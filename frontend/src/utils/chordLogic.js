@@ -54,3 +54,48 @@ export const getRandomNumber = () => {
 export const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
+
+// Enharmonic equivalents mapping (normalize to sharp for comparison)
+const ENHARMONIC_MAP = {
+  'Db': 'C#',
+  'Eb': 'D#',
+  'Gb': 'F#',
+  'Ab': 'G#',
+  'Bb': 'A#',
+  'Dbm': 'C#m',
+  'Ebm': 'D#m',
+  'Gbm': 'F#m',
+  'Abm': 'G#m',
+  'Bbm': 'A#m',
+  'Cb': 'B',
+  'E#m': 'Fm'
+};
+
+// Normalize chord to handle enharmonic equivalents
+export const normalizeChord = (chord) => {
+  if (!chord) return chord;
+  return ENHARMONIC_MAP[chord] || chord;
+};
+
+// Compare two chords considering enharmonic equivalents
+export const chordsAreEqual = (chord1, chord2) => {
+  return normalizeChord(chord1) === normalizeChord(chord2);
+};
+
+// Get the number for a given chord in a key (with enharmonic support)
+export const getNumberForChordEnharmonic = (key, chord) => {
+  const chords = MAJOR_KEYS[key];
+  if (!chords) return null;
+  
+  // Normalize the input chord
+  const normalizedChord = normalizeChord(chord);
+  
+  // Find matching chord (considering enharmonics)
+  for (let i = 0; i < chords.length; i++) {
+    if (normalizeChord(chords[i]) === normalizedChord) {
+      return i + 1;
+    }
+  }
+  
+  return null;
+};
