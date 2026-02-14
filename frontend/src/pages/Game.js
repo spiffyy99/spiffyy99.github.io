@@ -93,9 +93,11 @@ const Game = () => {
 
     if (config.mode === 'number-to-chord') {
       const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question);
-      isCorrect = answer === correctChord;
+      // Use enharmonic-aware comparison
+      isCorrect = chordsAreEqual(answer, correctChord);
     } else {
-      const correctNumber = getNumberForChord(currentQuestion.key, currentQuestion.question);
+      // Use enharmonic-aware number lookup
+      const correctNumber = getNumberForChordEnharmonic(currentQuestion.key, currentQuestion.question);
       isCorrect = answer === correctNumber;
     }
 
