@@ -199,9 +199,39 @@ const Game = () => {
           <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
             Current Key
           </p>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-[#002FA7]" data-testid="current-key">
-            {gameState.currentKey} Major
-          </h2>
+          {config.keySelection === 'preselected' && config.timerMode === 'untimed' ? (
+            <select
+              data-testid="key-change-selector"
+              value={gameState.currentKey}
+              onChange={(e) => {
+                const newKey = e.target.value;
+                setGameState(prev => ({
+                  ...prev,
+                  currentKey: newKey
+                }));
+                // Generate new question with the new key
+                setTimeout(() => {
+                  const newQuestion = generateQuestion();
+                  setGameState(prev => ({
+                    ...prev,
+                    currentKey: newKey,
+                    currentQuestion: { ...newQuestion, key: newKey }
+                  }));
+                }, 0);
+              }}
+              className="text-4xl md:text-6xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-4 py-2"
+            >
+              {Object.keys(MAJOR_KEYS).map((key) => (
+                <option key={key} value={key}>
+                  {key} Major
+                </option>
+              ))}
+            </select>
+          ) : (
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-[#002FA7]" data-testid="current-key">
+              {gameState.currentKey} Major
+            </h2>
+          )}
         </div>
 
         {/* Question Display */}
