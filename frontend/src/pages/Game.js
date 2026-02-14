@@ -8,9 +8,11 @@ import {
   MINOR_CHORDS,
   getChordForNumber,
   getNumberForChord,
+  getNumberForChordEnharmonic,
   getRandomKey,
   getRandomNumber,
-  generateSessionId
+  generateSessionId,
+  chordsAreEqual
 } from '../utils/chordLogic';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
