@@ -18,6 +18,12 @@ const Home = () => {
       title: 'Chord → Number',
       description: 'See a chord, select the correct number',
       icon: Music
+    },
+    {
+      id: 'transposition',
+      title: 'Transposition',
+      description: 'Transpose chords from one key to another',
+      icon: Music
     }
   ];
 
