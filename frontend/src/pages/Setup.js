@@ -188,13 +188,13 @@ const Setup = () => {
             </div>
           )}
 
-          {/* Borrowed Chords Option */}
+          {/* Parallel Minor Chords Option */}
           <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
             <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
-              Borrowed Chords
+              Parallel Minor Chords
             </h3>
             <button
-              data-testid="borrowed-chords-toggle"
+              data-testid="parallel-minor-toggle"
               onClick={() => setIncludeBorrowed(!includeBorrowed)}
               className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
                 includeBorrowed
