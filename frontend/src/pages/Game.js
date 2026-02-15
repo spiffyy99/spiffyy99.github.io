@@ -494,6 +494,23 @@ const Game = () => {
         settings={{ includeParallelMinor }}
         onSettingsChange={handleSettingsChange}
       />
+
+      {/* Time Up Modal */}
+      <TimeUpModal
+        isOpen={showTimeUp}
+        score={gameState.score}
+        accuracy={gameState.totalQuestions > 0 
+          ? Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100)
+          : 0}
+        totalQuestions={gameState.totalQuestions}
+        onPlayAgain={() => {
+          // Go back to setup to configure new game
+          navigate('/setup', { state: { mode: config.mode } });
+        }}
+        onGoHome={() => {
+          navigate('/');
+        }}
+      />
     </div>
   );
 };
