@@ -76,22 +76,26 @@ export const ALL_CHORDS_DISPLAY = [
   'Cm', 'C#m/Dbm', 'Dm', 'D#m/Ebm', 'Em', 'Fm', 'F#m/Gbm', 'Gm', 'G#m/Abm', 'Am', 'A#m/Bbm', 'Bm'
 ];
 
-// Get the chord for a given key and number (1-6)
-export const getChordForNumber = (key, number, includeBorrowed = false) => {
+// Get the chord for a given key and roman numeral
+export const getChordForNumber = (key, romanNumeral, includeParallelMinor = false) => {
   const keyData = MAJOR_KEYS[key];
   if (!keyData) return null;
   
-  if (!includeBorrowed) {
-    return keyData.chords[number - 1] || null;
+  // Find index in appropriate label array
+  const diatonicIndex = DIATONIC_LABELS.indexOf(romanNumeral);
+  if (diatonicIndex >= 0) {
+    return keyData.chords[diatonicIndex] || null;
   }
   
-  // With borrowed chords: 1-6 are diatonic, 7-13 are borrowed
-  if (number <= 6) {
-    return keyData.chords[number - 1] || null;
-  } else {
-    const borrowedChords = BORROWED_CHORDS[key];
-    return borrowedChords ? borrowedChords[number - 7] : null;
+  if (includeParallelMinor) {
+    const parallelIndex = PARALLEL_MINOR_LABELS.indexOf(romanNumeral);
+    if (parallelIndex >= 0) {
+      const parallelChords = PARALLEL_MINOR_CHORDS[key];
+      return parallelChords ? parallelChords[parallelIndex] : null;
+    }
   }
+  
+  return null;
 };
 
 // Enharmonic equivalents mapping
