@@ -97,6 +97,11 @@ const Game = () => {
         setGameState(prev => {
           if (prev.timeRemaining <= 1) {
             clearInterval(timer);
+            // Show time up modal when timer reaches 0
+            setTimeout(() => {
+              saveGameSession();
+              setShowTimeUp(true);
+            }, 100);
             return { ...prev, timeRemaining: 0, isGameActive: false };
           }
           return { ...prev, timeRemaining: prev.timeRemaining - 1 };
@@ -104,10 +109,6 @@ const Game = () => {
       }, 1000);
 
       return () => clearInterval(timer);
-    } else if (config.timerMode === 'timed' && gameState.timeRemaining === 0 && gameState.isGameActive) {
-      // Show time up modal instead of navigating immediately
-      saveGameSession();
-      setShowTimeUp(true);
     }
   }, [config.timerMode, gameState.isGameActive, gameState.timeRemaining]);
 
