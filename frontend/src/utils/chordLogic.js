@@ -169,10 +169,19 @@ export const getRandomKey = () => {
   return keys[Math.floor(Math.random() * keys.length)];
 };
 
-// Get a random number (1-6 or 1-13 with borrowed)
-export const getRandomNumber = (includeBorrowed = false) => {
-  const max = includeBorrowed ? 13 : 6;
-  return Math.floor(Math.random() * max) + 1;
+// Get a random roman numeral (I-vi or with parallel minor)
+export const getRandomNumber = (includeParallelMinor = false) => {
+  const allLabels = includeParallelMinor 
+    ? [...DIATONIC_LABELS, ...PARALLEL_MINOR_LABELS]
+    : DIATONIC_LABELS;
+  return allLabels[Math.floor(Math.random() * allLabels.length)];
+};
+
+// Get all available roman numerals
+export const getAllRomanNumerals = (includeParallelMinor = false) => {
+  return includeParallelMinor 
+    ? [...DIATONIC_LABELS, ...PARALLEL_MINOR_LABELS]
+    : DIATONIC_LABELS;
 };
 
 // Transpose a chord from source key to target key
@@ -191,13 +200,13 @@ export const transposeChord = (chord, sourceKey, targetKey) => {
     }
   }
   
-  // Check borrowed chords
-  const sourceBorrowed = BORROWED_CHORDS[sourceKey];
-  const targetBorrowed = BORROWED_CHORDS[targetKey];
-  if (sourceBorrowed && targetBorrowed) {
-    for (let i = 0; i < sourceBorrowed.length; i++) {
-      if (chordsAreEqual(sourceBorrowed[i], normalizedChord)) {
-        return targetBorrowed[i];
+  // Check parallel minor chords
+  const sourceparallel = PARALLEL_MINOR_CHORDS[sourceKey];
+  const targetparallel = PARALLEL_MINOR_CHORDS[targetKey];
+  if (sourceparallel && targetparallel) {
+    for (let i = 0; i < sourceparallel.length; i++) {
+      if (chordsAreEqual(sourceparallel[i], normalizedChord)) {
+        return targetparallel[i];
       }
     }
   }
@@ -205,10 +214,10 @@ export const transposeChord = (chord, sourceKey, targetKey) => {
   return null;
 };
 
-// Get a random chord from a key (including borrowed if enabled)
-export const getRandomChordFromKey = (key, includeBorrowed = false) => {
-  const number = getRandomNumber(includeBorrowed);
-  return getChordForNumber(key, number, includeBorrowed);
+// Get a random chord from a key (including parallel minor if enabled)
+export const getRandomChordFromKey = (key, includeParallelMinor = false) => {
+  const romanNumeral = getRandomNumber(includeParallelMinor);
+  return getChordForNumber(key, romanNumeral, includeParallelMinor);
 };
 
 // Generate unique session ID
