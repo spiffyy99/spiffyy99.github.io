@@ -134,27 +134,27 @@ export const chordsAreEqual = (chord1, chord2) => {
   return normalizeChord(chord1) === normalizeChord(chord2);
 };
 
-// Get the number for a given chord in a key (with enharmonic support)
-export const getNumberForChord = (key, chord, includeBorrowed = false) => {
+// Get the roman numeral for a given chord in a key (with enharmonic support)
+export const getNumberForChord = (key, chord, includeParallelMinor = false) => {
   const keyData = MAJOR_KEYS[key];
   if (!keyData) return null;
   
   const normalizedChord = normalizeChord(chord);
   
-  // Check diatonic chords (1-6)
+  // Check diatonic chords
   for (let i = 0; i < keyData.chords.length; i++) {
     if (chordsAreEqual(keyData.chords[i], normalizedChord)) {
-      return i + 1;
+      return DIATONIC_LABELS[i];
     }
   }
   
-  // Check borrowed chords if enabled (7-13)
-  if (includeBorrowed) {
-    const borrowedChords = BORROWED_CHORDS[key];
-    if (borrowedChords) {
-      for (let i = 0; i < borrowedChords.length; i++) {
-        if (chordsAreEqual(borrowedChords[i], normalizedChord)) {
-          return i + 7;
+  // Check parallel minor chords if enabled
+  if (includeParallelMinor) {
+    const parallelChords = PARALLEL_MINOR_CHORDS[key];
+    if (parallelChords) {
+      for (let i = 0; i < parallelChords.length; i++) {
+        if (chordsAreEqual(parallelChords[i], normalizedChord)) {
+          return PARALLEL_MINOR_LABELS[i];
         }
       }
     }
