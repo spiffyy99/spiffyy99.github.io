@@ -273,18 +273,25 @@ const Game = () => {
                 value={gameState.currentKey}
                 onChange={(e) => {
                   const newKey = e.target.value;
+                  // Generate new question with the new key immediately
+                  const newQuestion = (() => {
+                    if (config.mode === 'number-to-chord') {
+                      const romanNumeral = getRandomNumber(includeParallelMinor);
+                      return { key: newKey, question: romanNumeral, type: 'number' };
+                    } else {
+                      // chord-to-number mode
+                      const romanNumeral = getRandomNumber(includeParallelMinor);
+                      const chord = getChordForNumber(newKey, romanNumeral, includeParallelMinor);
+                      return { key: newKey, question: chord, type: 'chord' };
+                    }
+                  })();
+                  
                   setGameState(prev => ({
                     ...prev,
-                    currentKey: newKey
+                    currentKey: newKey,
+                    currentQuestion: newQuestion,
+                    feedback: null
                   }));
-                  setTimeout(() => {
-                    const newQuestion = generateQuestion();
-                    setGameState(prev => ({
-                      ...prev,
-                      currentKey: newKey,
-                      currentQuestion: { ...newQuestion, key: newKey }
-                    }));
-                  }, 0);
                 }}
                 className="text-4xl md:text-6xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-4 py-2"
               >
