@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Timer as TimerIcon, Trophy } from 'lucide-react';
+import { ArrowLeft, Timer as TimerIcon, Trophy, Settings as SettingsIcon } from 'lucide-react';
 import axios from 'axios';
+import SettingsModal from '../components/SettingsModal';
 import {
   MAJOR_KEYS,
   ALL_CHORDS_DISPLAY,
@@ -10,6 +11,7 @@ import {
   getRandomKey,
   getRandomNumber,
   getRandomChordFromKey,
+  getAllRomanNumerals,
   transposeChord,
   generateSessionId,
   chordsAreEqual
@@ -37,7 +39,8 @@ const Game = () => {
     timeRemaining: config.timerDuration || null
   });
 
-  const [includeBorrowed, setIncludeBorrowed] = useState(config.includeBorrowed || false);
+  const [includeParallelMinor, setIncludeParallelMinor] = useState(config.includeBorrowed || false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [displayedChords] = useState({
     major: ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'],
@@ -50,7 +53,7 @@ const Game = () => {
       // Transposition mode
       const source = gameState.sourceKey;
       const target = config.targetKeySelection === 'random' ? getRandomKey() : gameState.targetKey;
-      const sourceChord = getRandomChordFromKey(source, includeBorrowed);
+      const sourceChord = getRandomChordFromKey(source, includeParallelMinor);
       
       return {
         key: source,
@@ -63,16 +66,16 @@ const Game = () => {
       const key = config.keySelection === 'random' ? getRandomKey() : gameState.currentKey;
       
       if (config.mode === 'number-to-chord') {
-        const number = getRandomNumber(includeBorrowed);
-        return { key, question: number, type: 'number' };
+        const romanNumeral = getRandomNumber(includeParallelMinor);
+        return { key, question: romanNumeral, type: 'number' };
       } else {
         // chord-to-number mode
-        const number = getRandomNumber(includeBorrowed);
-        const chord = getChordForNumber(key, number, includeBorrowed);
+        const romanNumeral = getRandomNumber(includeParallelMinor);
+        const chord = getChordForNumber(key, romanNumeral, includeParallelMinor);
         return { key, question: chord, type: 'chord' };
       }
     }
-  }, [config.mode, config.keySelection, config.targetKeySelection, gameState.currentKey, gameState.sourceKey, gameState.targetKey, includeBorrowed]);
+  }, [config.mode, config.keySelection, config.targetKeySelection, gameState.currentKey, gameState.sourceKey, gameState.targetKey, includeParallelMinor]);
 
   // Initialize first question
   useEffect(() => {
@@ -112,10 +115,10 @@ const Game = () => {
     let isCorrect = false;
 
     if (config.mode === 'number-to-chord') {
-      const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeBorrowed);
+      const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeParallelMinor);
       isCorrect = chordsAreEqual(answer, correctChord);
     } else if (config.mode === 'chord-to-number') {
-      const correctNumber = getNumberForChord(currentQuestion.key, currentQuestion.question, includeBorrowed);
+      const correctNumber = getNumberForChord(currentQuestion.key, currentQuestion.question, includeParallelMinor);
       isCorrect = answer === correctNumber;
     } else if (config.mode === 'transposition') {
       const correctChord = transposeChord(currentQuestion.question, currentQuestion.key, currentQuestion.targetKey);
@@ -182,19 +185,28 @@ const Game = () => {
     });
   };
 
+  const handleSettingsChange = (newSettings) => {
+    if ('includeParallelMinor' in newSettings) {
+      setIncludeParallelMinor(newSettings.includeParallelMinor);
+      // Generate new question with updated settings
+      setTimeout(() => {
+        const newQuestion = generateQuestion();
+        setGameState(prev => ({
+          ...prev,
+          currentQuestion: newQuestion
+        }));
+      }, 0);
+    }
+  };
+
   if (!gameState.currentQuestion) {
     return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
       <p>Loading...</p>
     </div>;
   }
 
-  const getNumberRange = () => {
-    return includeBorrowed ? '1-13' : '1-6';
-  };
-
-  const getNumberButtons = () => {
-    const max = includeBorrowed ? 13 : 6;
-    return Array.from({ length: max }, (_, i) => i + 1);
+  const getRomanNumeralButtons = () => {
+    return getAllRomanNumerals(includeParallelMinor);
   };
 
   return (
@@ -212,28 +224,15 @@ const Game = () => {
           </button>
 
           <div className="flex items-center gap-6">
-            {/* Borrowed Chords Toggle */}
+            {/* Settings Button (only in untimed mode) */}
             {config.timerMode === 'untimed' && (
               <button
-                data-testid="borrowed-toggle-ingame"
-                onClick={() => {
-                  setIncludeBorrowed(!includeBorrowed);
-                  // Generate new question immediately
-                  setTimeout(() => {
-                    const newQuestion = generateQuestion();
-                    setGameState(prev => ({
-                      ...prev,
-                      currentQuestion: newQuestion
-                    }));
-                  }, 0);
-                }}
-                className={`text-xs font-bold uppercase tracking-widest px-3 py-2 rounded-sm border-2 transition-all ${
-                  includeBorrowed
-                    ? 'border-[#002FA7] bg-[#002FA7] text-white'
-                    : 'border-[#E5E7EB] text-[#9CA3AF] hover:border-[#002FA7]'
-                }`}
+                data-testid="settings-button"
+                onClick={() => setShowSettings(true)}
+                className="flex items-center gap-2 text-[#9CA3AF] hover:text-[#002FA7] transition-colors"
               >
-                Borrowed {includeBorrowed ? 'ON' : 'OFF'}
+                <SettingsIcon className="w-5 h-5" />
+                <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Settings</span>
               </button>
             )}
             
@@ -374,24 +373,24 @@ const Game = () => {
           </div>
         )}
 
-        {/* Question Display */}
+        {/* Question Display - Fixed size to prevent glitching */}
         <div className="mb-12 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-4">
-            {config.mode === 'number-to-chord' ? `Select the chord for (${getNumberRange()})` :
-             config.mode === 'chord-to-number' ? `Select the number for (${getNumberRange()})` :
+            {config.mode === 'number-to-chord' ? 'Select the chord for' :
+             config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              'Transpose this chord'}
           </p>
           <div 
             data-testid="question-display"
-            className={`inline-block px-16 py-12 border-4 rounded-sm transition-all ${
+            className={`inline-flex items-center justify-center min-w-[280px] min-h-[180px] px-16 py-12 border-4 rounded-sm ${
               gameState.feedback === 'correct' 
-                ? 'bg-green-100 border-green-500 animate-pulse'
+                ? 'bg-green-100 border-green-500'
                 : gameState.feedback === 'incorrect'
-                ? 'bg-red-100 border-red-500 animate-pulse'
+                ? 'bg-red-100 border-red-500'
                 : 'bg-white border-[#002FA7]'
             }`}
           >
-            <span className="text-6xl md:text-8xl font-bold text-[#1A1A1A]">
+            <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">
               {gameState.currentQuestion.question}
             </span>
           </div>
@@ -400,34 +399,34 @@ const Game = () => {
         {/* Answer Buttons */}
         {(config.mode === 'number-to-chord' || config.mode === 'transposition') ? (
           <div className="space-y-4 max-w-5xl mx-auto">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
               Major Chords
             </p>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-3 md:gap-4 mb-8">
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-2 md:gap-3 mb-8">
               {displayedChords.major.map((chord) => (
                 <button
                   key={chord}
                   data-testid={`chord-button-${chord}`}
                   onClick={() => handleAnswer(chord)}
                   disabled={!gameState.isGameActive || gameState.feedback}
-                  className="h-16 md:h-24 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-sm md:text-base font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                  className="h-14 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-[10px] md:text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 px-1"
                 >
                   {chord}
                 </button>
               ))}
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
               Minor Chords
             </p>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-3 md:gap-4">
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-2 md:gap-3">
               {displayedChords.minor.map((chord) => (
                 <button
                   key={chord}
                   data-testid={`chord-button-${chord}`}
                   onClick={() => handleAnswer(chord)}
                   disabled={!gameState.isGameActive || gameState.feedback}
-                  className="h-16 md:h-24 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-sm md:text-base font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                  className="h-14 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-[10px] md:text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 px-1"
                 >
                   {chord}
                 </button>
@@ -435,20 +434,20 @@ const Game = () => {
             </div>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
-              Select Number ({getNumberRange()})
+          <div className="max-w-3xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
+              Select Roman Numeral
             </p>
-            <div className={`grid gap-4 ${includeBorrowed ? 'grid-cols-4 md:grid-cols-7' : 'grid-cols-3'}`}>
-              {getNumberButtons().map((num) => (
+            <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+              {getRomanNumeralButtons().map((numeral) => (
                 <button
-                  key={num}
-                  data-testid={`number-button-${num}`}
-                  onClick={() => handleAnswer(num)}
+                  key={numeral}
+                  data-testid={`number-button-${numeral}`}
+                  onClick={() => handleAnswer(numeral)}
                   disabled={!gameState.isGameActive || gameState.feedback}
-                  className="h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-3xl font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                  className="h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-2xl md:text-3xl font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
                 >
-                  {num}
+                  {numeral}
                 </button>
               ))}
             </div>
@@ -468,6 +467,14 @@ const Game = () => {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={{ includeParallelMinor }}
+        onSettingsChange={handleSettingsChange}
+      />
     </div>
   );
 };
