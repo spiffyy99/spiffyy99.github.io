@@ -152,9 +152,7 @@ const Game = () => {
     }, 500);
   };
 
-  const endGame = async () => {
-    setGameState(prev => ({ ...prev, isGameActive: false }));
-
+  const saveGameSession = async () => {
     // Save session to backend
     try {
       const accuracy = gameState.totalQuestions > 0 
@@ -173,6 +171,11 @@ const Game = () => {
     } catch (error) {
       console.error('Error saving session:', error);
     }
+  };
+
+  const endGame = async () => {
+    setGameState(prev => ({ ...prev, isGameActive: false }));
+    await saveGameSession();
 
     // Navigate to results
     navigate('/results', {
@@ -183,6 +186,11 @@ const Game = () => {
           ? Math.round((gameState.correctAnswers / gameState.totalQuestions) * 100)
           : 0,
         key: config.selectedKey || (config.mode === 'transposition' ? `${gameState.sourceKey}→${gameState.targetKey}` : 'Random'),
+        mode: config.mode,
+        timerMode: config.timerMode
+      }
+    });
+  };
         mode: config.mode,
         timerMode: config.timerMode
       }
