@@ -191,11 +191,6 @@ const Game = () => {
       }
     });
   };
-        mode: config.mode,
-        timerMode: config.timerMode
-      }
-    });
-  };
 
   const handleSettingsChange = (newSettings) => {
     if ('includeParallelMinor' in newSettings) {
