@@ -50,21 +50,25 @@ export const MAJOR_KEYS = {
   }
 };
 
-// Borrowed chords from parallel minor (for each major key)
-export const BORROWED_CHORDS = {
-  'C': ['Cm', 'Ddim', 'D#/Eb', 'Fm', 'Gm', 'G#/Ab', 'A#/Bb'],
-  'C#/Db': ['C#m/Dbm', 'D#dim/Ebdim', 'E', 'F#m/Gbm', 'G#m/Abm', 'A', 'B'],
-  'D': ['Dm', 'Edim', 'F', 'Gm', 'Am', 'A#/Bb', 'C'],
-  'D#/Eb': ['D#m/Ebm', 'Fdim', 'F#/Gb', 'G#m/Abm', 'A#m/Bbm', 'B', 'C#/Db'],
-  'E': ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D'],
-  'F': ['Fm', 'Gdim', 'G#/Ab', 'A#m/Bbm', 'Cm', 'C#/Db', 'D#/Eb'],
-  'F#/Gb': ['F#m/Gbm', 'G#dim/Abdim', 'A', 'Bm', 'C#m/Dbm', 'D', 'E'],
-  'G': ['Gm', 'Adim', 'A#/Bb', 'Cm', 'Dm', 'D#/Eb', 'F'],
-  'G#/Ab': ['G#m/Abm', 'A#dim/Bbdim', 'B', 'C#m/Dbm', 'D#m/Ebm', 'E', 'F#/Gb'],
-  'A': ['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G'],
-  'A#/Bb': ['A#m/Bbm', 'Cdim', 'C#/Db', 'D#m/Ebm', 'Fm', 'F#/Gb', 'G#/Ab'],
-  'B': ['Bm', 'C#dim', 'D', 'Em', 'F#m', 'G', 'A']
+// Borrowed chords from parallel minor (for each major key) - only major/minor, no diminished
+export const PARALLEL_MINOR_CHORDS = {
+  'C': ['Cm', 'D#/Eb', 'Fm', 'Gm', 'G#/Ab', 'A#/Bb'],
+  'C#/Db': ['C#m/Dbm', 'E', 'F#m/Gbm', 'G#m/Abm', 'A', 'B'],
+  'D': ['Dm', 'F', 'Gm', 'Am', 'A#/Bb', 'C'],
+  'D#/Eb': ['D#m/Ebm', 'F#/Gb', 'G#m/Abm', 'A#m/Bbm', 'B', 'C#/Db'],
+  'E': ['Em', 'G', 'Am', 'Bm', 'C', 'D'],
+  'F': ['Fm', 'G#/Ab', 'A#m/Bbm', 'Cm', 'C#/Db', 'D#/Eb'],
+  'F#/Gb': ['F#m/Gbm', 'A', 'Bm', 'C#m/Dbm', 'D', 'E'],
+  'G': ['Gm', 'A#/Bb', 'Cm', 'Dm', 'D#/Eb', 'F'],
+  'G#/Ab': ['G#m/Abm', 'B', 'C#m/Dbm', 'D#m/Ebm', 'E', 'F#/Gb'],
+  'A': ['Am', 'C', 'Dm', 'Em', 'F', 'G'],
+  'A#/Bb': ['A#m/Bbm', 'C#/Db', 'D#m/Ebm', 'Fm', 'F#/Gb', 'G#/Ab'],
+  'B': ['Bm', 'D', 'Em', 'F#m', 'G', 'A']
 };
+
+// Roman numeral labels for diatonic and parallel minor chords
+export const DIATONIC_LABELS = ['I', 'ii', 'iii', 'IV', 'V', 'vi'];
+export const PARALLEL_MINOR_LABELS = ['i', '♭III', 'iv', 'v', '♭VI', '♭VII'];
 
 // All 24 chords with dual names
 export const ALL_CHORDS_DISPLAY = [
