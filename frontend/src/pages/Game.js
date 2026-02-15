@@ -397,7 +397,7 @@ const Game = () => {
           </p>
           <div 
             data-testid="question-display"
-            className={`inline-flex items-center justify-center min-w-[280px] min-h-[180px] px-16 py-12 border-4 rounded-sm ${
+            className={`inline-flex items-center justify-center w-[420px] h-[200px] border-4 rounded-sm transition-colors duration-150 ${
               gameState.feedback === 'correct' 
                 ? 'bg-green-100 border-green-500'
                 : gameState.feedback === 'incorrect'
@@ -405,7 +405,7 @@ const Game = () => {
                 : 'bg-white border-[#002FA7]'
             }`}
           >
-            <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">
+            <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A] w-full text-center">
               {gameState.currentQuestion.question}
             </span>
           </div>
