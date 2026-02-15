@@ -105,7 +105,9 @@ const Game = () => {
 
       return () => clearInterval(timer);
     } else if (config.timerMode === 'timed' && gameState.timeRemaining === 0 && gameState.isGameActive) {
-      endGame();
+      // Show time up modal instead of navigating immediately
+      saveGameSession();
+      setShowTimeUp(true);
     }
   }, [config.timerMode, gameState.isGameActive, gameState.timeRemaining]);
 
