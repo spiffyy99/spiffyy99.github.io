@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Timer as TimerIcon, Trophy, Settings as SettingsIcon } from 'lucide-react';
 import axios from 'axios';
 import SettingsModal from '../components/SettingsModal';
+import TimeUpModal from '../components/TimeUpModal';
 import {
   MAJOR_KEYS,
   ALL_CHORDS_DISPLAY,
@@ -41,6 +42,7 @@ const Game = () => {
 
   const [includeParallelMinor, setIncludeParallelMinor] = useState(config.includeBorrowed || false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTimeUp, setShowTimeUp] = useState(false);
 
   const [displayedChords] = useState({
     major: ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'],
