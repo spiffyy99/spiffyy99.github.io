@@ -132,7 +132,9 @@ const Game = () => {
     const { currentQuestion } = gameState;
     let isCorrect = false;
 
-    if (config.mode === 'number-to-chord') {
+    if (config.mode === 'intervals') {
+      isCorrect = answer === currentQuestion.correctInterval;
+    } else if (config.mode === 'number-to-chord') {
       const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeParallelMinor);
       isCorrect = chordsAreEqual(answer, correctChord);
     } else if (config.mode === 'chord-to-number') {
