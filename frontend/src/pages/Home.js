@@ -24,6 +24,12 @@ const Home = () => {
       title: 'Transposition',
       description: 'Transpose chords from one key to another',
       icon: Music
+    },
+    {
+      id: 'intervals',
+      title: 'Interval Recognition',
+      description: 'Identify the interval between two notes',
+      icon: Music
     }
   ];
 
