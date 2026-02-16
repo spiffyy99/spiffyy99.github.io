@@ -66,8 +66,65 @@ const Setup = () => {
 
         {/* Settings Cards */}
         <div className="space-y-6 mb-12">
-          {/* Transposition Mode Settings */}
-          {mode === 'transposition' ? (
+          {/* Interval Mode - Only Timer */}
+          {mode === 'intervals' ? (
+            /* Timer Mode for Intervals */
+            <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+              <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+                Timer Mode
+              </h3>
+              <div className="space-y-3">
+                <button
+                  data-testid="timer-untimed"
+                  onClick={() => setTimerMode('untimed')}
+                  className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                    timerMode === 'untimed'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-[#1A1A1A]">Untimed</div>
+                  <div className="text-sm text-[#9CA3AF]">Practice at your own pace</div>
+                </button>
+                <button
+                  data-testid="timer-timed"
+                  onClick={() => setTimerMode('timed')}
+                  className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                    timerMode === 'timed'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-[#1A1A1A]">Timed</div>
+                  <div className="text-sm text-[#9CA3AF]">Race against the clock</div>
+                </button>
+              </div>
+
+              {timerMode === 'timed' && (
+                <div className="mt-4">
+                  <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">
+                    Duration
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['15', '30', '60'].map((duration) => (
+                      <button
+                        key={duration}
+                        data-testid={`timer-${duration}`}
+                        onClick={() => setTimerDuration(duration)}
+                        className={`p-3 border-2 rounded-sm font-bold transition-all ${
+                          timerDuration === duration
+                            ? 'border-[#002FA7] bg-[#002FA7] text-white'
+                            : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                        }`}
+                      >
+                        {duration}s
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : mode === 'transposition' ? (
             <>
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                 <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
