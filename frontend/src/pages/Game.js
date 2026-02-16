@@ -54,7 +54,17 @@ const Game = () => {
 
   // Generate new question
   const generateQuestion = useCallback(() => {
-    if (config.mode === 'transposition') {
+    if (config.mode === 'intervals') {
+      // Interval recognition mode
+      const notePair = generateRandomNotePair();
+      return {
+        question: `${notePair.note1} → ${notePair.note2}`,
+        note1: notePair.note1,
+        note2: notePair.note2,
+        correctInterval: notePair.correctInterval,
+        type: 'interval'
+      };
+    } else if (config.mode === 'transposition') {
       // Transposition mode
       const source = gameState.sourceKey;
       const target = config.targetKeySelection === 'random' ? getRandomKey() : gameState.targetKey;
