@@ -463,6 +463,26 @@ const Game = () => {
               ))}
             </div>
           </div>
+        ) : config.mode === 'intervals' ? (
+          <div className="max-w-4xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
+              Select Interval
+            </p>
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+              {INTERVALS.map((interval) => (
+                <button
+                  key={interval.name}
+                  data-testid={`interval-button-${interval.name}`}
+                  onClick={() => handleAnswer(interval.name)}
+                  disabled={!gameState.isGameActive || gameState.feedback}
+                  className="h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all font-bold flex flex-col items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  <span className="text-2xl">{interval.name}</span>
+                  <span className="text-[10px] text-[#9CA3AF] mt-1">{interval.fullName}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="max-w-3xl mx-auto">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
