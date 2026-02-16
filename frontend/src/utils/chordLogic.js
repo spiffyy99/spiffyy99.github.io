@@ -224,3 +224,50 @@ export const getRandomChordFromKey = (key, includeParallelMinor = false) => {
 export const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
+
+// Interval logic for the fourth mode
+export const ALL_NOTES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
+
+export const INTERVALS = [
+  { name: 'm2', fullName: 'Minor 2nd', semitones: 1 },
+  { name: 'M2', fullName: 'Major 2nd', semitones: 2 },
+  { name: 'm3', fullName: 'Minor 3rd', semitones: 3 },
+  { name: 'M3', fullName: 'Major 3rd', semitones: 4 },
+  { name: 'P4', fullName: 'Perfect 4th', semitones: 5 },
+  { name: 'TT', fullName: 'Tritone', semitones: 6 },
+  { name: 'P5', fullName: 'Perfect 5th', semitones: 7 },
+  { name: 'm6', fullName: 'Minor 6th', semitones: 8 },
+  { name: 'M6', fullName: 'Major 6th', semitones: 9 },
+  { name: 'm7', fullName: 'Minor 7th', semitones: 10 },
+  { name: 'M7', fullName: 'Major 7th', semitones: 11 },
+  { name: 'P8', fullName: 'Octave', semitones: 12 }
+];
+
+// Get interval between two notes
+export const getInterval = (note1, note2) => {
+  const index1 = ALL_NOTES.indexOf(note1);
+  const index2 = ALL_NOTES.indexOf(note2);
+  
+  if (index1 === -1 || index2 === -1) return null;
+  
+  // Calculate semitones (can go up to 12 for octave)
+  let semitones = index2 - index1;
+  if (semitones < 0) semitones += 12;
+  if (semitones === 0) semitones = 12; // Same note = octave
+  
+  const interval = INTERVALS.find(i => i.semitones === semitones);
+  return interval ? interval.name : null;
+};
+
+// Generate random note pair for interval practice
+export const generateRandomNotePair = () => {
+  const note1 = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+  const intervalIndex = Math.floor(Math.random() * INTERVALS.length);
+  const interval = INTERVALS[intervalIndex];
+  
+  const note1Index = ALL_NOTES.indexOf(note1);
+  const note2Index = (note1Index + interval.semitones) % 12;
+  const note2 = ALL_NOTES[note2Index];
+  
+  return { note1, note2, correctInterval: interval.name };
+};
