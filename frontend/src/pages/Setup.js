@@ -282,12 +282,14 @@ const Setup = () => {
               </div>
             </button>
           </div>
+          )}
 
-          {/* Timer Mode */}
-          <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-            <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
-              Timer Mode
-            </h3>
+          {/* Timer Mode - Not shown for Intervals (already shown above) */}
+          {mode !== 'intervals' && (
+            <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+              <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+                Timer Mode
+              </h3>
             <div className="space-y-3">
               <button
                 data-testid="timer-untimed"
