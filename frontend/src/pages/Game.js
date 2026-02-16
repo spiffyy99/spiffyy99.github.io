@@ -7,6 +7,7 @@ import TimeUpModal from '../components/TimeUpModal';
 import {
   MAJOR_KEYS,
   ALL_CHORDS_DISPLAY,
+  INTERVALS,
   getChordForNumber,
   getNumberForChord,
   getRandomKey,
@@ -15,7 +16,9 @@ import {
   getAllRomanNumerals,
   transposeChord,
   generateSessionId,
-  chordsAreEqual
+  chordsAreEqual,
+  generateRandomNotePair,
+  getInterval
 } from '../utils/chordLogic';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
