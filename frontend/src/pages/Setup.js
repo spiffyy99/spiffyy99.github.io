@@ -37,7 +37,8 @@ const Setup = () => {
   const getModeTitle = () => {
     if (mode === 'number-to-chord') return 'Number → Chord';
     if (mode === 'chord-to-number') return 'Chord → Number';
-    return 'Transposition';
+    if (mode === 'transposition') return 'Transposition';
+    return 'Interval Recognition';
   };
 
   return (
