@@ -408,6 +408,7 @@ const Game = () => {
           <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-4">
             {config.mode === 'number-to-chord' ? 'Select the chord for' :
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
+             config.mode === 'intervals' ? 'Identify the interval' :
              'Transpose this chord'}
           </p>
           <div 
