@@ -341,6 +341,7 @@ const Setup = () => {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Start Button */}
