@@ -246,28 +246,29 @@ const Setup = () => {
             </div>
           )}
 
-          {/* Parallel Minor Chords Option */}
-          <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-            <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
-              Parallel Minor Chords
-            </h3>
-            <button
-              data-testid="parallel-minor-toggle"
-              onClick={() => setIncludeBorrowed(!includeBorrowed)}
-              className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
-                includeBorrowed
-                  ? 'border-[#002FA7] bg-[#002FA7]/5'
-                  : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-[#1A1A1A]">
-                    {includeBorrowed ? 'Enabled' : 'Disabled'}
-                  </div>
-                  <div className="text-sm text-[#9CA3AF]">
-                    {includeBorrowed 
-                      ? 'Includes chords from parallel minor (i-♭VII)'
+          {/* Parallel Minor Chords Option - Not for Intervals mode */}
+          {mode !== 'intervals' && (
+            <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+              <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
+                Parallel Minor Chords
+              </h3>
+              <button
+                data-testid="parallel-minor-toggle"
+                onClick={() => setIncludeBorrowed(!includeBorrowed)}
+                className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                  includeBorrowed
+                    ? 'border-[#002FA7] bg-[#002FA7]/5'
+                    : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-[#1A1A1A]">
+                      {includeBorrowed ? 'Enabled' : 'Disabled'}
+                    </div>
+                    <div className="text-sm text-[#9CA3AF]">
+                      {includeBorrowed 
+                        ? 'Includes chords from parallel minor (i-♭VII)'
                       : 'Only diatonic major scale chords (I-vi)'}
                   </div>
                 </div>
