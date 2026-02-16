@@ -247,8 +247,8 @@ const Game = () => {
           </button>
 
           <div className="flex items-center gap-6">
-            {/* Settings Button (only in untimed mode) */}
-            {config.timerMode === 'untimed' && (
+            {/* Settings Button (only in untimed mode and not for intervals) */}
+            {config.timerMode === 'untimed' && config.mode !== 'intervals' && (
               <button
                 data-testid="settings-button"
                 onClick={() => setShowSettings(true)}
