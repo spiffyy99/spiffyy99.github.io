@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Timer as TimerIcon, Trophy, Settings as SettingsIcon } from 'lucide-react';
 import axios from 'axios';
@@ -46,6 +46,12 @@ const Game = () => {
   const [includeParallelMinor, setIncludeParallelMinor] = useState(config.includeBorrowed || false);
   const [showSettings, setShowSettings] = useState(false);
   const [showTimeUp, setShowTimeUp] = useState(false);
+  
+  // Use ref to track includeParallelMinor for generateQuestion to avoid regenerating on setting change
+  const includeParallelMinorRef = useRef(config.includeBorrowed || false);
+  useEffect(() => {
+    includeParallelMinorRef.current = includeParallelMinor;
+  }, [includeParallelMinor]);
 
   const [displayedChords] = useState({
     major: ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'],
@@ -54,6 +60,7 @@ const Game = () => {
 
   // Generate new question
   const generateQuestion = useCallback(() => {
+    const useParallelMinor = includeParallelMinorRef.current;
     if (config.mode === 'intervals') {
       // Interval recognition mode
       const notePair = generateRandomNotePair();
@@ -68,7 +75,7 @@ const Game = () => {
       // Transposition mode
       const source = gameState.sourceKey;
       const target = config.targetKeySelection === 'random' ? getRandomKey() : gameState.targetKey;
-      const sourceChord = getRandomChordFromKey(source, includeParallelMinor);
+      const sourceChord = getRandomChordFromKey(source, useParallelMinor);
       
       return {
         key: source,
@@ -81,18 +88,18 @@ const Game = () => {
       const key = config.keySelection === 'random' ? getRandomKey() : gameState.currentKey;
       
       if (config.mode === 'number-to-chord') {
-        const romanNumeral = getRandomNumber(includeParallelMinor);
+        const romanNumeral = getRandomNumber(useParallelMinor);
         return { key, question: romanNumeral, type: 'number' };
       } else {
         // chord-to-number mode
-        const romanNumeral = getRandomNumber(includeParallelMinor);
-        const chord = getChordForNumber(key, romanNumeral, includeParallelMinor);
+        const romanNumeral = getRandomNumber(useParallelMinor);
+        const chord = getChordForNumber(key, romanNumeral, useParallelMinor);
         return { key, question: chord, type: 'chord' };
       }
     }
-  }, [config.mode, config.keySelection, config.targetKeySelection, gameState.currentKey, gameState.sourceKey, gameState.targetKey, includeParallelMinor]);
+  }, [config.mode, config.keySelection, config.targetKeySelection, gameState.currentKey, gameState.sourceKey, gameState.targetKey]);
 
-  // Initialize first question
+  // Initialize first question - only run once on mount
   useEffect(() => {
     const firstQuestion = generateQuestion();
     setGameState(prev => ({
@@ -101,7 +108,8 @@ const Game = () => {
       targetKey: firstQuestion.targetKey || prev.targetKey,
       currentQuestion: firstQuestion
     }));
-  }, [generateQuestion]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   // Timer countdown
   useEffect(() => {
@@ -211,14 +219,7 @@ const Game = () => {
   const handleSettingsChange = (newSettings) => {
     if ('includeParallelMinor' in newSettings) {
       setIncludeParallelMinor(newSettings.includeParallelMinor);
-      // Generate new question with updated settings
-      setTimeout(() => {
-        const newQuestion = generateQuestion();
-        setGameState(prev => ({
-          ...prev,
-          currentQuestion: newQuestion
-        }));
-      }, 0);
+      // Don't regenerate question - setting only affects future questions
     }
   };
 

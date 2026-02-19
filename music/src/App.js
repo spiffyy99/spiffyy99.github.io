@@ -1,10 +1,11 @@
 import "@/App.css";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Setup from "./pages/Setup";
 import Game from "./pages/Game";
 import Results from "./pages/Results";
-import Dashboard from "./pages/Dashboard";
+// Dashboard component kept for future use
+// import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -15,7 +16,10 @@ function App() {
           <Route path="/setup" element={<Setup />} />
           <Route path="/game" element={<Game />} />
           <Route path="/results" element={<Results />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Dashboard route disabled - redirects to home */}
+          {/* Uncomment below and import Dashboard to re-enable */}
+          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
     </div>

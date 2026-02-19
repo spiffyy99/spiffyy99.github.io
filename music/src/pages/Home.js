@@ -82,6 +82,7 @@ const Home = () => {
 
         {/* Quick Actions */}
         <div className="flex flex-wrap justify-center gap-4">
+          {/* Dashboard button - commented out for now
           <button
             data-testid="nav-dashboard"
             onClick={() => navigate('/dashboard')}
@@ -90,6 +91,7 @@ const Home = () => {
             <TrendingUp className="w-4 h-4" />
             Dashboard
           </button>
+          */}
         </div>
       </div>
     </div>
