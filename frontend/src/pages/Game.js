@@ -57,7 +57,19 @@ const Game = () => {
 
   // Generate new question
   const generateQuestion = useCallback(() => {
-    if (config.mode === 'intervals') {
+    if (config.mode === 'interval-transpose') {
+      // Interval transposition mode
+      const transposition = generateIntervalTransposition();
+      return {
+        question: transposition,
+        startNote: transposition.startNote,
+        interval: transposition.interval,
+        intervalFullName: transposition.intervalFullName,
+        direction: transposition.direction,
+        correctNote: transposition.correctNote,
+        type: 'interval-transpose'
+      };
+    } else if (config.mode === 'intervals') {
       // Interval recognition mode
       const notePair = generateRandomNotePair();
       return {
