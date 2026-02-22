@@ -496,6 +496,25 @@ const Game = () => {
               ))}
             </div>
           </div>
+        ) : config.mode === 'interval-transpose' ? (
+          <div className="max-w-4xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
+              Select Note
+            </p>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-3">
+              {ALL_NOTES.map((note) => (
+                <button
+                  key={note}
+                  data-testid={`note-button-${note}`}
+                  onClick={() => handleAnswer(note)}
+                  disabled={!gameState.isGameActive || gameState.feedback}
+                  className="h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-sm md:text-base font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  {note}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : config.mode === 'intervals' ? (
           <div className="max-w-4xl mx-auto">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
