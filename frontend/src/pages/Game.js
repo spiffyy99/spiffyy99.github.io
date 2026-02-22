@@ -516,11 +516,11 @@ const Game = () => {
             </div>
           </div>
         ) : config.mode === 'intervals' ? (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
               Select Interval
             </p>
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {INTERVALS.map((interval) => (
                 <button
                   key={interval.name}
