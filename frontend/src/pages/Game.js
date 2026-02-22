@@ -426,6 +426,7 @@ const Game = () => {
             {config.mode === 'number-to-chord' ? 'Select the chord for' :
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
+             config.mode === 'interval-transpose' ? 'Find the destination note' :
              'Transpose this chord'}
           </p>
           <div 
@@ -438,9 +439,23 @@ const Game = () => {
                 : 'bg-white border-[#002FA7]'
             }`}
           >
-            <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A] w-full text-center">
-              {gameState.currentQuestion.question}
-            </span>
+            {config.mode === 'interval-transpose' ? (
+              <div className="text-center">
+                <div className="text-5xl md:text-7xl font-bold text-[#1A1A1A] mb-3">
+                  {gameState.currentQuestion.startNote}
+                </div>
+                <div className="text-2xl text-[#9CA3AF] mb-2">
+                  {gameState.currentQuestion.direction === 'up' ? '↑' : '↓'}
+                </div>
+                <div className="text-xl font-medium text-[#002FA7]">
+                  {gameState.currentQuestion.intervalFullName}
+                </div>
+              </div>
+            ) : (
+              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A] w-full text-center">
+                {config.mode === 'interval-transpose' ? '' : gameState.currentQuestion.question}
+              </span>
+            )}
           </div>
         </div>
 
