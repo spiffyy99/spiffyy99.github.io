@@ -247,8 +247,8 @@ const Setup = () => {
             </div>
           )}
 
-          {/* Parallel Minor Chords Option - Not for Intervals mode */}
-          {mode !== 'intervals' && (
+          {/* Parallel Minor Chords Option - Not for Interval modes */}
+          {mode !== 'intervals' && mode !== 'interval-transpose' && (
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
                 Parallel Minor Chords
