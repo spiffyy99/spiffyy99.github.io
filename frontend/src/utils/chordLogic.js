@@ -259,15 +259,37 @@ export const getInterval = (note1, note2) => {
   return interval ? interval.name : null;
 };
 
-// Generate random note pair for interval practice
-export const generateRandomNotePair = () => {
-  const note1 = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
-  const intervalIndex = Math.floor(Math.random() * INTERVALS.length);
-  const interval = INTERVALS[intervalIndex];
+// Calculate destination note given start note, interval, and direction
+export const transposeByInterval = (startNote, intervalName, direction) => {
+  const startIndex = ALL_NOTES.indexOf(startNote);
+  if (startIndex === -1) return null;
   
-  const note1Index = ALL_NOTES.indexOf(note1);
-  const note2Index = (note1Index + interval.semitones) % 12;
-  const note2 = ALL_NOTES[note2Index];
+  const interval = INTERVALS.find(i => i.name === intervalName);
+  if (!interval) return null;
   
-  return { note1, note2, correctInterval: interval.name };
+  let destinationIndex;
+  if (direction === 'up') {
+    destinationIndex = (startIndex + interval.semitones) % 12;
+  } else {
+    destinationIndex = (startIndex - interval.semitones + 12) % 12;
+  }
+  
+  return ALL_NOTES[destinationIndex];
+};
+
+// Generate random interval transposition question
+export const generateIntervalTransposition = () => {
+  const startNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+  const interval = INTERVALS[Math.floor(Math.random() * INTERVALS.length)];
+  const direction = Math.random() > 0.5 ? 'up' : 'down';
+  
+  const correctNote = transposeByInterval(startNote, interval.name, direction);
+  
+  return {
+    startNote,
+    interval: interval.name,
+    intervalFullName: interval.fullName,
+    direction,
+    correctNote
+  };
 };
