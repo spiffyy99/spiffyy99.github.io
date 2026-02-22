@@ -38,7 +38,8 @@ const Setup = () => {
     if (mode === 'number-to-chord') return 'Number → Chord';
     if (mode === 'chord-to-number') return 'Chord → Number';
     if (mode === 'transposition') return 'Transposition';
-    return 'Interval Recognition';
+    if (mode === 'intervals') return 'Interval Recognition';
+    return 'Interval Transposition';
   };
 
   return (
