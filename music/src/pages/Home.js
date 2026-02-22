@@ -30,6 +30,12 @@ const Home = () => {
       title: 'Interval Recognition',
       description: 'Identify the interval between two notes',
       icon: Music
+    },
+    {
+      id: 'interval-transpose',
+      title: 'Interval Transposition',
+      description: 'Find the note given start note, interval, and direction',
+      icon: Music
     }
   ];
 
@@ -52,7 +58,7 @@ const Home = () => {
         </div>
 
         {/* Mode Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
           {modes.map((mode) => {
             const Icon = mode.icon;
             return (

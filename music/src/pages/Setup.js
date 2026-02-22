@@ -38,7 +38,8 @@ const Setup = () => {
     if (mode === 'number-to-chord') return 'Number → Chord';
     if (mode === 'chord-to-number') return 'Chord → Number';
     if (mode === 'transposition') return 'Transposition';
-    return 'Interval Recognition';
+    if (mode === 'intervals') return 'Interval Recognition';
+    return 'Interval Transposition';
   };
 
   return (
@@ -66,8 +67,8 @@ const Setup = () => {
 
         {/* Settings Cards */}
         <div className="space-y-6 mb-12">
-          {/* Interval Mode - Only Timer */}
-          {mode === 'intervals' ? (
+          {/* Interval Modes - Only Timer */}
+          {(mode === 'intervals' || mode === 'interval-transpose') ? (
             /* Timer Mode for Intervals */
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
@@ -246,8 +247,8 @@ const Setup = () => {
             </div>
           )}
 
-          {/* Parallel Minor Chords Option - Not for Intervals mode */}
-          {mode !== 'intervals' && (
+          {/* Parallel Minor Chords Option - Not for Interval modes */}
+          {mode !== 'intervals' && mode !== 'interval-transpose' && (
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
                 Parallel Minor Chords
@@ -285,7 +286,7 @@ const Setup = () => {
           )}
 
           {/* Timer Mode - Not shown for Intervals (already shown above) */}
-          {mode !== 'intervals' && (
+          {mode !== 'intervals' && mode !== 'interval-transpose' && (
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
                 Timer Mode

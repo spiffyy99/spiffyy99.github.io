@@ -7,6 +7,7 @@ import TimeUpModal from '../components/TimeUpModal';
 import {
   MAJOR_KEYS,
   ALL_CHORDS_DISPLAY,
+  ALL_NOTES,
   INTERVALS,
   getChordForNumber,
   getNumberForChord,
@@ -18,7 +19,9 @@ import {
   generateSessionId,
   chordsAreEqual,
   generateRandomNotePair,
-  getInterval
+  getInterval,
+  generateIntervalTransposition,
+  transposeByInterval
 } from '../utils/chordLogic';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -61,7 +64,19 @@ const Game = () => {
   // Generate new question
   const generateQuestion = useCallback(() => {
     const useParallelMinor = includeParallelMinorRef.current;
-    if (config.mode === 'intervals') {
+    if (config.mode === 'interval-transpose') {
+      // Interval transposition mode
+      const transposition = generateIntervalTransposition();
+      return {
+        question: transposition,
+        startNote: transposition.startNote,
+        interval: transposition.interval,
+        intervalFullName: transposition.intervalFullName,
+        direction: transposition.direction,
+        correctNote: transposition.correctNote,
+        type: 'interval-transpose'
+      };
+    } else if (config.mode === 'intervals') {
       // Interval recognition mode
       const notePair = generateRandomNotePair();
       return {
@@ -140,7 +155,9 @@ const Game = () => {
     const { currentQuestion } = gameState;
     let isCorrect = false;
 
-    if (config.mode === 'intervals') {
+    if (config.mode === 'interval-transpose') {
+      isCorrect = answer === currentQuestion.correctNote;
+    } else if (config.mode === 'intervals') {
       isCorrect = answer === currentQuestion.correctInterval;
     } else if (config.mode === 'number-to-chord') {
       const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeParallelMinor);
@@ -248,8 +265,8 @@ const Game = () => {
           </button>
 
           <div className="flex items-center gap-6">
-            {/* Settings Button (only in untimed mode and not for intervals) */}
-            {config.timerMode === 'untimed' && config.mode !== 'intervals' && (
+            {/* Settings Button (only in untimed mode and not for interval modes) */}
+            {config.timerMode === 'untimed' && config.mode !== 'intervals' && config.mode !== 'interval-transpose' && (
               <button
                 data-testid="settings-button"
                 onClick={() => setShowSettings(true)}
@@ -274,7 +291,7 @@ const Game = () => {
         </div>
 
         {/* Current Key Display - Not for intervals or transposition */}
-        {config.mode !== 'transposition' && config.mode !== 'intervals' && (
+        {config.mode !== 'transposition' && config.mode !== 'intervals' && config.mode !== 'interval-transpose' && (
           <div className="text-center mb-8">
             <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
               Current Key
@@ -422,9 +439,23 @@ const Game = () => {
                 : 'bg-white border-[#002FA7]'
             }`}
           >
-            <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A] w-full text-center">
-              {gameState.currentQuestion.question}
-            </span>
+            {config.mode === 'interval-transpose' ? (
+              <div className="text-center px-6">
+                <div className="text-6xl md:text-8xl font-bold text-[#1A1A1A] mb-4">
+                  {gameState.currentQuestion.startNote}
+                </div>
+                <div className="text-2xl font-medium text-[#002FA7] mb-2">
+                  {gameState.currentQuestion.direction === 'up' ? '↑ UP' : '↓ DOWN'}
+                </div>
+                <div className="text-xl font-medium text-[#9CA3AF]">
+                  {gameState.currentQuestion.intervalFullName}
+                </div>
+              </div>
+            ) : (
+              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A] w-full text-center">
+                {config.mode === 'interval-transpose' ? '' : gameState.currentQuestion.question}
+              </span>
+            )}
           </div>
         </div>
 
@@ -465,12 +496,31 @@ const Game = () => {
               ))}
             </div>
           </div>
+        ) : config.mode === 'interval-transpose' ? (
+          <div className="max-w-4xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
+              Select Note
+            </p>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-3">
+              {ALL_NOTES.map((note) => (
+                <button
+                  key={note}
+                  data-testid={`note-button-${note}`}
+                  onClick={() => handleAnswer(note)}
+                  disabled={!gameState.isGameActive || gameState.feedback}
+                  className="h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-sm md:text-base font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  {note}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : config.mode === 'intervals' ? (
           <div className="max-w-4xl mx-auto">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">
               Select Interval
             </p>
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {INTERVALS.map((interval) => (
                 <button
                   key={interval.name}
