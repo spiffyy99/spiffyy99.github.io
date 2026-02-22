@@ -285,8 +285,8 @@ const Setup = () => {
           </div>
           )}
 
-          {/* Timer Mode - Not shown for Intervals (already shown above) */}
-          {mode !== 'intervals' && (
+          {/* Timer Mode - Not shown for Interval modes (already shown above) */}
+          {mode !== 'intervals' && mode !== 'interval-transpose' && (
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
                 Timer Mode
