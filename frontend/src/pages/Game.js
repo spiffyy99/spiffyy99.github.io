@@ -147,7 +147,9 @@ const Game = () => {
     const { currentQuestion } = gameState;
     let isCorrect = false;
 
-    if (config.mode === 'intervals') {
+    if (config.mode === 'interval-transpose') {
+      isCorrect = answer === currentQuestion.correctNote;
+    } else if (config.mode === 'intervals') {
       isCorrect = answer === currentQuestion.correctInterval;
     } else if (config.mode === 'number-to-chord') {
       const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeParallelMinor);
