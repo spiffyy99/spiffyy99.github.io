@@ -240,7 +240,11 @@ export const INTERVALS = [
   { name: 'M6', fullName: 'Major 6th', semitones: 9 },
   { name: 'm7', fullName: 'Minor 7th', semitones: 10 },
   { name: 'M7', fullName: 'Major 7th', semitones: 11 },
-  { name: 'P8', fullName: 'Octave', semitones: 12 }
+  { name: 'P8', fullName: 'Octave', semitones: 12 },
+  { name: 'm9', fullName: 'Minor 9th', semitones: 13 },
+  { name: 'M9', fullName: 'Major 9th', semitones: 14 },
+  { name: 'P11', fullName: 'Perfect 11th', semitones: 17 },
+  { name: 'M13', fullName: 'Major 13th', semitones: 21 }
 ];
 
 // Get interval between two notes
