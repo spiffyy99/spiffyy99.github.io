@@ -440,14 +440,14 @@ const Game = () => {
             }`}
           >
             {config.mode === 'interval-transpose' ? (
-              <div className="text-center">
-                <div className="text-5xl md:text-7xl font-bold text-[#1A1A1A] mb-3">
+              <div className="text-center px-6">
+                <div className="text-6xl md:text-8xl font-bold text-[#1A1A1A] mb-4">
                   {gameState.currentQuestion.startNote}
                 </div>
-                <div className="text-2xl text-[#9CA3AF] mb-2">
-                  {gameState.currentQuestion.direction === 'up' ? '↑' : '↓'}
+                <div className="text-2xl font-medium text-[#002FA7] mb-2">
+                  {gameState.currentQuestion.direction === 'up' ? '↑ UP' : '↓ DOWN'}
                 </div>
-                <div className="text-xl font-medium text-[#002FA7]">
+                <div className="text-xl font-medium text-[#9CA3AF]">
                   {gameState.currentQuestion.intervalFullName}
                 </div>
               </div>
