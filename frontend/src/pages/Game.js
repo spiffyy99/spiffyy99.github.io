@@ -290,7 +290,7 @@ const Game = () => {
         </div>
 
         {/* Current Key Display - Not for intervals or transposition */}
-        {config.mode !== 'transposition' && config.mode !== 'intervals' && (
+        {config.mode !== 'transposition' && config.mode !== 'intervals' && config.mode !== 'interval-transpose' && (
           <div className="text-center mb-8">
             <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
               Current Key
