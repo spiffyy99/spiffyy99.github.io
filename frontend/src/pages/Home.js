@@ -30,6 +30,12 @@ const Home = () => {
       title: 'Interval Recognition',
       description: 'Identify the interval between two notes',
       icon: Music
+    },
+    {
+      id: 'interval-transpose',
+      title: 'Interval Transposition',
+      description: 'Find the note given start note, interval, and direction',
+      icon: Music
     }
   ];
 
