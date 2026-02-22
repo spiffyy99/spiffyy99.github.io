@@ -240,7 +240,11 @@ export const INTERVALS = [
   { name: 'M6', fullName: 'Major 6th', semitones: 9 },
   { name: 'm7', fullName: 'Minor 7th', semitones: 10 },
   { name: 'M7', fullName: 'Major 7th', semitones: 11 },
-  { name: 'P8', fullName: 'Octave', semitones: 12 }
+  { name: 'P8', fullName: 'Octave', semitones: 12 },
+  { name: 'm9', fullName: 'Minor 9th', semitones: 13 },
+  { name: 'M9', fullName: 'Major 9th', semitones: 14 },
+  { name: 'P11', fullName: 'Perfect 11th', semitones: 17 },
+  { name: 'M13', fullName: 'Major 13th', semitones: 21 }
 ];
 
 // Get interval between two notes
@@ -270,4 +274,40 @@ export const generateRandomNotePair = () => {
   const note2 = ALL_NOTES[note2Index];
   
   return { note1, note2, correctInterval: interval.name };
+};
+
+// Calculate destination note given start note, interval, and direction
+export const transposeByInterval = (startNote, intervalName, direction) => {
+  const startIndex = ALL_NOTES.indexOf(startNote);
+  if (startIndex === -1) return null;
+  
+  const interval = INTERVALS.find(i => i.name === intervalName);
+  if (!interval) return null;
+  
+  let destinationIndex;
+  if (direction === 'up') {
+    destinationIndex = (startIndex + interval.semitones) % 12;
+  } else {
+    // For down, we need to handle wrapping correctly
+    destinationIndex = (startIndex - (interval.semitones % 12) + 12) % 12;
+  }
+  
+  return ALL_NOTES[destinationIndex];
+};
+
+// Generate random interval transposition question
+export const generateIntervalTransposition = () => {
+  const startNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+  const interval = INTERVALS[Math.floor(Math.random() * INTERVALS.length)];
+  const direction = Math.random() > 0.5 ? 'up' : 'down';
+  
+  const correctNote = transposeByInterval(startNote, interval.name, direction);
+  
+  return {
+    startNote,
+    interval: interval.name,
+    intervalFullName: interval.fullName,
+    direction,
+    correctNote
+  };
 };
