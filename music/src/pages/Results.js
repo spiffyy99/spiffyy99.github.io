@@ -96,15 +96,6 @@ const Results = () => {
             </button>
 
             <button
-              data-testid="dashboard-button"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center justify-center gap-2 rounded-none border-2 border-[#002FA7] bg-transparent text-[#002FA7] hover:bg-[#002FA7] hover:text-white transition-all duration-200 font-bold uppercase tracking-wider text-sm px-6 py-3"
-            >
-              <TrendingUp className="w-4 h-4" />
-              Dashboard
-            </button>
-
-            <button
               data-testid="home-button"
               onClick={() => navigate('/')}
               className="flex items-center justify-center gap-2 rounded-none border-2 border-[#E5E7EB] bg-transparent text-[#1A1A1A] hover:border-[#1A1A1A] transition-all duration-200 font-bold uppercase tracking-wider text-sm px-6 py-3"
