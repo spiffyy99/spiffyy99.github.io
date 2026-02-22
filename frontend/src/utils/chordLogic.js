@@ -288,7 +288,8 @@ export const transposeByInterval = (startNote, intervalName, direction) => {
   if (direction === 'up') {
     destinationIndex = (startIndex + interval.semitones) % 12;
   } else {
-    destinationIndex = (startIndex - interval.semitones + 12) % 12;
+    // For down, we need to handle wrapping correctly
+    destinationIndex = (startIndex - (interval.semitones % 12) + 12) % 12;
   }
   
   return ALL_NOTES[destinationIndex];
