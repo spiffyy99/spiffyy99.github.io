@@ -67,8 +67,8 @@ const Setup = () => {
 
         {/* Settings Cards */}
         <div className="space-y-6 mb-12">
-          {/* Interval Mode - Only Timer */}
-          {mode === 'intervals' ? (
+          {/* Interval Modes - Only Timer */}
+          {(mode === 'intervals' || mode === 'interval-transpose') ? (
             /* Timer Mode for Intervals */
             <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
               <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">
