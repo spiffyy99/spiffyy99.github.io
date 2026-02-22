@@ -404,7 +404,7 @@ const Game = () => {
           </div>
         )}
 
-        {/* Question Display - Fixed size to prevent glitching */}
+        {/* Question Display */}
         <div className="mb-12 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-4">
             {config.mode === 'number-to-chord' ? 'Select the chord for' :
@@ -414,7 +414,7 @@ const Game = () => {
           </p>
           <div 
             data-testid="question-display"
-            className={`inline-flex items-center justify-center w-[420px] h-[200px] border-4 rounded-sm transition-colors duration-150 ${
+            className={`inline-flex items-center justify-center w-full max-w-xs sm:max-w-md md:w-[420px] h-[200px] border-4 rounded-sm transition-colors duration-150 ${
               gameState.feedback === 'correct' 
                 ? 'bg-green-100 border-green-500'
                 : gameState.feedback === 'incorrect'
