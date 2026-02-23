@@ -158,7 +158,9 @@ const Game = () => {
     if (config.mode === 'interval-transpose') {
       isCorrect = answer === currentQuestion.correctNote;
     } else if (config.mode === 'intervals') {
-      isCorrect = answer === currentQuestion.correctInterval;
+      let correctIntervalSemitones = INTERVALS.find(i => i.name === currentQuestion.correctInterval)?.semitones % 12;
+      let answerIntervalSemitones = INTERVALS.find(i => i.name === answer)?.semitones % 12;
+      isCorrect = correctIntervalSemitones === answerIntervalSemitones;
     } else if (config.mode === 'number-to-chord') {
       const correctChord = getChordForNumber(currentQuestion.key, currentQuestion.question, includeParallelMinor);
       isCorrect = chordsAreEqual(answer, correctChord);

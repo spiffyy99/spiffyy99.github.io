@@ -266,7 +266,11 @@ export const getInterval = (note1, note2) => {
 // Generate random note pair for interval practice
 export const generateRandomNotePair = () => {
   const note1 = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
-  const intervalIndex = Math.floor(Math.random() * INTERVALS.length);
+  let intervalIndex = Math.floor(Math.random() * INTERVALS.length);
+  if (INTERVALS[intervalIndex].semitones > 12) {
+    let baseSemitones = INTERVALS[intervalIndex].semitones % 12;
+    intervalIndex = INTERVALS.findIndex(i => i.semitones === baseSemitones);
+  }
   const interval = INTERVALS[intervalIndex];
   
   const note1Index = ALL_NOTES.indexOf(note1);
