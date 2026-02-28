@@ -1,232 +1,236 @@
-// Consolidated major keys with dual names where applicable
-export const MAJOR_KEYS = {
-  'C': {
-    name: 'C',
-    chords: ['C', 'Dm', 'Em', 'F', 'G', 'Am']
+// ===== CORE DATA =====
+
+export const ALL_NOTES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
+
+export const SCALE_TYPES = {
+  major: {
+    name: 'Major',
+    intervals: [0, 2, 4, 5, 7, 9, 11],
+    qualities: ['major', 'minor', 'minor', 'major', 'major', 'minor', 'dim']
   },
-  'C#/Db': {
-    name: 'C#/Db',
-    chords: ['C#/Db', 'D#m/Ebm', 'E#m/Fm', 'F#/Gb', 'G#/Ab', 'A#m/Bbm']
+  naturalMinor: {
+    name: 'Natural Minor',
+    intervals: [0, 2, 3, 5, 7, 8, 10],
+    qualities: ['minor', 'dim', 'major', 'minor', 'minor', 'major', 'major']
   },
-  'D': {
-    name: 'D',
-    chords: ['D', 'Em', 'F#m', 'G', 'A', 'Bm']
+  harmonicMinor: {
+    name: 'Harmonic Minor',
+    intervals: [0, 2, 3, 5, 7, 8, 11],
+    qualities: ['minor', 'dim', 'aug', 'minor', 'major', 'major', 'dim']
   },
-  'D#/Eb': {
-    name: 'D#/Eb',
-    chords: ['D#/Eb', 'Fm', 'Gm', 'G#/Ab', 'A#/Bb', 'Cm']
+  dorian: {
+    name: 'Dorian',
+    intervals: [0, 2, 3, 5, 7, 9, 10],
+    qualities: ['minor', 'minor', 'major', 'major', 'minor', 'dim', 'major']
   },
-  'E': {
-    name: 'E',
-    chords: ['E', 'F#m', 'G#m', 'A', 'B', 'C#m']
+  phrygian: {
+    name: 'Phrygian',
+    intervals: [0, 1, 3, 5, 7, 8, 10],
+    qualities: ['minor', 'major', 'major', 'minor', 'dim', 'major', 'minor']
   },
-  'F': {
-    name: 'F',
-    chords: ['F', 'Gm', 'Am', 'A#/Bb', 'C', 'Dm']
+  lydian: {
+    name: 'Lydian',
+    intervals: [0, 2, 4, 6, 7, 9, 11],
+    qualities: ['major', 'major', 'minor', 'dim', 'major', 'minor', 'minor']
   },
-  'F#/Gb': {
-    name: 'F#/Gb',
-    chords: ['F#/Gb', 'G#m/Abm', 'A#m/Bbm', 'B', 'C#/Db', 'D#m/Ebm']
-  },
-  'G': {
-    name: 'G',
-    chords: ['G', 'Am', 'Bm', 'C', 'D', 'Em']
-  },
-  'G#/Ab': {
-    name: 'G#/Ab',
-    chords: ['G#/Ab', 'A#m/Bbm', 'Cm', 'C#/Db', 'D#/Eb', 'Fm']
-  },
-  'A': {
-    name: 'A',
-    chords: ['A', 'Bm', 'C#m', 'D', 'E', 'F#m']
-  },
-  'A#/Bb': {
-    name: 'A#/Bb',
-    chords: ['A#/Bb', 'Cm', 'Dm', 'D#/Eb', 'F', 'Gm']
-  },
-  'B': {
-    name: 'B',
-    chords: ['B', 'C#m', 'D#m', 'E', 'F#/Gb', 'G#m']
+  mixolydian: {
+    name: 'Mixolydian',
+    intervals: [0, 2, 4, 5, 7, 9, 10],
+    qualities: ['major', 'minor', 'dim', 'major', 'minor', 'minor', 'major']
   }
 };
 
-// Borrowed chords from parallel minor (for each major key) - only major/minor, no diminished
-export const PARALLEL_MINOR_CHORDS = {
-  'C': ['Cm', 'D#/Eb', 'Fm', 'Gm', 'G#/Ab', 'A#/Bb'],
-  'C#/Db': ['C#m/Dbm', 'E', 'F#m/Gbm', 'G#m/Abm', 'A', 'B'],
-  'D': ['Dm', 'F', 'Gm', 'Am', 'A#/Bb', 'C'],
-  'D#/Eb': ['D#m/Ebm', 'F#/Gb', 'G#m/Abm', 'A#m/Bbm', 'B', 'C#/Db'],
-  'E': ['Em', 'G', 'Am', 'Bm', 'C', 'D'],
-  'F': ['Fm', 'G#/Ab', 'A#m/Bbm', 'Cm', 'C#/Db', 'D#/Eb'],
-  'F#/Gb': ['F#m/Gbm', 'A', 'Bm', 'C#m/Dbm', 'D', 'E'],
-  'G': ['Gm', 'A#/Bb', 'Cm', 'Dm', 'D#/Eb', 'F'],
-  'G#/Ab': ['G#m/Abm', 'B', 'C#m/Dbm', 'D#m/Ebm', 'E', 'F#/Gb'],
-  'A': ['Am', 'C', 'Dm', 'Em', 'F', 'G'],
-  'A#/Bb': ['A#m/Bbm', 'C#/Db', 'D#m/Ebm', 'Fm', 'F#/Gb', 'G#/Ab'],
-  'B': ['Bm', 'D', 'Em', 'F#m', 'G', 'A']
+export const DEGREE_NUMBERS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+
+const QUALITY_SUFFIX = {
+  major: '',
+  minor: 'm',
+  dim: 'dim',
+  aug: 'aug'
 };
 
-// Roman numeral labels for diatonic and parallel minor chords
-export const DIATONIC_LABELS = ['I', 'ii', 'iii', 'IV', 'V', 'vi'];
-export const PARALLEL_MINOR_LABELS = ['i', '♭III', 'iv', 'v', '♭VI', '♭VII'];
-
-// All 24 chords with dual names
-export const ALL_CHORDS_DISPLAY = [
-  'C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B',
-  'Cm', 'C#m/Dbm', 'Dm', 'D#m/Ebm', 'Em', 'Fm', 'F#m/Gbm', 'Gm', 'G#m/Abm', 'Am', 'A#m/Bbm', 'Bm'
+// Borrowed chord definitions (from parallel minor, for major scale context only)
+export const BORROWED_CHORD_DEFS = [
+  { degree: 0, chordQuality: 'minor', answerQuality: 'minor', flat: false },
+  { degree: 2, chordQuality: 'major', answerQuality: 'flat', flat: true },
+  { degree: 3, chordQuality: 'minor', answerQuality: 'minor', flat: false },
+  { degree: 4, chordQuality: 'minor', answerQuality: 'minor', flat: false },
+  { degree: 5, chordQuality: 'major', answerQuality: 'flat', flat: true },
+  { degree: 6, chordQuality: 'major', answerQuality: 'flat', flat: true },
 ];
 
-// Get the chord for a given key and roman numeral
-export const getChordForNumber = (key, romanNumeral, includeParallelMinor = false) => {
-  const keyData = MAJOR_KEYS[key];
-  if (!keyData) return null;
-  
-  // Find index in appropriate label array
-  const diatonicIndex = DIATONIC_LABELS.indexOf(romanNumeral);
-  if (diatonicIndex >= 0) {
-    return keyData.chords[diatonicIndex] || null;
+// ===== DISPLAY FUNCTIONS =====
+
+export const formatRomanNumeral = (degreeIndex, quality, flat = false) => {
+  const base = DEGREE_NUMBERS[degreeIndex];
+  const prefix = flat ? '\u266D' : '';
+  switch (quality) {
+    case 'major': return prefix + base;
+    case 'minor': return prefix + base.toLowerCase();
+    case 'dim': return prefix + base.toLowerCase() + '\u00B0';
+    case 'aug': return prefix + base + '+';
+    default: return prefix + base;
   }
-  
-  if (includeParallelMinor) {
-    const parallelIndex = PARALLEL_MINOR_LABELS.indexOf(romanNumeral);
-    if (parallelIndex >= 0) {
-      const parallelChords = PARALLEL_MINOR_CHORDS[key];
-      return parallelChords ? parallelChords[parallelIndex] : null;
-    }
+};
+
+export const buildChordDisplay = (note, quality) => {
+  const suffix = QUALITY_SUFFIX[quality];
+  if (note.includes('/')) {
+    const parts = note.split('/');
+    return parts.map(p => p + suffix).join('/');
   }
-  
-  return null;
+  return note + suffix;
 };
 
-// Enharmonic equivalents mapping
-const ENHARMONIC_MAP = {
-  'C#': 'C#/Db',
-  'Db': 'C#/Db',
-  'D#': 'D#/Eb',
-  'Eb': 'D#/Eb',
-  'F#': 'F#/Gb',
-  'Gb': 'F#/Gb',
-  'G#': 'G#/Ab',
-  'Ab': 'G#/Ab',
-  'A#': 'A#/Bb',
-  'Bb': 'A#/Bb',
-  'C#m': 'C#m/Dbm',
-  'Dbm': 'C#m/Dbm',
-  'D#m': 'D#m/Ebm',
-  'Ebm': 'D#m/Ebm',
-  'F#m': 'F#m/Gbm',
-  'Gbm': 'F#m/Gbm',
-  'G#m': 'G#m/Abm',
-  'Abm': 'G#m/Abm',
-  'A#m': 'A#m/Bbm',
-  'Bbm': 'A#m/Bbm',
-  'E#m': 'Fm'
+// ===== SCALE FUNCTIONS =====
+
+export const getNoteAtDegree = (rootNote, scaleType, degreeIndex) => {
+  const rootIndex = ALL_NOTES.indexOf(rootNote);
+  if (rootIndex === -1) return null;
+  const scale = SCALE_TYPES[scaleType];
+  if (!scale || degreeIndex < 0 || degreeIndex >= 7) return null;
+  return ALL_NOTES[(rootIndex + scale.intervals[degreeIndex]) % 12];
 };
 
-// Normalize chord to handle enharmonic equivalents
-export const normalizeChord = (chord) => {
-  if (!chord) return chord;
-  return ENHARMONIC_MAP[chord] || chord;
+export const getChordAtDegree = (rootNote, scaleType, degreeIndex) => {
+  const note = getNoteAtDegree(rootNote, scaleType, degreeIndex);
+  if (!note) return null;
+  const quality = SCALE_TYPES[scaleType].qualities[degreeIndex];
+  return {
+    note,
+    noteIndex: ALL_NOTES.indexOf(note),
+    quality,
+    degreeIndex,
+    romanNumeral: formatRomanNumeral(degreeIndex, quality, false)
+  };
 };
 
-// Compare two chords considering enharmonic equivalents
-export const chordsAreEqual = (chord1, chord2) => {
-  return normalizeChord(chord1) === normalizeChord(chord2);
+export const getScaleChords = (rootNote, scaleType) => {
+  return Array.from({ length: 7 }, (_, i) => getChordAtDegree(rootNote, scaleType, i));
 };
 
-// Get the roman numeral for a given chord in a key (with enharmonic support)
-export const getNumberForChord = (key, chord, includeParallelMinor = false) => {
-  const keyData = MAJOR_KEYS[key];
-  if (!keyData) return null;
-  
-  const normalizedChord = normalizeChord(chord);
-  
-  // Check diatonic chords
-  for (let i = 0; i < keyData.chords.length; i++) {
-    if (chordsAreEqual(keyData.chords[i], normalizedChord)) {
-      return DIATONIC_LABELS[i];
-    }
+// ===== BORROWED CHORD FUNCTIONS =====
+
+export const getBorrowedChord = (rootNote, borrowedDef) => {
+  const rootIndex = ALL_NOTES.indexOf(rootNote);
+  if (rootIndex === -1) return null;
+  const majorScale = SCALE_TYPES.major;
+  let noteIndex = (rootIndex + majorScale.intervals[borrowedDef.degree]) % 12;
+  if (borrowedDef.flat) {
+    noteIndex = (noteIndex - 1 + 12) % 12;
   }
-  
-  // Check parallel minor chords if enabled
-  if (includeParallelMinor) {
-    const parallelChords = PARALLEL_MINOR_CHORDS[key];
-    if (parallelChords) {
-      for (let i = 0; i < parallelChords.length; i++) {
-        if (chordsAreEqual(parallelChords[i], normalizedChord)) {
-          return PARALLEL_MINOR_LABELS[i];
-        }
-      }
-    }
+  return {
+    note: ALL_NOTES[noteIndex],
+    noteIndex,
+    quality: borrowedDef.chordQuality,
+    degreeIndex: borrowedDef.degree,
+    answerQuality: borrowedDef.answerQuality,
+    flat: borrowedDef.flat,
+    romanNumeral: formatRomanNumeral(borrowedDef.degree, borrowedDef.chordQuality, borrowedDef.flat)
+  };
+};
+
+// ===== GAME LOGIC =====
+
+export const getRandomScale = (enabledScaleTypes) => {
+  const types = enabledScaleTypes && enabledScaleTypes.length > 0 ? enabledScaleTypes : ['major'];
+  const scaleType = types[Math.floor(Math.random() * types.length)];
+  const rootNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+  return { rootNote, scaleType };
+};
+
+export const getRandomDegree = () => Math.floor(Math.random() * 7);
+
+const getRandomBorrowedDef = () => {
+  return BORROWED_CHORD_DEFS[Math.floor(Math.random() * BORROWED_CHORD_DEFS.length)];
+};
+
+// Question generators
+
+export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false) => {
+  if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
+    const def = getRandomBorrowedDef();
+    const borrowed = getBorrowedChord(rootNote, def);
+    return {
+      type: 'number-to-chord',
+      scale: { rootNote, scaleType },
+      romanNumeral: borrowed.romanNumeral,
+      correctNoteIndex: borrowed.noteIndex,
+      correctQuality: borrowed.quality,
+      isBorrowed: true
+    };
   }
-  
-  return null;
+  const deg = getRandomDegree();
+  const chord = getChordAtDegree(rootNote, scaleType, deg);
+  return {
+    type: 'number-to-chord',
+    scale: { rootNote, scaleType },
+    romanNumeral: chord.romanNumeral,
+    correctNoteIndex: chord.noteIndex,
+    correctQuality: chord.quality,
+    isBorrowed: false
+  };
 };
 
-// Get a random key
-export const getRandomKey = () => {
-  const keys = Object.keys(MAJOR_KEYS);
-  return keys[Math.floor(Math.random() * keys.length)];
-};
-
-// Get a random roman numeral (I-vi or with parallel minor)
-export const getRandomNumber = (includeParallelMinor = false) => {
-  const allLabels = includeParallelMinor 
-    ? [...DIATONIC_LABELS, ...PARALLEL_MINOR_LABELS]
-    : DIATONIC_LABELS;
-  return allLabels[Math.floor(Math.random() * allLabels.length)];
-};
-
-// Get all available roman numerals
-export const getAllRomanNumerals = (includeParallelMinor = false) => {
-  return includeParallelMinor 
-    ? [...DIATONIC_LABELS, ...PARALLEL_MINOR_LABELS]
-    : DIATONIC_LABELS;
-};
-
-// Transpose a chord from source key to target key
-export const transposeChord = (chord, sourceKey, targetKey) => {
-  // Find the position of the chord in source key
-  const sourceKeyData = MAJOR_KEYS[sourceKey];
-  const targetKeyData = MAJOR_KEYS[targetKey];
-  
-  if (!sourceKeyData || !targetKeyData) return null;
-  
-  // Check diatonic chords
-  const normalizedChord = normalizeChord(chord);
-  for (let i = 0; i < sourceKeyData.chords.length; i++) {
-    if (chordsAreEqual(sourceKeyData.chords[i], normalizedChord)) {
-      return targetKeyData.chords[i];
-    }
+export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false) => {
+  if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
+    const def = getRandomBorrowedDef();
+    const borrowed = getBorrowedChord(rootNote, def);
+    return {
+      type: 'chord-to-number',
+      scale: { rootNote, scaleType },
+      chordDisplay: buildChordDisplay(borrowed.note, borrowed.quality),
+      correctDegree: borrowed.degreeIndex,
+      correctAnswerQuality: borrowed.answerQuality,
+      isBorrowed: true
+    };
   }
-  
-  // Check parallel minor chords
-  const sourceparallel = PARALLEL_MINOR_CHORDS[sourceKey];
-  const targetparallel = PARALLEL_MINOR_CHORDS[targetKey];
-  if (sourceparallel && targetparallel) {
-    for (let i = 0; i < sourceparallel.length; i++) {
-      if (chordsAreEqual(sourceparallel[i], normalizedChord)) {
-        return targetparallel[i];
-      }
-    }
+  const deg = getRandomDegree();
+  const chord = getChordAtDegree(rootNote, scaleType, deg);
+  return {
+    type: 'chord-to-number',
+    scale: { rootNote, scaleType },
+    chordDisplay: buildChordDisplay(chord.note, chord.quality),
+    correctDegree: deg,
+    correctAnswerQuality: chord.quality,
+    isBorrowed: false
+  };
+};
+
+export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false) => {
+  if (includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major' && Math.random() < 0.25) {
+    const def = getRandomBorrowedDef();
+    const sourceBorrowed = getBorrowedChord(sourceRoot, def);
+    const targetBorrowed = getBorrowedChord(targetRoot, def);
+    return {
+      type: 'transposition',
+      sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+      targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+      chordDisplay: buildChordDisplay(sourceBorrowed.note, sourceBorrowed.quality),
+      correctNoteIndex: targetBorrowed.noteIndex,
+      correctQuality: targetBorrowed.quality,
+      isBorrowed: true
+    };
   }
-  
-  return null;
+  const deg = getRandomDegree();
+  const sourceChord = getChordAtDegree(sourceRoot, sourceScaleType, deg);
+  const targetChord = getChordAtDegree(targetRoot, targetScaleType, deg);
+  return {
+    type: 'transposition',
+    sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+    targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+    chordDisplay: buildChordDisplay(sourceChord.note, sourceChord.quality),
+    correctNoteIndex: targetChord.noteIndex,
+    correctQuality: targetChord.quality,
+    isBorrowed: false
+  };
 };
 
-// Get a random chord from a key (including parallel minor if enabled)
-export const getRandomChordFromKey = (key, includeParallelMinor = false) => {
-  const romanNumeral = getRandomNumber(includeParallelMinor);
-  return getChordForNumber(key, romanNumeral, includeParallelMinor);
-};
-
-// Generate unique session ID
 export const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-// Interval logic for the fourth mode
-export const ALL_NOTES = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'];
+// ===== INTERVAL LOGIC (unchanged) =====
 
 export const INTERVALS = [
   { name: 'm2', fullName: 'Minor 2nd', semitones: 1 },
@@ -247,23 +251,17 @@ export const INTERVALS = [
   { name: 'M13', fullName: 'Major 13th', semitones: 21 }
 ];
 
-// Get interval between two notes
 export const getInterval = (note1, note2) => {
   const index1 = ALL_NOTES.indexOf(note1);
   const index2 = ALL_NOTES.indexOf(note2);
-  
   if (index1 === -1 || index2 === -1) return null;
-  
-  // Calculate semitones (can go up to 12 for octave)
   let semitones = index2 - index1;
   if (semitones < 0) semitones += 12;
-  if (semitones === 0) semitones = 12; // Same note = octave
-  
+  if (semitones === 0) semitones = 12;
   const interval = INTERVALS.find(i => i.semitones === semitones);
   return interval ? interval.name : null;
 };
 
-// Generate random note pair for interval practice
 export const generateRandomNotePair = () => {
   const note1 = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
   let intervalIndex = Math.floor(Math.random() * INTERVALS.length);
@@ -272,41 +270,31 @@ export const generateRandomNotePair = () => {
     intervalIndex = INTERVALS.findIndex(i => i.semitones === baseSemitones);
   }
   const interval = INTERVALS[intervalIndex];
-  
   const note1Index = ALL_NOTES.indexOf(note1);
   const note2Index = (note1Index + interval.semitones) % 12;
   const note2 = ALL_NOTES[note2Index];
-  
   return { note1, note2, correctInterval: interval.name };
 };
 
-// Calculate destination note given start note, interval, and direction
 export const transposeByInterval = (startNote, intervalName, direction) => {
   const startIndex = ALL_NOTES.indexOf(startNote);
   if (startIndex === -1) return null;
-  
   const interval = INTERVALS.find(i => i.name === intervalName);
   if (!interval) return null;
-  
   let destinationIndex;
   if (direction === 'up') {
     destinationIndex = (startIndex + interval.semitones) % 12;
   } else {
-    // For down, we need to handle wrapping correctly
     destinationIndex = (startIndex - (interval.semitones % 12) + 12) % 12;
   }
-  
   return ALL_NOTES[destinationIndex];
 };
 
-// Generate random interval transposition question
 export const generateIntervalTransposition = () => {
   const startNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
   const interval = INTERVALS[Math.floor(Math.random() * INTERVALS.length)];
   const direction = Math.random() > 0.5 ? 'up' : 'down';
-  
   const correctNote = transposeByInterval(startNote, interval.name, direction);
-  
   return {
     startNote,
     interval: interval.name,
