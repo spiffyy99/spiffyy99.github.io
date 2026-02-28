@@ -4,6 +4,7 @@ import { ArrowLeft, Timer as TimerIcon, Trophy, Settings as SettingsIcon } from 
 import axios from 'axios';
 import SettingsModal from '../components/SettingsModal';
 import TimeUpModal from '../components/TimeUpModal';
+import ThemeToggle from '../components/ThemeToggle';
 import {
   ALL_NOTES,
   SCALE_TYPES,
@@ -16,11 +17,23 @@ import {
   generateTranspositionQuestion,
   generateRandomNotePair,
   generateIntervalTransposition,
-  transposeByInterval,
+  buildChordDisplay,
+  formatRomanNumeral,
 } from '../utils/chordLogic';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+const randomRoot = () => ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+
+// Dynamic font size for question text
+const questionTextClass = (text) => {
+  if (!text) return 'text-5xl md:text-7xl';
+  if (text.length > 14) return 'text-2xl md:text-4xl';
+  if (text.length > 10) return 'text-3xl md:text-5xl';
+  if (text.length > 6) return 'text-4xl md:text-6xl';
+  return 'text-5xl md:text-7xl';
+};
 
 const Game = () => {
   const navigate = useNavigate();
@@ -36,14 +49,14 @@ const Game = () => {
   useEffect(() => { enabledScaleTypesRef.current = enabledScaleTypes; }, [enabledScaleTypes]);
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
 
-  // Quality switch for answer input
+  // Quality switch
   const [selectedQuality, setSelectedQuality] = useState('major');
 
   // Modals
   const [showSettings, setShowSettings] = useState(false);
   const [showTimeUp, setShowTimeUp] = useState(false);
 
-  // Compute initial scale
+  // Initial scale computation
   const getInitialScale = () => {
     if (config.mode === 'transposition') return null;
     if (config.scaleSelection === 'random') {
@@ -60,8 +73,8 @@ const Game = () => {
       : null,
     targetScale: config.mode === 'transposition'
       ? (config.targetScaleSelection === 'random'
-        ? getRandomScale(config.enabledScaleTypes || ['major'])
-        : { rootNote: config.targetRoot || 'D', scaleType: config.targetScaleType || 'major' })
+        ? { rootNote: randomRoot(), scaleType: config.sourceScaleType || 'major' }
+        : { rootNote: config.targetRoot || 'D', scaleType: config.sourceScaleType || 'major' })
       : null,
     currentQuestion: null,
     score: 0,
@@ -97,10 +110,11 @@ const Game = () => {
     }
     if (config.mode === 'transposition') {
       const source = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
-      const target = config.targetScaleSelection === 'random'
-        ? getRandomScale(scaleTypes)
-        : (gameState.targetScale || { rootNote: 'D', scaleType: 'major' });
-      return generateTranspositionQuestion(source.rootNote, source.scaleType, target.rootNote, target.scaleType, borrowed);
+      const sharedType = source.scaleType;
+      const targetRootNote = config.targetScaleSelection === 'random'
+        ? randomRoot()
+        : (gameState.targetScale?.rootNote || 'D');
+      return generateTranspositionQuestion(source.rootNote, sharedType, targetRootNote, sharedType, borrowed);
     }
     return null;
   }, [config.mode, config.scaleSelection, config.targetScaleSelection, gameState.currentScale, gameState.sourceScale, gameState.targetScale]);
@@ -140,7 +154,25 @@ const Game = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.timerMode, gameState.isGameActive, gameState.timeRemaining]);
 
-  // Submit answer and advance
+  // Correct answer display text
+  const getCorrectAnswerText = () => {
+    const q = gameState.currentQuestion;
+    if (!q) return '';
+    if (q.type === 'number-to-chord' || q.type === 'transposition') {
+      return buildChordDisplay(ALL_NOTES[q.correctNoteIndex], q.correctQuality);
+    }
+    if (q.type === 'chord-to-number') {
+      if (q.correctAnswerQuality === 'flat') {
+        return formatRomanNumeral(q.correctDegree, 'major', true);
+      }
+      return formatRomanNumeral(q.correctDegree, q.correctAnswerQuality, false);
+    }
+    if (q.type === 'interval') return q.correctInterval;
+    if (q.type === 'interval-transpose') return q.correctNote;
+    return '';
+  };
+
+  // Submit answer
   const submitAnswer = (isCorrect) => {
     setGameState(prev => ({
       ...prev,
@@ -163,28 +195,24 @@ const Game = () => {
           }));
         }
       }
-    }, 500);
+    }, 800);
   };
 
-  // Mode 1 & 3: user clicks root note button
+  // Answer handlers
   const handleNoteAnswer = (noteIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
     if (!q) return;
-    const isCorrect = noteIndex === q.correctNoteIndex && selectedQuality === q.correctQuality;
-    submitAnswer(isCorrect);
+    submitAnswer(noteIndex === q.correctNoteIndex && selectedQuality === q.correctQuality);
   };
 
-  // Mode 2: user clicks degree button
   const handleDegreeAnswer = (degreeIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
     if (!q) return;
-    const isCorrect = degreeIndex === q.correctDegree && selectedQuality === q.correctAnswerQuality;
-    submitAnswer(isCorrect);
+    submitAnswer(degreeIndex === q.correctDegree && selectedQuality === q.correctAnswerQuality);
   };
 
-  // Interval modes
   const handleIntervalAnswer = (answer) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
@@ -200,16 +228,15 @@ const Game = () => {
     submitAnswer(isCorrect);
   };
 
-  // Save game session
+  // Save session
   const saveGameSession = async () => {
     try {
       const accuracy = gameState.totalQuestions > 0
-        ? (gameState.correctAnswers / gameState.totalQuestions) * 100
-        : 0;
+        ? (gameState.correctAnswers / gameState.totalQuestions) * 100 : 0;
       const scaleLabel = gameState.currentScale
         ? `${gameState.currentScale.rootNote} ${SCALE_TYPES[gameState.currentScale.scaleType]?.name || 'Major'}`
         : (gameState.sourceScale
-          ? `${gameState.sourceScale.rootNote} ${SCALE_TYPES[gameState.sourceScale.scaleType]?.name}\u2192${gameState.targetScale?.rootNote} ${SCALE_TYPES[gameState.targetScale?.scaleType]?.name}`
+          ? `${gameState.sourceScale.rootNote}\u2192${gameState.targetScale?.rootNote} ${SCALE_TYPES[gameState.sourceScale.scaleType]?.name}`
           : 'Random');
       await axios.post(`${API}/game/session`, {
         session_id: gameState.sessionId,
@@ -244,17 +271,48 @@ const Game = () => {
     });
   };
 
-  // Handle in-game settings changes
+  // Handle settings changes - FIX: regenerate question when scale type changes in preselected mode
   const handleSettingsChange = (newSettings) => {
     if ('enabledScaleTypes' in newSettings) {
       setEnabledScaleTypes(newSettings.enabledScaleTypes);
-      // Auto-adjust current scale type if no longer valid (for preselected mode)
+      // Auto-adjust + regenerate if current scale type is now invalid
       if (config.scaleSelection === 'preselected' && gameState.currentScale) {
         if (!newSettings.enabledScaleTypes.includes(gameState.currentScale.scaleType)) {
-          setGameState(prev => ({
-            ...prev,
-            currentScale: { ...prev.currentScale, scaleType: newSettings.enabledScaleTypes[0] }
-          }));
+          const newScaleType = newSettings.enabledScaleTypes[0];
+          const root = gameState.currentScale.rootNote;
+          const borrowed = includeBorrowedRef.current;
+          let newQuestion;
+          if (config.mode === 'number-to-chord') {
+            newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed);
+          } else if (config.mode === 'chord-to-number') {
+            newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed);
+          }
+          if (newQuestion) {
+            setGameState(prev => ({
+              ...prev,
+              currentScale: { rootNote: root, scaleType: newScaleType },
+              currentQuestion: newQuestion,
+              feedback: null
+            }));
+          } else {
+            setGameState(prev => ({
+              ...prev,
+              currentScale: { ...prev.currentScale, scaleType: newScaleType }
+            }));
+          }
+        }
+      }
+      // Fix for transposition mode
+      if (config.mode === 'transposition' && gameState.sourceScale) {
+        if (!newSettings.enabledScaleTypes.includes(gameState.sourceScale.scaleType)) {
+          const newScaleType = newSettings.enabledScaleTypes[0];
+          const src = { rootNote: gameState.sourceScale.rootNote, scaleType: newScaleType };
+          const tgtRoot = config.targetScaleSelection === 'random'
+            ? randomRoot()
+            : (gameState.targetScale?.rootNote || 'D');
+          const tgt = { rootNote: tgtRoot, scaleType: newScaleType };
+          const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current);
+          setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
         }
       }
     }
@@ -298,6 +356,44 @@ const Game = () => {
     }));
   };
 
+  // Transposition handlers
+  const handleTranspositionScaleTypeChange = (newScaleType) => {
+    const src = { rootNote: gameState.sourceScale?.rootNote || 'C', scaleType: newScaleType };
+    const tgtRoot = config.targetScaleSelection === 'random'
+      ? randomRoot()
+      : (gameState.targetScale?.rootNote || 'D');
+    const tgt = { rootNote: tgtRoot, scaleType: newScaleType };
+    const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current);
+    setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
+  };
+
+  const handleSourceRootChange = (newRoot) => {
+    const scaleType = gameState.sourceScale?.scaleType || 'major';
+    const tgtRoot = config.targetScaleSelection === 'random'
+      ? randomRoot()
+      : (gameState.targetScale?.rootNote || 'D');
+    const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current);
+    setGameState(prev => ({
+      ...prev,
+      sourceScale: { rootNote: newRoot, scaleType },
+      targetScale: { rootNote: tgtRoot, scaleType },
+      currentQuestion: newQ,
+      feedback: null
+    }));
+  };
+
+  const handleTargetRootChange = (newRoot) => {
+    const scaleType = gameState.sourceScale?.scaleType || 'major';
+    const srcRoot = gameState.sourceScale?.rootNote || 'C';
+    const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current);
+    setGameState(prev => ({
+      ...prev,
+      targetScale: { rootNote: newRoot, scaleType },
+      currentQuestion: newQ,
+      feedback: null
+    }));
+  };
+
   // Loading state
   if (!gameState.currentQuestion) {
     return <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center"><p>Loading...</p></div>;
@@ -309,15 +405,21 @@ const Game = () => {
   const isIntervalMode = config.mode === 'intervals' || config.mode === 'interval-transpose';
   const isPreselectedUntimed = config.scaleSelection === 'preselected' && config.timerMode === 'untimed';
 
-  // Quality options for the switch
   const qualityOptions = isDegreeMode
     ? ['major', 'minor', 'dim', 'aug', 'flat']
     : ['major', 'minor', 'dim', 'aug'];
-
   const qualityLabels = { major: 'Major', minor: 'Minor', dim: 'Dim', aug: 'Aug', flat: '\u266D Flat' };
 
-  // Current display scale
   const displayScale = q.scale || q.sourceScale || gameState.currentScale;
+
+  // Get question text for dynamic sizing
+  const getQuestionText = () => {
+    if (q.type === 'number-to-chord') return q.romanNumeral;
+    if (q.type === 'chord-to-number' || q.type === 'transposition') return q.chordDisplay;
+    if (q.type === 'interval') return `${q.note1} \u2192 ${q.note2}`;
+    if (q.type === 'interval-transpose') return q.startNote;
+    return '';
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
@@ -333,8 +435,8 @@ const Game = () => {
             <span className="text-xs font-bold uppercase tracking-widest">Quit</span>
           </button>
 
-          <div className="flex items-center gap-6">
-            {/* Settings Button (non-interval modes) */}
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
             {!isIntervalMode && (
               <button
                 data-testid="settings-button"
@@ -389,103 +491,67 @@ const Game = () => {
           </div>
         )}
 
-        {/* Transposition Scale Display */}
+        {/* Transposition Scale Display - shared scale type + From/To roots */}
         {config.mode === 'transposition' && (
-          <div className="flex items-center justify-center gap-8 mb-8">
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">From</p>
+          <div className="text-center mb-8">
+            {/* Shared scale type */}
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">Scale Type</p>
               {config.timerMode === 'untimed' ? (
-                <div className="flex flex-col items-center gap-1">
-                  <select
-                    data-testid="source-root-change"
-                    value={gameState.sourceScale?.rootNote || 'C'}
-                    onChange={(e) => {
-                      const newRoot = e.target.value;
-                      const src = { rootNote: newRoot, scaleType: gameState.sourceScale?.scaleType || 'major' };
-                      const tgt = config.targetScaleSelection === 'random'
-                        ? getRandomScale(enabledScaleTypesRef.current)
-                        : (gameState.targetScale || { rootNote: 'D', scaleType: 'major' });
-                      const newQ = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, includeBorrowedRef.current);
-                      setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-                    }}
-                    className="text-2xl md:text-4xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-2 py-1"
-                  >
-                    {ALL_NOTES.map((n) => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                  <select
-                    data-testid="source-scale-type-change"
-                    value={gameState.sourceScale?.scaleType || 'major'}
-                    onChange={(e) => {
-                      const newType = e.target.value;
-                      const src = { rootNote: gameState.sourceScale?.rootNote || 'C', scaleType: newType };
-                      const tgt = config.targetScaleSelection === 'random'
-                        ? getRandomScale(enabledScaleTypesRef.current)
-                        : (gameState.targetScale || { rootNote: 'D', scaleType: 'major' });
-                      const newQ = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, includeBorrowedRef.current);
-                      setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-                    }}
-                    className="text-lg font-bold text-[#002FA7] bg-transparent border-b-2 border-[#002FA7]/50 focus:outline-none text-center cursor-pointer"
-                  >
-                    {enabledScaleTypes.map(id => <option key={id} value={id}>{SCALE_TYPES[id].name}</option>)}
-                  </select>
-                </div>
+                <select
+                  data-testid="transposition-scale-type-change"
+                  value={gameState.sourceScale?.scaleType || 'major'}
+                  onChange={(e) => handleTranspositionScaleTypeChange(e.target.value)}
+                  className="text-2xl md:text-3xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-3 py-1"
+                >
+                  {enabledScaleTypes.map(id => <option key={id} value={id}>{SCALE_TYPES[id].name}</option>)}
+                </select>
               ) : (
-                <div>
-                  <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7]">
-                    {q.sourceScale?.rootNote || gameState.sourceScale?.rootNote}
-                  </h2>
-                  <p className="text-sm font-medium text-[#002FA7]/70">
-                    {SCALE_TYPES[q.sourceScale?.scaleType || gameState.sourceScale?.scaleType]?.name}
-                  </p>
-                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-[#002FA7]">
+                  {SCALE_TYPES[q.sourceScale?.scaleType || gameState.sourceScale?.scaleType]?.name}
+                </h3>
               )}
             </div>
 
-            <div className="text-4xl text-[#9CA3AF]">{'\u2192'}</div>
-
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">To</p>
-              {config.targetScaleSelection === 'preselected' && config.timerMode === 'untimed' ? (
-                <div className="flex flex-col items-center gap-1">
+            {/* From → To roots */}
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">From</p>
+                {config.timerMode === 'untimed' ? (
                   <select
-                    data-testid="target-root-change"
-                    value={gameState.targetScale?.rootNote || 'D'}
-                    onChange={(e) => {
-                      const newRoot = e.target.value;
-                      const tgt = { rootNote: newRoot, scaleType: gameState.targetScale?.scaleType || 'major' };
-                      const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
-                      const newQ = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, includeBorrowedRef.current);
-                      setGameState(prev => ({ ...prev, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-                    }}
-                    className="text-2xl md:text-4xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-2 py-1"
+                    data-testid="source-root-change"
+                    value={gameState.sourceScale?.rootNote || 'C'}
+                    onChange={(e) => handleSourceRootChange(e.target.value)}
+                    className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-3 py-1"
                   >
                     {ALL_NOTES.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
+                ) : (
+                  <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7]">
+                    {q.sourceScale?.rootNote || gameState.sourceScale?.rootNote}
+                  </h2>
+                )}
+              </div>
+
+              <div className="text-4xl text-[#9CA3AF]">{'\u2192'}</div>
+
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">To</p>
+                {config.targetScaleSelection === 'preselected' && config.timerMode === 'untimed' ? (
                   <select
-                    data-testid="target-scale-type-change"
-                    value={gameState.targetScale?.scaleType || 'major'}
-                    onChange={(e) => {
-                      const newType = e.target.value;
-                      const tgt = { rootNote: gameState.targetScale?.rootNote || 'D', scaleType: newType };
-                      const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
-                      const newQ = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, includeBorrowedRef.current);
-                      setGameState(prev => ({ ...prev, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-                    }}
-                    className="text-lg font-bold text-[#002FA7] bg-transparent border-b-2 border-[#002FA7]/50 focus:outline-none text-center cursor-pointer"
+                    data-testid="target-root-change"
+                    value={gameState.targetScale?.rootNote || 'D'}
+                    onChange={(e) => handleTargetRootChange(e.target.value)}
+                    className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-3 py-1"
                   >
-                    {enabledScaleTypes.map(id => <option key={id} value={id}>{SCALE_TYPES[id].name}</option>)}
+                    {ALL_NOTES.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
-                </div>
-              ) : (
-                <div>
+                ) : (
                   <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7]" data-testid="target-scale">
                     {q.targetScale?.rootNote || gameState.targetScale?.rootNote}
                   </h2>
-                  <p className="text-sm font-medium text-[#002FA7]/70">
-                    {SCALE_TYPES[q.targetScale?.scaleType || gameState.targetScale?.scaleType]?.name}
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -501,7 +567,7 @@ const Game = () => {
           </p>
           <div
             data-testid="question-display"
-            className={`inline-flex items-center justify-center w-full max-w-xs sm:max-w-md md:w-[420px] h-[200px] border-4 rounded-sm transition-colors duration-150 ${
+            className={`inline-flex items-center justify-center min-w-[250px] md:min-w-[350px] max-w-[95vw] px-8 md:px-16 h-[180px] border-4 rounded-sm transition-colors duration-150 ${
               gameState.feedback === 'correct'
                 ? 'bg-green-100 border-green-500'
                 : gameState.feedback === 'incorrect'
@@ -511,22 +577,23 @@ const Game = () => {
           >
             {q.type === 'interval-transpose' ? (
               <div className="text-center px-6">
-                <div className="text-6xl md:text-8xl font-bold text-[#1A1A1A] mb-4">{q.startNote}</div>
-                <div className="text-2xl font-medium text-[#002FA7] mb-2">{q.direction === 'up' ? '\u2191 UP' : '\u2193 DOWN'}</div>
-                <div className="text-xl font-medium text-[#9CA3AF]">{q.intervalFullName}</div>
+                <div className="text-5xl md:text-7xl font-bold text-[#1A1A1A] mb-3">{q.startNote}</div>
+                <div className="text-xl font-medium text-[#002FA7] mb-1">{q.direction === 'up' ? '\u2191 UP' : '\u2193 DOWN'}</div>
+                <div className="text-lg font-medium text-[#9CA3AF]">{q.intervalFullName}</div>
               </div>
-            ) : q.type === 'interval' ? (
-              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">
-                {q.note1} {'\u2192'} {q.note2}
-              </span>
-            ) : q.type === 'number-to-chord' ? (
-              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">{q.romanNumeral}</span>
-            ) : q.type === 'chord-to-number' ? (
-              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">{q.chordDisplay}</span>
             ) : (
-              <span className="text-5xl md:text-7xl font-bold text-[#1A1A1A]">{q.chordDisplay}</span>
+              <span className={`${questionTextClass(getQuestionText())} font-bold text-[#1A1A1A]`}>
+                {getQuestionText()}
+              </span>
             )}
           </div>
+
+          {/* Correct answer indicator on wrong answer */}
+          {gameState.feedback === 'incorrect' && (
+            <p className="mt-3 text-sm font-bold text-[#FF3B30]" data-testid="correct-answer-display">
+              Correct: {getCorrectAnswerText()}
+            </p>
+          )}
         </div>
 
         {/* Answer Area */}
@@ -633,7 +700,7 @@ const Game = () => {
           </div>
         )}
 
-        {/* End Game Button */}
+        {/* End Game */}
         {config.timerMode === 'untimed' && gameState.isGameActive && (
           <div className="text-center mt-12">
             <button
@@ -647,7 +714,6 @@ const Game = () => {
         )}
       </div>
 
-      {/* Settings Modal */}
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
@@ -656,7 +722,6 @@ const Game = () => {
         mode={config.mode}
       />
 
-      {/* Time Up Modal */}
       <TimeUpModal
         isOpen={showTimeUp}
         score={gameState.score}
