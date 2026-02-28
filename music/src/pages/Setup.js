@@ -217,22 +217,22 @@ const Setup = () => {
               {/* Scale Selection */}
               {mode === 'transposition' ? (
                 <>
+                  {/* Single Scale Type for both source and target */}
                   <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Source Scale</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
-                        <RootSelect value={sourceRoot} onChange={(e) => setSourceRoot(e.target.value)} testId="source-root-selector" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Scale Type</label>
-                        <ScaleTypeSelect value={sourceScaleType} onChange={(e) => setSourceScaleType(e.target.value)} testId="source-scale-type-selector" />
-                      </div>
-                    </div>
+                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Type</h3>
+                    <p className="text-sm text-[#9CA3AF] mb-4">Applies to both source and target scales</p>
+                    <ScaleTypeSelect value={sourceScaleType} onChange={(e) => setSourceScaleType(e.target.value)} testId="source-scale-type-selector" />
                   </div>
 
+                  {/* Source Root Note */}
                   <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Target Scale</h3>
+                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Source Root Note</h3>
+                    <RootSelect value={sourceRoot} onChange={(e) => setSourceRoot(e.target.value)} testId="source-root-selector" />
+                  </div>
+
+                  {/* Target Root Note */}
+                  <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Target Root Note</h3>
                     <div className="space-y-3 mb-4">
                       <button
                         data-testid="target-scale-random"
@@ -241,8 +241,8 @@ const Setup = () => {
                           targetScaleSelection === 'random' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
                         }`}
                       >
-                        <div className="font-bold text-[#1A1A1A]">Random Target Scale</div>
-                        <div className="text-sm text-[#9CA3AF]">A new random target for each question</div>
+                        <div className="font-bold text-[#1A1A1A]">Random Target Root</div>
+                        <div className="text-sm text-[#9CA3AF]">A new random target root for each question</div>
                       </button>
                       <button
                         data-testid="target-scale-preselected"
@@ -251,20 +251,14 @@ const Setup = () => {
                           targetScaleSelection === 'preselected' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
                         }`}
                       >
-                        <div className="font-bold text-[#1A1A1A]">Fixed Target Scale</div>
-                        <div className="text-sm text-[#9CA3AF]">Keep the same target scale</div>
+                        <div className="font-bold text-[#1A1A1A]">Fixed Target Root</div>
+                        <div className="text-sm text-[#9CA3AF]">Keep the same target root note</div>
                       </button>
                     </div>
                     {targetScaleSelection === 'preselected' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
-                          <RootSelect value={targetRoot} onChange={(e) => setTargetRoot(e.target.value)} testId="target-root-selector" />
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Scale Type</label>
-                          <ScaleTypeSelect value={targetScaleType} onChange={(e) => setTargetScaleType(e.target.value)} testId="target-scale-type-selector" />
-                        </div>
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
+                        <RootSelect value={targetRoot} onChange={(e) => setTargetRoot(e.target.value)} testId="target-root-selector" />
                       </div>
                     )}
                   </div>
