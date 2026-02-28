@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Music, Timer, TrendingUp, Settings } from 'lucide-react';
+import { Music } from 'lucide-react';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -9,20 +9,20 @@ const Home = () => {
   const modes = [
     {
       id: 'number-to-chord',
-      title: 'Number → Chord',
-      description: 'See a number (1-6), select the correct chord',
+      title: 'Number \u2192 Chord',
+      description: 'See a roman numeral, select the correct root note and chord type',
       icon: Music
     },
     {
       id: 'chord-to-number',
-      title: 'Chord → Number',
-      description: 'See a chord, select the correct number',
+      title: 'Chord \u2192 Number',
+      description: 'See a chord, select the correct degree and quality',
       icon: Music
     },
     {
       id: 'transposition',
       title: 'Transposition',
-      description: 'Transpose chords from one key to another',
+      description: 'Transpose chords between different scales and modes',
       icon: Music
     },
     {
@@ -47,17 +47,15 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20">
-        {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#1A1A1A] mb-4">
             Scale Genius
           </h1>
           <p className="text-base md:text-lg text-[#9CA3AF] max-w-2xl mx-auto">
-            Master chord progressions in all major keys. Choose your mode and start practicing.
+            Master chord progressions across all scales and modes. Choose your mode and start practicing.
           </p>
         </div>
 
-        {/* Mode Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
           {modes.map((mode) => {
             const Icon = mode.icon;
@@ -84,20 +82,6 @@ const Home = () => {
               </button>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex flex-wrap justify-center gap-4">
-          {/* Dashboard button - commented out for now
-          <button
-            data-testid="nav-dashboard"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 rounded-none bg-[#002FA7] text-white hover:bg-[#002FA7]/90 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all font-bold uppercase tracking-wider text-sm px-6 py-3"
-          >
-            <TrendingUp className="w-4 h-4" />
-            Dashboard
-          </button>
-          */}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, RotateCcw, TrendingUp } from 'lucide-react';
+import { Home, RotateCcw } from 'lucide-react';
 
 const Results = () => {
   const navigate = useNavigate();
@@ -21,10 +21,20 @@ const Results = () => {
     return 'Keep practicing!';
   };
 
+  const getModeDisplay = () => {
+    switch (results.mode) {
+      case 'number-to-chord': return 'Number \u2192 Chord';
+      case 'chord-to-number': return 'Chord \u2192 Number';
+      case 'transposition': return 'Transposition';
+      case 'intervals': return 'Interval Recognition';
+      case 'interval-transpose': return 'Interval Transposition';
+      default: return results.mode;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4">
       <div className="max-w-2xl w-full">
-        {/* Results Card */}
         <div className="bg-white border border-[#E5E7EB] rounded-sm p-8 md:p-12 shadow-md">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-[#1A1A1A] mb-2">
@@ -33,48 +43,32 @@ const Results = () => {
             <p className="text-[#9CA3AF]">{getAccuracyMessage(results.accuracy)}</p>
           </div>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="text-center p-6 bg-[#F3F4F6] rounded-sm">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
-                Score
-              </p>
-              <p className="text-4xl font-bold text-[#1A1A1A]" data-testid="final-score">
-                {results.score}
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">Score</p>
+              <p className="text-4xl font-bold text-[#1A1A1A]" data-testid="final-score">{results.score}</p>
             </div>
-
             <div className="text-center p-6 bg-[#F3F4F6] rounded-sm">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">
-                Questions
-              </p>
-              <p className="text-4xl font-bold text-[#1A1A1A]" data-testid="total-questions">
-                {results.totalQuestions}
-              </p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">Questions</p>
+              <p className="text-4xl font-bold text-[#1A1A1A]" data-testid="total-questions">{results.totalQuestions}</p>
             </div>
           </div>
 
-          {/* Accuracy Display */}
           <div className="text-center mb-8 p-8 border-4 border-[#E5E7EB] rounded-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">
-              Accuracy
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">Accuracy</p>
             <p className={`text-6xl md:text-8xl font-bold ${getAccuracyColor(results.accuracy)}`} data-testid="accuracy-percentage">
               {results.accuracy}%
             </p>
           </div>
 
-          {/* Game Details */}
           <div className="space-y-2 mb-8 p-6 bg-[#F3F4F6] rounded-sm">
             <div className="flex justify-between">
-              <span className="text-[#9CA3AF]">Key:</span>
-              <span className="font-bold text-[#1A1A1A]">{results.key}</span>
+              <span className="text-[#9CA3AF]">Scale:</span>
+              <span className="font-bold text-[#1A1A1A]">{results.scale || results.key || 'Random'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#9CA3AF]">Mode:</span>
-              <span className="font-bold text-[#1A1A1A]">
-                {results.mode === 'number-to-chord' ? 'Number → Chord' : 'Chord → Number'}
-              </span>
+              <span className="font-bold text-[#1A1A1A]">{getModeDisplay()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#9CA3AF]">Timer:</span>
@@ -84,8 +78,7 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               data-testid="play-again-button"
               onClick={() => navigate('/setup', { state: { mode: results.mode } })}
@@ -94,7 +87,6 @@ const Results = () => {
               <RotateCcw className="w-4 h-4" />
               Play Again
             </button>
-
             <button
               data-testid="home-button"
               onClick={() => navigate('/')}
