@@ -63,3 +63,42 @@ code {
         }
     }
 }
+
+/* ===== DARK MODE ===== */
+html.dark {
+    background-color: #0F0F14;
+}
+
+.dark .bg-\[\#FDFBF7\] { background-color: #0F0F14 !important; }
+.dark .bg-white { background-color: #1A1A24 !important; }
+.dark .bg-\[\#F3F4F6\] { background-color: #15151F !important; }
+
+.dark .text-\[\#1A1A1A\] { color: #E5E7EB !important; }
+.dark .text-\[\#9CA3AF\] { color: #7B8494 !important; }
+.dark .text-\[\#002FA7\] { color: #5B8AFF !important; }
+.dark .text-\[\#002FA7\]\/70 { color: rgba(91, 138, 255, 0.7) !important; }
+
+.dark .border-\[\#E5E7EB\] { border-color: #2D2D3A !important; }
+.dark .border { border-color: #2D2D3A; }
+.dark .border-\[\#002FA7\]:not(.bg-\[\#002FA7\]) { border-color: #5B8AFF !important; }
+
+.dark .hover\:bg-blue-50:hover { background-color: rgba(0, 47, 167, 0.15) !important; }
+.dark .hover\:border-\[\#002FA7\]\/50:hover { border-color: rgba(91, 138, 255, 0.5) !important; }
+.dark .hover\:text-\[\#002FA7\]:hover { color: #5B8AFF !important; }
+.dark .hover\:border-\[\#002FA7\]:hover { border-color: #5B8AFF !important; }
+.dark .hover\:border-\[\#1A1A1A\]:hover { border-color: #E5E7EB !important; }
+.dark .hover\:bg-\[\#002FA7\]\/5:hover { background-color: rgba(0, 47, 167, 0.2) !important; }
+
+.dark .bg-\[\#002FA7\]\/5 { background-color: rgba(0, 47, 167, 0.15) !important; }
+.dark .bg-\[\#E5E7EB\] { background-color: #3D3D4A !important; }
+
+.dark .bg-green-100 { background-color: rgba(5, 150, 105, 0.15) !important; }
+.dark .bg-red-100 { background-color: rgba(255, 59, 48, 0.15) !important; }
+
+.dark select, .dark option { background-color: #1A1A24; color: #E5E7EB; }
+
+.dark .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; }
+.dark .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5) !important; }
+.dark .shadow-\[4px_4px_0px_0px_rgba\(0\,0\,0\,1\)\] { box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.1) !important; }
+.dark .hover\:shadow-\[2px_2px_0px_0px_rgba\(0\,0\,0\,1\)\]:hover { box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 0.1) !important; }
+.dark .bg-black\/50 { background-color: rgba(0, 0, 0, 0.7) !important; }
