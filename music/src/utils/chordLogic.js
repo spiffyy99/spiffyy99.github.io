@@ -268,36 +268,88 @@ export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false) => {
+export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false) => {
+  // Decide if this will be a 7th chord question (50% chance if enabled)
+  const is7thQuestion = include7ths && Math.random() < 0.5;
+  
   if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
+    
+    if (is7thQuestion) {
+      const seventh = BORROWED_7TH_MAP[borrowed.quality] || 'dom7';
+      return {
+        type: 'chord-to-number',
+        scale: { rootNote, scaleType },
+        chordDisplay: buildChordDisplay(borrowed.note, seventh),
+        correctDegree: borrowed.degreeIndex,
+        correctAnswerQuality: borrowed.answerQuality,
+        isBorrowed: true,
+        is7th: true
+      };
+    }
+    
     return {
       type: 'chord-to-number',
       scale: { rootNote, scaleType },
       chordDisplay: buildChordDisplay(borrowed.note, borrowed.quality),
       correctDegree: borrowed.degreeIndex,
       correctAnswerQuality: borrowed.answerQuality,
-      isBorrowed: true
+      isBorrowed: true,
+      is7th: false
     };
   }
+  
   const deg = getRandomDegree();
   const chord = getChordAtDegree(rootNote, scaleType, deg);
+  
+  if (is7thQuestion) {
+    const seventh = get7thChordQuality(scaleType, deg, chord.quality);
+    return {
+      type: 'chord-to-number',
+      scale: { rootNote, scaleType },
+      chordDisplay: buildChordDisplay(chord.note, seventh),
+      correctDegree: deg,
+      correctAnswerQuality: chord.quality, // Still answer with base quality for degree
+      isBorrowed: false,
+      is7th: true
+    };
+  }
+  
   return {
     type: 'chord-to-number',
     scale: { rootNote, scaleType },
     chordDisplay: buildChordDisplay(chord.note, chord.quality),
     correctDegree: deg,
     correctAnswerQuality: chord.quality,
-    isBorrowed: false
+    isBorrowed: false,
+    is7th: false
   };
 };
 
-export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false) => {
+export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false) => {
+  // Decide if this will be a 7th chord question (50% chance if enabled)
+  const is7thQuestion = include7ths && Math.random() < 0.5;
+  
   if (includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const sourceBorrowed = getBorrowedChord(sourceRoot, def);
     const targetBorrowed = getBorrowedChord(targetRoot, def);
+    
+    if (is7thQuestion) {
+      const seventh = BORROWED_7TH_MAP[sourceBorrowed.quality] || 'dom7';
+      return {
+        type: 'transposition',
+        sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+        targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+        chordDisplay: buildChordDisplay(sourceBorrowed.note, seventh),
+        correctNoteIndex: targetBorrowed.noteIndex,
+        correctQuality: seventh,
+        isBorrowed: true,
+        is7th: true
+      };
+    }
+    
     return {
       type: 'transposition',
       sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
@@ -305,12 +357,29 @@ export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targe
       chordDisplay: buildChordDisplay(sourceBorrowed.note, sourceBorrowed.quality),
       correctNoteIndex: targetBorrowed.noteIndex,
       correctQuality: targetBorrowed.quality,
-      isBorrowed: true
+      isBorrowed: true,
+      is7th: false
     };
   }
+  
   const deg = getRandomDegree();
   const sourceChord = getChordAtDegree(sourceRoot, sourceScaleType, deg);
   const targetChord = getChordAtDegree(targetRoot, targetScaleType, deg);
+  
+  if (is7thQuestion) {
+    const seventh = get7thChordQuality(sourceScaleType, deg, sourceChord.quality);
+    return {
+      type: 'transposition',
+      sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+      targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+      chordDisplay: buildChordDisplay(sourceChord.note, seventh),
+      correctNoteIndex: targetChord.noteIndex,
+      correctQuality: seventh,
+      isBorrowed: false,
+      is7th: true
+    };
+  }
+  
   return {
     type: 'transposition',
     sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
@@ -318,7 +387,8 @@ export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targe
     chordDisplay: buildChordDisplay(sourceChord.note, sourceChord.quality),
     correctNoteIndex: targetChord.noteIndex,
     correctQuality: targetChord.quality,
-    isBorrowed: false
+    isBorrowed: false,
+    is7th: false
   };
 };
 
