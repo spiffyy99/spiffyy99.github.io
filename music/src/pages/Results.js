@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, RotateCcw } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Results = () => {
   const navigate = useNavigate();
@@ -33,7 +34,12 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center px-4">
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="max-w-2xl w-full">
         <div className="bg-white border border-[#E5E7EB] rounded-sm p-8 md:p-12 shadow-md">
           <div className="text-center mb-8">
