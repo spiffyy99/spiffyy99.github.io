@@ -617,13 +617,13 @@ const Game = () => {
         {(isChordMode || isDegreeMode) && (
           <>
             {/* Quality Switch */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <div className={`flex flex-wrap justify-center gap-2 mb-6 ${show7thOptions ? 'max-w-md mx-auto' : ''}`}>
               {qualityOptions.map(qo => (
                 <button
                   key={qo}
                   data-testid={`quality-${qo}`}
                   onClick={() => setSelectedQuality(qo)}
-                  className={`px-4 py-2 border-2 rounded-sm font-bold text-xs md:text-sm uppercase tracking-wider transition-all ${
+                  className={`px-3 md:px-4 py-2 border-2 rounded-sm font-bold text-xs md:text-sm uppercase tracking-wider transition-all ${
                     selectedQuality === qo
                       ? 'border-[#002FA7] bg-[#002FA7] text-white'
                       : 'border-[#E5E7EB] bg-white hover:border-[#002FA7]/50 text-[#1A1A1A]'
