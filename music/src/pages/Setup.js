@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
 import { ALL_NOTES, SCALE_TYPES } from '../utils/chordLogic';
+import ThemeToggle from '../components/ThemeToggle';
 
 const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
 
@@ -178,14 +179,17 @@ const Setup = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
       <div className="max-w-4xl mx-auto px-4 md:px-8 py-12">
-        <button
-          data-testid="back-button"
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-[#9CA3AF] hover:text-[#002FA7] transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-xs font-bold uppercase tracking-widest">Back</span>
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button
+            data-testid="back-button"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-[#9CA3AF] hover:text-[#002FA7] transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-widest">Back</span>
+          </button>
+          <ThemeToggle />
+        </div>
 
         <div className="mb-12">
           <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-[#1A1A1A] mb-2">Game Setup</h2>
