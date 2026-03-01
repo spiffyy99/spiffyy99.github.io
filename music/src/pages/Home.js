@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Music } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -47,6 +48,11 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20">
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-4">
+          <ThemeToggle />
+        </div>
+
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#1A1A1A] mb-4">
             Scale Genius
@@ -67,8 +73,8 @@ const Home = () => {
                 className="bg-white border border-[#E5E7EB] rounded-sm p-8 hover:border-[#002FA7] hover:shadow-md transition-all duration-200 text-left group"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-[#F3F4F6] group-hover:bg-[#002FA7] group-hover:text-white transition-colors rounded-sm">
-                    <Icon className="w-6 h-6" strokeWidth={2} />
+                  <div className="p-3 bg-[#F3F4F6] group-hover:bg-[#002FA7] transition-colors rounded-sm">
+                    <Icon className="w-6 h-6 text-[#002FA7] group-hover:text-white transition-colors" strokeWidth={2} />
                   </div>
                   <div>
                     <h3 className="text-xl md:text-2xl font-medium tracking-tight text-[#1A1A1A] mb-2">
