@@ -285,11 +285,12 @@ const Game = () => {
           const newScaleType = newSettings.enabledScaleTypes[0];
           const root = gameState.currentScale.rootNote;
           const borrowed = includeBorrowedRef.current;
+          const sevenths = include7thsRef.current;
           let newQuestion;
           if (config.mode === 'number-to-chord') {
-            newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed);
+            newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed, sevenths);
           } else if (config.mode === 'chord-to-number') {
-            newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed);
+            newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed, sevenths);
           }
           if (newQuestion) {
             setGameState(prev => ({
@@ -315,13 +316,16 @@ const Game = () => {
             ? randomRoot()
             : (gameState.targetScale?.rootNote || 'D');
           const tgt = { rootNote: tgtRoot, scaleType: newScaleType };
-          const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current);
+          const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current, include7thsRef.current);
           setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
         }
       }
     }
     if ('includeBorrowed' in newSettings) {
       setIncludeBorrowed(newSettings.includeBorrowed);
+    }
+    if ('include7ths' in newSettings) {
+      setInclude7ths(newSettings.include7ths);
     }
   };
 
