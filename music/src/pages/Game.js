@@ -734,7 +734,7 @@ const Game = () => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={{ enabledScaleTypes, includeBorrowed }}
+        settings={{ enabledScaleTypes, includeBorrowed, include7ths }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
       />
