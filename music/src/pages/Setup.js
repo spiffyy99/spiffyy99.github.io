@@ -336,6 +336,35 @@ const Setup = () => {
                 <p className="text-xs text-[#9CA3AF] mt-2">Only applies when playing in a major scale</p>
               </div>
 
+              {/* 7th Chords - Only for number-to-chord mode */}
+              {mode === 'number-to-chord' && (
+                <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                  <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">7th Chords</h3>
+                  <button
+                    data-testid="7th-chords-toggle"
+                    onClick={() => setInclude7ths(!include7ths)}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      include7ths ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-[#1A1A1A]">{include7ths ? 'Enabled' : 'Disabled'}</div>
+                        <div className="text-sm text-[#9CA3AF]">
+                          {include7ths
+                            ? 'Randomly adds 7th chords: Maj7, m7, dom7, ø7, °7, aug7'
+                            : 'Only triads (Major, Minor, Dim, Aug)'}
+                        </div>
+                      </div>
+                      <div className={`w-12 h-6 rounded-full transition-colors ${include7ths ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${include7ths ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                      </div>
+                    </div>
+                  </button>
+                  <p className="text-xs text-[#9CA3AF] mt-2">Questions will show (7) and you must identify the correct 7th chord type</p>
+                </div>
+              )}
+
               {/* Timer */}
               <TimerSection />
             </>
