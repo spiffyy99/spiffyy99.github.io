@@ -588,12 +588,14 @@ const Game = () => {
             )}
           </div>
 
-          {/* Correct answer indicator on wrong answer */}
-          {gameState.feedback === 'incorrect' && (
-            <p className="mt-3 text-sm font-bold text-[#FF3B30]" data-testid="correct-answer-display">
-              Correct: {getCorrectAnswerText()}
-            </p>
-          )}
+          {/* Correct answer indicator - always reserve space */}
+          <div className="h-8 mt-3 flex items-center justify-center">
+            {gameState.feedback === 'incorrect' && (
+              <p className="text-sm font-bold text-[#FF3B30]" data-testid="correct-answer-display">
+                Correct: {getCorrectAnswerText()}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Answer Area */}
