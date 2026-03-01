@@ -45,9 +45,12 @@ const Game = () => {
   const enabledScaleTypesRef = useRef(config.enabledScaleTypes || ['major']);
   const [includeBorrowed, setIncludeBorrowed] = useState(config.includeBorrowed || false);
   const includeBorrowedRef = useRef(config.includeBorrowed || false);
+  const [include7ths, setInclude7ths] = useState(config.include7ths || false);
+  const include7thsRef = useRef(config.include7ths || false);
 
   useEffect(() => { enabledScaleTypesRef.current = enabledScaleTypes; }, [enabledScaleTypes]);
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
+  useEffect(() => { include7thsRef.current = include7ths; }, [include7ths]);
 
   // Quality switch
   const [selectedQuality, setSelectedQuality] = useState('major');
