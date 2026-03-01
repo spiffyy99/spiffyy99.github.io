@@ -413,10 +413,17 @@ const Game = () => {
   const isIntervalMode = config.mode === 'intervals' || config.mode === 'interval-transpose';
   const isPreselectedUntimed = config.scaleSelection === 'preselected' && config.timerMode === 'untimed';
 
+  // Quality options - show 7ths only when enabled AND question is a 7th question
+  const show7thOptions = include7ths && q.is7th;
   const qualityOptions = isDegreeMode
     ? ['major', 'minor', 'dim', 'aug', 'flat']
-    : ['major', 'minor', 'dim', 'aug'];
-  const qualityLabels = { major: 'Major', minor: 'Minor', dim: 'Dim', aug: 'Aug', flat: '\u266D Flat' };
+    : show7thOptions
+      ? ['maj7', 'min7', 'dom7', 'halfdim7', 'dim7', 'aug7']
+      : ['major', 'minor', 'dim', 'aug'];
+  const qualityLabels = {
+    major: 'Major', minor: 'Minor', dim: 'Dim', aug: 'Aug', flat: '\u266D Flat',
+    maj7: 'Maj7', min7: 'm7', dom7: '7', halfdim7: 'ø7', dim7: '°7', aug7: 'Aug7'
+  };
 
   const displayScale = q.scale || q.sourceScale || gameState.currentScale;
 
