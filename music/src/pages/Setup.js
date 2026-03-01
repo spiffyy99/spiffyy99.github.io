@@ -31,6 +31,7 @@ const Setup = () => {
 
   // Options
   const [includeBorrowed, setIncludeBorrowed] = useState(false);
+  const [include7ths, setInclude7ths] = useState(false);
   const [timerMode, setTimerMode] = useState('untimed');
   const [timerDuration, setTimerDuration] = useState('60');
 
@@ -54,6 +55,7 @@ const Setup = () => {
       mode,
       enabledScaleTypes,
       includeBorrowed,
+      include7ths,
       timerMode,
       timerDuration: timerMode === 'timed' ? parseInt(timerDuration) : null,
     };
