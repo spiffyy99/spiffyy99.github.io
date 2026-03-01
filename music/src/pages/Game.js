@@ -92,6 +92,7 @@ const Game = () => {
   const generateQuestion = useCallback(() => {
     const scaleTypes = enabledScaleTypesRef.current;
     const borrowed = includeBorrowedRef.current;
+    const sevenths = include7thsRef.current;
 
     if (config.mode === 'interval-transpose') {
       return { ...generateIntervalTransposition(), type: 'interval-transpose' };
@@ -103,13 +104,13 @@ const Game = () => {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed);
+      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths);
     }
     if (config.mode === 'chord-to-number') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed);
+      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths);
     }
     if (config.mode === 'transposition') {
       const source = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
@@ -117,7 +118,7 @@ const Game = () => {
       const targetRootNote = config.targetScaleSelection === 'random'
         ? randomRoot()
         : (gameState.targetScale?.rootNote || 'D');
-      return generateTranspositionQuestion(source.rootNote, sharedType, targetRootNote, sharedType, borrowed);
+      return generateTranspositionQuestion(source.rootNote, sharedType, targetRootNote, sharedType, borrowed, sevenths);
     }
     return null;
   }, [config.mode, config.scaleSelection, config.targetScaleSelection, gameState.currentScale, gameState.sourceScale, gameState.targetScale]);
