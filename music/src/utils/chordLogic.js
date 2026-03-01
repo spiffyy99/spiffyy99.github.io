@@ -209,28 +209,62 @@ const getRandomBorrowedDef = () => {
 
 // Question generators
 
-export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false) => {
+export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false) => {
+  // Decide if this will be a 7th chord question (50% chance if enabled)
+  const is7thQuestion = include7ths && Math.random() < 0.5;
+  
   if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
+    
+    if (is7thQuestion) {
+      const seventh = BORROWED_7TH_MAP[borrowed.quality] || 'dom7';
+      return {
+        type: 'number-to-chord',
+        scale: { rootNote, scaleType },
+        romanNumeral: borrowed.romanNumeral + '(7)',
+        correctNoteIndex: borrowed.noteIndex,
+        correctQuality: seventh,
+        isBorrowed: true,
+        is7th: true
+      };
+    }
+    
     return {
       type: 'number-to-chord',
       scale: { rootNote, scaleType },
       romanNumeral: borrowed.romanNumeral,
       correctNoteIndex: borrowed.noteIndex,
       correctQuality: borrowed.quality,
-      isBorrowed: true
+      isBorrowed: true,
+      is7th: false
     };
   }
+  
   const deg = getRandomDegree();
   const chord = getChordAtDegree(rootNote, scaleType, deg);
+  
+  if (is7thQuestion) {
+    const seventh = get7thChordQuality(scaleType, deg, chord.quality);
+    return {
+      type: 'number-to-chord',
+      scale: { rootNote, scaleType },
+      romanNumeral: chord.romanNumeral + '(7)',
+      correctNoteIndex: chord.noteIndex,
+      correctQuality: seventh,
+      isBorrowed: false,
+      is7th: true
+    };
+  }
+  
   return {
     type: 'number-to-chord',
     scale: { rootNote, scaleType },
     romanNumeral: chord.romanNumeral,
     correctNoteIndex: chord.noteIndex,
     correctQuality: chord.quality,
-    isBorrowed: false
+    isBorrowed: false,
+    is7th: false
   };
 };
 
