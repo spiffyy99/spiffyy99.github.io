@@ -7,7 +7,7 @@ const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
 const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) => {
   if (!isOpen) return null;
 
-  const { enabledScaleTypes = ['major'], includeBorrowed = false } = settings;
+  const { enabledScaleTypes = ['major'], includeBorrowed = false, include7ths = false } = settings;
 
   const majorEnabled = enabledScaleTypes.includes('major');
   const naturalMinorEnabled = enabledScaleTypes.includes('naturalMinor');
@@ -120,6 +120,34 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
               </button>
             </div>
           </div>
+
+          {/* 7th Chords - Only for number-to-chord mode */}
+          {mode === 'number-to-chord' && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-[#1A1A1A]">7th Chords</h4>
+                  <p className="text-xs text-[#9CA3AF] mt-1">
+                    {include7ths
+                      ? 'Includes Maj7, m7, dom7, ø7, °7, aug7'
+                      : 'Only triads'}
+                  </p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">Changes apply on next question</p>
+                </div>
+                <button
+                  data-testid="settings-7th-toggle"
+                  onClick={() => onSettingsChange({ include7ths: !include7ths })}
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
+                    include7ths ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                    include7ths ? 'translate-x-6' : 'translate-x-0.5'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <button
