@@ -102,3 +102,12 @@ html.dark {
 .dark .shadow-\[4px_4px_0px_0px_rgba\(0\,0\,0\,1\)\] { box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.1) !important; }
 .dark .hover\:shadow-\[2px_2px_0px_0px_rgba\(0\,0\,0\,1\)\]:hover { box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 0.1) !important; }
 .dark .bg-black\/50 { background-color: rgba(0, 0, 0, 0.7) !important; }
+
+/* Fix icon visibility in dark mode */
+.dark .text-\[\#002FA7\].group-hover\:text-white { color: #5B8AFF !important; }
+.dark .group:hover .text-\[\#002FA7\].group-hover\:text-white { color: white !important; }
+
+/* Fix button text visibility in dark mode - note buttons */
+.dark button:not(.bg-\[\#002FA7\]) .text-\[10px\],
+.dark button:not(.bg-\[\#002FA7\]).text-\[10px\] { color: #E5E7EB; }
+.dark button:not(.bg-\[\#002FA7\]) { color: #E5E7EB; }
