@@ -46,7 +46,69 @@ const QUALITY_SUFFIX = {
   major: '',
   minor: 'm',
   dim: 'dim',
-  aug: 'aug'
+  aug: 'aug',
+  maj7: 'maj7',
+  min7: 'm7',
+  dom7: '7',
+  halfdim7: 'ø7',
+  dim7: '°7',
+  aug7: 'aug7'
+};
+
+// 7th chord quality mappings based on scale degree and base triad quality
+export const SEVENTH_CHORD_MAP = {
+  // Major scale 7th chords
+  major: {
+    major: { 0: 'maj7', 3: 'maj7', 4: 'dom7' }, // I, IV = maj7; V = dom7
+    minor: { 1: 'min7', 2: 'min7', 5: 'min7' }, // ii, iii, vi = min7
+    dim: { 6: 'halfdim7' } // vii° = half-dim7
+  },
+  naturalMinor: {
+    minor: { 0: 'min7', 3: 'min7', 4: 'min7' }, // i, iv, v = min7
+    major: { 2: 'maj7', 5: 'maj7', 6: 'dom7' }, // III, VI = maj7; VII = dom7
+    dim: { 1: 'halfdim7' } // ii° = half-dim7
+  },
+  harmonicMinor: {
+    minor: { 0: 'min7', 3: 'min7' }, // i, iv = min7 (technically minMaj7 for i, but simplified)
+    major: { 4: 'dom7', 5: 'maj7' }, // V = dom7, VI = maj7
+    aug: { 2: 'aug7' }, // III+ = aug7
+    dim: { 1: 'halfdim7', 6: 'dim7' } // ii° = half-dim7, vii° = dim7
+  },
+  dorian: {
+    minor: { 0: 'min7', 1: 'min7', 4: 'min7' },
+    major: { 2: 'maj7', 3: 'dom7', 6: 'maj7' },
+    dim: { 5: 'halfdim7' }
+  },
+  phrygian: {
+    minor: { 0: 'min7', 3: 'min7', 6: 'min7' },
+    major: { 1: 'maj7', 2: 'dom7', 5: 'maj7' },
+    dim: { 4: 'halfdim7' }
+  },
+  lydian: {
+    major: { 0: 'maj7', 1: 'dom7', 4: 'maj7' },
+    minor: { 2: 'min7', 5: 'min7', 6: 'min7' },
+    dim: { 3: 'halfdim7' }
+  },
+  mixolydian: {
+    major: { 0: 'dom7', 3: 'maj7', 6: 'maj7' },
+    minor: { 1: 'min7', 4: 'min7', 5: 'min7' },
+    dim: { 2: 'halfdim7' }
+  }
+};
+
+// Get the 7th chord quality for a given scale, degree, and base quality
+export const get7thChordQuality = (scaleType, degreeIndex, baseQuality) => {
+  const scaleMap = SEVENTH_CHORD_MAP[scaleType];
+  if (!scaleMap) return 'dom7'; // fallback
+  const qualityMap = scaleMap[baseQuality];
+  if (!qualityMap) return 'dom7'; // fallback
+  return qualityMap[degreeIndex] || 'dom7'; // fallback to dom7
+};
+
+// Base quality to possible 7th qualities mapping for borrowed chords
+export const BORROWED_7TH_MAP = {
+  minor: 'min7',
+  major: 'dom7' // borrowed major chords typically function as dominant
 };
 
 // Borrowed chord definitions (from parallel minor, for major scale context only)
