@@ -228,16 +228,18 @@ const Setup = () => {
               {/* Scale Types */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                 <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types</h3>
+                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={() => setMajorEnabled(!majorEnabled)} testId="scale-type-major" />
-                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={() => setNaturalMinorEnabled(!naturalMinorEnabled)} testId="scale-type-natural-minor" />
-                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={() => setHarmonicMinorEnabled(!harmonicMinorEnabled)} testId="scale-type-harmonic-minor" />
+                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
                   <ScaleCheckbox
                     label="Other Modes"
                     subtitle="Dorian, Phrygian, Lydian, Mixolydian"
                     checked={otherModesEnabled}
-                    onChange={() => setOtherModesEnabled(!otherModesEnabled)}
+                    onChange={toggleOtherModes}
                     testId="scale-type-other-modes"
+                    disabled={otherModesEnabled && enabledCount === 1}
                   />
                 </div>
               </div>
