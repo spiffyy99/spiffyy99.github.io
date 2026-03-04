@@ -18,14 +18,14 @@ const Setup = () => {
   const [otherModesEnabled, setOtherModesEnabled] = useState(false);
 
   // Scale selection
-  const [scaleSelection, setScaleSelection] = useState('random');
+  const [scaleSelection, setScaleSelection] = useState('preselected');
   const [selectedRoot, setSelectedRoot] = useState('C');
   const [selectedScaleType, setSelectedScaleType] = useState('major');
 
   // Transposition
   const [sourceRoot, setSourceRoot] = useState('C');
   const [sourceScaleType, setSourceScaleType] = useState('major');
-  const [targetScaleSelection, setTargetScaleSelection] = useState('preselected');
+  const [targetScaleSelection, setTargetScaleSelection] = useState('random');
   const [targetRoot, setTargetRoot] = useState('D');
   const [targetScaleType, setTargetScaleType] = useState('major');
 
