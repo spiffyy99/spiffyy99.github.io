@@ -14,7 +14,13 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
   const harmonicMinorEnabled = enabledScaleTypes.includes('harmonicMinor');
   const otherModesEnabled = OTHER_MODES.some(m => enabledScaleTypes.includes(m));
 
+  // Count enabled to prevent deselecting last
+  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
+
   const toggleScaleTypes = (types, currentlyEnabled) => {
+    // Prevent deselecting last option
+    if (currentlyEnabled && enabledCount === 1) return;
+    
     let newTypes;
     if (currentlyEnabled) {
       newTypes = enabledScaleTypes.filter(t => !types.includes(t));
@@ -25,13 +31,14 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
     onSettingsChange({ enabledScaleTypes: newTypes });
   };
 
-  const Checkbox = ({ label, checked, onChange, testId, subtitle }) => (
+  const Checkbox = ({ label, checked, onChange, testId, subtitle, disabled }) => (
     <button
       data-testid={testId}
       onClick={onChange}
+      disabled={disabled}
       className={`flex items-center gap-3 p-3 border-2 rounded-sm transition-all w-full text-left ${
         checked ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
-      }`}
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center shrink-0 transition-colors ${
         checked ? 'border-[#002FA7] bg-[#002FA7]' : 'border-[#9CA3AF]'
