@@ -72,25 +72,28 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
           {/* Scale Types */}
           <div className="border border-[#E5E7EB] rounded-sm p-4">
             <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
-            <p className="text-xs text-[#9CA3AF] mb-3">Changes apply on the next question</p>
+            <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
             <div className="space-y-2">
               <Checkbox
                 label="Major"
                 checked={majorEnabled}
                 onChange={() => toggleScaleTypes(['major'], majorEnabled)}
                 testId="settings-scale-major"
+                disabled={majorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Natural Minor"
                 checked={naturalMinorEnabled}
                 onChange={() => toggleScaleTypes(['naturalMinor'], naturalMinorEnabled)}
                 testId="settings-scale-natural-minor"
+                disabled={naturalMinorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Harmonic Minor"
                 checked={harmonicMinorEnabled}
                 onChange={() => toggleScaleTypes(['harmonicMinor'], harmonicMinorEnabled)}
                 testId="settings-scale-harmonic-minor"
+                disabled={harmonicMinorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Other Modes"
@@ -98,6 +101,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
                 checked={otherModesEnabled}
                 onChange={() => toggleScaleTypes(OTHER_MODES, otherModesEnabled)}
                 testId="settings-scale-other-modes"
+                disabled={otherModesEnabled && enabledCount === 1}
               />
             </div>
           </div>
