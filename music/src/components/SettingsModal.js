@@ -14,7 +14,13 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
   const harmonicMinorEnabled = enabledScaleTypes.includes('harmonicMinor');
   const otherModesEnabled = OTHER_MODES.some(m => enabledScaleTypes.includes(m));
 
+  // Count enabled to prevent deselecting last
+  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
+
   const toggleScaleTypes = (types, currentlyEnabled) => {
+    // Prevent deselecting last option
+    if (currentlyEnabled && enabledCount === 1) return;
+    
     let newTypes;
     if (currentlyEnabled) {
       newTypes = enabledScaleTypes.filter(t => !types.includes(t));
@@ -25,13 +31,14 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
     onSettingsChange({ enabledScaleTypes: newTypes });
   };
 
-  const Checkbox = ({ label, checked, onChange, testId, subtitle }) => (
+  const Checkbox = ({ label, checked, onChange, testId, subtitle, disabled }) => (
     <button
       data-testid={testId}
       onClick={onChange}
+      disabled={disabled}
       className={`flex items-center gap-3 p-3 border-2 rounded-sm transition-all w-full text-left ${
         checked ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
-      }`}
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center shrink-0 transition-colors ${
         checked ? 'border-[#002FA7] bg-[#002FA7]' : 'border-[#9CA3AF]'
@@ -65,25 +72,28 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
           {/* Scale Types */}
           <div className="border border-[#E5E7EB] rounded-sm p-4">
             <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
-            <p className="text-xs text-[#9CA3AF] mb-3">Changes apply on the next question</p>
+            <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
             <div className="space-y-2">
               <Checkbox
                 label="Major"
                 checked={majorEnabled}
                 onChange={() => toggleScaleTypes(['major'], majorEnabled)}
                 testId="settings-scale-major"
+                disabled={majorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Natural Minor"
                 checked={naturalMinorEnabled}
                 onChange={() => toggleScaleTypes(['naturalMinor'], naturalMinorEnabled)}
                 testId="settings-scale-natural-minor"
+                disabled={naturalMinorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Harmonic Minor"
                 checked={harmonicMinorEnabled}
                 onChange={() => toggleScaleTypes(['harmonicMinor'], harmonicMinorEnabled)}
                 testId="settings-scale-harmonic-minor"
+                disabled={harmonicMinorEnabled && enabledCount === 1}
               />
               <Checkbox
                 label="Other Modes"
@@ -91,6 +101,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
                 checked={otherModesEnabled}
                 onChange={() => toggleScaleTypes(OTHER_MODES, otherModesEnabled)}
                 testId="settings-scale-other-modes"
+                disabled={otherModesEnabled && enabledCount === 1}
               />
             </div>
           </div>

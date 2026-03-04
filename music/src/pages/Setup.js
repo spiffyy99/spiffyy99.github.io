@@ -18,14 +18,14 @@ const Setup = () => {
   const [otherModesEnabled, setOtherModesEnabled] = useState(false);
 
   // Scale selection
-  const [scaleSelection, setScaleSelection] = useState('random');
+  const [scaleSelection, setScaleSelection] = useState('preselected');
   const [selectedRoot, setSelectedRoot] = useState('C');
   const [selectedScaleType, setSelectedScaleType] = useState('major');
 
   // Transposition
   const [sourceRoot, setSourceRoot] = useState('C');
   const [sourceScaleType, setSourceScaleType] = useState('major');
-  const [targetScaleSelection, setTargetScaleSelection] = useState('preselected');
+  const [targetScaleSelection, setTargetScaleSelection] = useState('random');
   const [targetRoot, setTargetRoot] = useState('D');
   const [targetScaleType, setTargetScaleType] = useState('major');
 
@@ -85,13 +85,35 @@ const Setup = () => {
 
   const isNonIntervalMode = mode !== 'intervals' && mode !== 'interval-transpose';
 
-  const ScaleCheckbox = ({ label, checked, onChange, testId, subtitle }) => (
+  // Count enabled scale types to prevent deselecting the last one
+  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
+
+  // Toggle functions that prevent deselecting the last option
+  const toggleMajor = () => {
+    if (majorEnabled && enabledCount === 1) return; // Can't deselect last
+    setMajorEnabled(!majorEnabled);
+  };
+  const toggleNaturalMinor = () => {
+    if (naturalMinorEnabled && enabledCount === 1) return;
+    setNaturalMinorEnabled(!naturalMinorEnabled);
+  };
+  const toggleHarmonicMinor = () => {
+    if (harmonicMinorEnabled && enabledCount === 1) return;
+    setHarmonicMinorEnabled(!harmonicMinorEnabled);
+  };
+  const toggleOtherModes = () => {
+    if (otherModesEnabled && enabledCount === 1) return;
+    setOtherModesEnabled(!otherModesEnabled);
+  };
+
+  const ScaleCheckbox = ({ label, checked, onChange, testId, subtitle, disabled }) => (
     <button
       data-testid={testId}
       onClick={onChange}
+      disabled={disabled}
       className={`flex items-center gap-3 p-3 border-2 rounded-sm transition-all w-full text-left ${
         checked ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
-      }`}
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center shrink-0 transition-colors ${
         checked ? 'border-[#002FA7] bg-[#002FA7]' : 'border-[#9CA3AF]'
@@ -206,16 +228,18 @@ const Setup = () => {
               {/* Scale Types */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                 <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types</h3>
+                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={() => setMajorEnabled(!majorEnabled)} testId="scale-type-major" />
-                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={() => setNaturalMinorEnabled(!naturalMinorEnabled)} testId="scale-type-natural-minor" />
-                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={() => setHarmonicMinorEnabled(!harmonicMinorEnabled)} testId="scale-type-harmonic-minor" />
+                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
                   <ScaleCheckbox
                     label="Other Modes"
                     subtitle="Dorian, Phrygian, Lydian, Mixolydian"
                     checked={otherModesEnabled}
-                    onChange={() => setOtherModesEnabled(!otherModesEnabled)}
+                    onChange={toggleOtherModes}
                     testId="scale-type-other-modes"
+                    disabled={otherModesEnabled && enabledCount === 1}
                   />
                 </div>
               </div>

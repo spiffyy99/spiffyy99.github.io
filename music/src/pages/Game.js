@@ -326,6 +326,28 @@ const Game = () => {
     }
     if ('include7ths' in newSettings) {
       setInclude7ths(newSettings.include7ths);
+      // If disabling 7ths and current question is a 7th, regenerate
+      if (!newSettings.include7ths && gameState.currentQuestion?.is7th) {
+        const scale = gameState.currentScale || { rootNote: 'C', scaleType: 'major' };
+        const borrowed = includeBorrowedRef.current;
+        let newQuestion;
+        if (config.mode === 'number-to-chord') {
+          newQuestion = generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, false);
+        } else if (config.mode === 'chord-to-number') {
+          newQuestion = generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, false);
+        } else if (config.mode === 'transposition') {
+          const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
+          const tgt = gameState.targetScale || { rootNote: 'D', scaleType: 'major' };
+          newQuestion = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, borrowed, false);
+        }
+        if (newQuestion) {
+          setGameState(prev => ({
+            ...prev,
+            currentQuestion: newQuestion,
+            feedback: null
+          }));
+        }
+      }
     }
   };
 
