@@ -640,7 +640,7 @@ const Game = () => {
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
-             config.mode === 'guess-scale' ? `This is a ${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'}. Which root note?` :
+             config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale:` :
              'Transpose this chord'}
           </p>
           <div

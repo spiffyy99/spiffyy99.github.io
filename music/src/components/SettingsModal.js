@@ -71,11 +71,9 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
         <div className="space-y-4">
           {/* Scale Types */}
           <div className="border border-[#E5E7EB] rounded-sm p-4">
-            <h4 className="font-bold text-[#1A1A1A] mb-3">{mode === 'guess-scale' ? 'Scale Types in Pool' : 'Scale Types'}</h4>
+            <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
             <p className="text-xs text-[#9CA3AF] mb-3">
-              {mode === 'guess-scale' 
-                ? 'Scale types that can appear in questions. New question on change.' 
-                : 'At least one must be selected'}
+                'At least one must be selected'
             </p>
             <div className="space-y-2">
               <Checkbox
