@@ -396,6 +396,60 @@ export const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// ===== GUESS THE SCALE LOGIC =====
+
+// Generate a question for "Guess the Scale" mode
+// Returns 3-4 diatonic chords that uniquely identify the scale
+export const generateGuessScaleQuestion = (enabledScaleTypes, include7ths = false) => {
+  const scaleTypes = enabledScaleTypes && enabledScaleTypes.length > 0 ? enabledScaleTypes : ['major'];
+  const scaleType = scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+  const rootNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+  
+  const scale = SCALE_TYPES[scaleType];
+  if (!scale) return null;
+  
+  // Get all 7 diatonic chords for this scale
+  const allChords = [];
+  for (let i = 0; i < 7; i++) {
+    const chord = getChordAtDegree(rootNote, scaleType, i);
+    if (chord) {
+      if (include7ths) {
+        const seventh = get7thChordQuality(scaleType, i, chord.quality);
+        allChords.push({
+          ...chord,
+          displayQuality: seventh,
+          display: buildChordDisplay(chord.note, seventh)
+        });
+      } else {
+        allChords.push({
+          ...chord,
+          displayQuality: chord.quality,
+          display: buildChordDisplay(chord.note, chord.quality)
+        });
+      }
+    }
+  }
+  
+  // Shuffle and pick 3-4 chords
+  const shuffled = [...allChords].sort(() => Math.random() - 0.5);
+  const numChords = Math.random() < 0.5 ? 3 : 4;
+  const selectedChords = shuffled.slice(0, numChords);
+  
+  // Sort selected chords by degree for cleaner display
+  selectedChords.sort((a, b) => a.degreeIndex - b.degreeIndex);
+  
+  return {
+    type: 'guess-scale',
+    chords: selectedChords,
+    correctScale: {
+      rootNote,
+      scaleType,
+      name: `${rootNote} ${SCALE_TYPES[scaleType].name}`
+    },
+    correctScaleType: scaleType
+  };
+};
+
 // ===== INTERVAL LOGIC (unchanged) =====
 
 export const INTERVALS = [

@@ -17,6 +17,7 @@ import {
   generateTranspositionQuestion,
   generateRandomNotePair,
   generateIntervalTransposition,
+  generateGuessScaleQuestion,
   buildChordDisplay,
   formatRomanNumeral,
 } from '../utils/chordLogic';
@@ -127,6 +128,9 @@ const Game = () => {
     if (config.mode === 'intervals') {
       return { ...generateRandomNotePair(), type: 'interval' };
     }
+    if (config.mode === 'guess-scale') {
+      return generateGuessScaleQuestion(scaleTypes, sevenths);
+    }
     if (config.mode === 'number-to-chord') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
@@ -204,6 +208,7 @@ const Game = () => {
     }
     if (q.type === 'interval') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
+    if (q.type === 'guess-scale') return q.correctScale?.name || '';
     return '';
   };
 
@@ -263,6 +268,14 @@ const Game = () => {
     submitAnswer(isCorrect);
   };
 
+  const handleScaleAnswer = (scaleType) => {
+    if (!gameState.isGameActive || gameState.feedback) return;
+    const q = gameState.currentQuestion;
+    if (!q || q.type !== 'guess-scale') return;
+    const isCorrect = scaleType === q.correctScaleType;
+    submitAnswer(isCorrect);
+  };
+
   // Save session
   const saveGameSession = async () => {
     try {
@@ -310,8 +323,21 @@ const Game = () => {
   const handleSettingsChange = (newSettings) => {
     if ('enabledScaleTypes' in newSettings) {
       setEnabledScaleTypes(newSettings.enabledScaleTypes);
+      
+      // For guess-scale mode, regenerate when scale types change (untimed only)
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+        const sevenths = include7thsRef.current;
+        const newQuestion = generateGuessScaleQuestion(newSettings.enabledScaleTypes, sevenths);
+        if (newQuestion) {
+          setGameState(prev => ({
+            ...prev,
+            currentQuestion: newQuestion,
+            feedback: null
+          }));
+        }
+      }
       // Auto-adjust + regenerate if current scale type is now invalid
-      if (config.scaleSelection === 'preselected' && gameState.currentScale) {
+      else if (config.scaleSelection === 'preselected' && gameState.currentScale) {
         if (!newSettings.enabledScaleTypes.includes(gameState.currentScale.scaleType)) {
           const newScaleType = newSettings.enabledScaleTypes[0];
           const root = gameState.currentScale.rootNote;
@@ -345,8 +371,21 @@ const Game = () => {
     }
     if ('include7ths' in newSettings) {
       setInclude7ths(newSettings.include7ths);
+      
+      // For guess-scale mode, regenerate when 7ths setting changes (untimed only)
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+        const scaleTypes = enabledScaleTypesRef.current;
+        const newQuestion = generateGuessScaleQuestion(scaleTypes, newSettings.include7ths);
+        if (newQuestion) {
+          setGameState(prev => ({
+            ...prev,
+            currentQuestion: newQuestion,
+            feedback: null
+          }));
+        }
+      }
       // If disabling 7ths and current question is a 7th, regenerate
-      if (!newSettings.include7ths && gameState.currentQuestion?.is7th) {
+      else if (!newSettings.include7ths && gameState.currentQuestion?.is7th) {
         const scale = gameState.currentScale || { rootNote: 'C', scaleType: 'major' };
         const borrowed = includeBorrowedRef.current;
         let newQuestion;
@@ -443,6 +482,7 @@ const Game = () => {
   const isChordMode = config.mode === 'number-to-chord' || config.mode === 'transposition';
   const isDegreeMode = config.mode === 'chord-to-number';
   const isIntervalMode = config.mode === 'intervals' || config.mode === 'interval-transpose';
+  const isGuessScaleMode = config.mode === 'guess-scale';
   const isPreselectedUntimed = config.scaleSelection === 'preselected' && config.timerMode === 'untimed';
 
   // Quality options - show 7ths only when enabled AND question is a 7th question
@@ -484,7 +524,7 @@ const Game = () => {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            {!isIntervalMode && (
+            {(!isIntervalMode || isGuessScaleMode) && (
               <button
                 data-testid="settings-button"
                 onClick={() => setShowSettings(true)}
@@ -507,8 +547,8 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Scale Display - modes 1 & 2 */}
-        {!isIntervalMode && config.mode !== 'transposition' && displayScale && (
+        {/* Scale Display - modes 1 & 2 (not for guess-scale) */}
+        {!isIntervalMode && !isGuessScaleMode && config.mode !== 'transposition' && displayScale && (
           <div className="text-center mb-8">
             <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">Current Scale</p>
             {isPreselectedUntimed ? (
@@ -599,11 +639,12 @@ const Game = () => {
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
+             config.mode === 'guess-scale' ? 'Which scale do these chords belong to?' :
              'Transpose this chord'}
           </p>
           <div
             data-testid="question-display"
-            className={`inline-flex items-center justify-center min-w-[250px] md:min-w-[350px] max-w-[95vw] px-8 md:px-16 h-[180px] border-4 rounded-sm transition-colors duration-150 ${
+            className={`inline-flex items-center justify-center min-w-[250px] md:min-w-[350px] max-w-[95vw] px-8 md:px-16 ${isGuessScaleMode ? 'min-h-[120px] py-6' : 'h-[180px]'} border-4 rounded-sm transition-colors duration-150 ${
               gameState.feedback === 'correct'
                 ? 'bg-green-100 border-green-500'
                 : gameState.feedback === 'incorrect'
@@ -616,6 +657,14 @@ const Game = () => {
                 <div className="text-5xl md:text-7xl font-bold text-[#1A1A1A] mb-3">{q.startNote}</div>
                 <div className="text-xl font-medium text-[#002FA7] mb-1">{q.direction === 'up' ? '\u2191 UP' : '\u2193 DOWN'}</div>
                 <div className="text-lg font-medium text-[#9CA3AF]">{q.intervalFullName}</div>
+              </div>
+            ) : q.type === 'guess-scale' ? (
+              <div className="flex flex-wrap justify-center gap-3 md:gap-4 px-4">
+                {q.chords.map((chord, idx) => (
+                  <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
+                    {chord.display}
+                  </span>
+                ))}
               </div>
             ) : (
               <span className={`${questionTextClass(getQuestionText())} font-bold text-[#1A1A1A]`}>
@@ -732,6 +781,26 @@ const Game = () => {
                 >
                   <span className="text-2xl">{interval.name}</span>
                   <span className="text-[10px] text-[#9CA3AF] mt-1">{interval.fullName}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Guess Scale Buttons */}
+        {isGuessScaleMode && (
+          <div className="max-w-4xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">Select Scale Type</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {enabledScaleTypes.map((scaleType) => (
+                <button
+                  key={scaleType}
+                  data-testid={`scale-button-${scaleType}`}
+                  onClick={() => handleScaleAnswer(scaleType)}
+                  disabled={!gameState.isGameActive || gameState.feedback}
+                  className="h-16 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 text-sm md:text-base"
+                >
+                  {SCALE_TYPES[scaleType]?.name || scaleType}
                 </button>
               ))}
             </div>

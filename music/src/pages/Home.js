@@ -37,6 +37,12 @@ const Home = () => {
       title: 'Interval Transposition',
       description: 'Find the note given start note, interval, and direction',
       icon: Music
+    },
+    {
+      id: 'guess-scale',
+      title: 'Guess the Scale',
+      description: 'See diatonic chords and identify which scale they belong to',
+      icon: Music
     }
   ];
 
