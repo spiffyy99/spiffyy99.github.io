@@ -64,6 +64,9 @@ const Setup = () => {
         gameConfig.sourceRoot = sourceRoot;
         gameConfig.targetRoot = targetRoot;
       }
+    } else if (mode === 'guess-scale') {
+      // Guess scale mode: always random, just needs enabled scale types and 7ths setting
+      gameConfig.scaleSelection = 'random';
     } else if (mode !== 'intervals' && mode !== 'interval-transpose') {
       gameConfig.scaleSelection = scaleSelection;
       gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
@@ -78,10 +81,13 @@ const Setup = () => {
     if (mode === 'chord-to-number') return 'Chord \u2192 Number';
     if (mode === 'transposition') return 'Transposition';
     if (mode === 'intervals') return 'Interval Recognition';
-    return 'Interval Transposition';
+    if (mode === 'interval-transpose') return 'Interval Transposition';
+    if (mode === 'guess-scale') return 'Guess the Scale';
+    return 'Unknown Mode';
   };
 
   const isNonIntervalMode = mode !== 'intervals' && mode !== 'interval-transpose';
+  const isGuessScaleMode = mode === 'guess-scale';
 
   // Count enabled scale types to prevent deselecting the last one
   const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
@@ -221,6 +227,56 @@ const Setup = () => {
         <div className="space-y-6 mb-12">
           {!isNonIntervalMode ? (
             <TimerSection />
+          ) : isGuessScaleMode ? (
+            <>
+              {/* Scale Types for Guess Scale Mode */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types</h3>
+                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox
+                    label="Other Modes"
+                    subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                    checked={otherModesEnabled}
+                    onChange={toggleOtherModes}
+                    testId="scale-type-other-modes"
+                    disabled={otherModesEnabled && enabledCount === 1}
+                  />
+                </div>
+              </div>
+
+              {/* 7th Chords for Guess Scale Mode */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">7th Chords</h3>
+                <button
+                  data-testid="7th-chords-toggle"
+                  onClick={() => setInclude7ths(!include7ths)}
+                  className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                    include7ths ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-[#1A1A1A]">{include7ths ? 'Enabled' : 'Disabled'}</div>
+                      <div className="text-sm text-[#9CA3AF]">
+                        {include7ths
+                          ? 'Chords displayed with 7ths (Maj7, m7, dom7, etc.)'
+                          : 'Chords displayed as triads only'}
+                      </div>
+                    </div>
+                    <div className={`w-12 h-6 rounded-full transition-colors ${include7ths ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${include7ths ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Timer */}
+              <TimerSection />
+            </>
           ) : (
             <>
               {/* Scale Types */}
@@ -257,7 +313,7 @@ const Setup = () => {
                         }`}
                       >
                         <div className="font-bold text-[#1A1A1A]">Random Roots</div>
-                        <div className="text-sm text-[#9CA3AF]">New random source and target roots for each question (automatically different)</div>
+                        <div className="text-sm text-[#9CA3AF]">New random source and target roots for each question</div>
                       </button>
                       <button
                         data-testid="target-scale-preselected"
@@ -267,7 +323,7 @@ const Setup = () => {
                         }`}
                       >
                         <div className="font-bold text-[#1A1A1A]">Fixed Roots</div>
-                        <div className="text-sm text-[#9CA3AF]">Select specific source and target root notes</div>
+                        <div className="text-sm text-[#9CA3AF]">Select specific source and target root notes (cannot be the same)</div>
                       </button>
                     </div>
                   </div>

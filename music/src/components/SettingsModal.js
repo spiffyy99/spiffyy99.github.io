@@ -72,7 +72,9 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
           {/* Scale Types */}
           <div className="border border-[#E5E7EB] rounded-sm p-4">
             <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
-            <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+            <p className="text-xs text-[#9CA3AF] mb-3">
+                'At least one must be selected'
+            </p>
             <div className="space-y-2">
               <Checkbox
                 label="Major"
@@ -106,44 +108,49 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
             </div>
           </div>
 
-          {/* Borrowed Chords */}
-          <div className="border border-[#E5E7EB] rounded-sm p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-[#1A1A1A]">Borrowed Chords</h4>
-                <p className="text-xs text-[#9CA3AF] mt-1">
-                  {includeBorrowed
-                    ? 'Includes chords from parallel minor'
-                    : 'Only diatonic scale chords'}
-                </p>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">Only applies in major scale context</p>
-              </div>
-              <button
-                data-testid="settings-borrowed-toggle"
-                onClick={() => onSettingsChange({ includeBorrowed: !includeBorrowed })}
-                className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
-                  includeBorrowed ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
-                }`}
-              >
-                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                  includeBorrowed ? 'translate-x-6' : 'translate-x-0.5'
-                }`} />
-              </button>
-            </div>
-          </div>
-
-          {/* 7th Chords - Only for number-to-chord mode */}
-          {mode === 'number-to-chord' && (
+          {/* Borrowed Chords - Not shown for guess-scale mode */}
+          {mode !== 'guess-scale' && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-[#1A1A1A]">7th Chords</h4>
+                  <h4 className="font-bold text-[#1A1A1A]">Borrowed Chords</h4>
                   <p className="text-xs text-[#9CA3AF] mt-1">
-                    {include7ths
-                      ? 'Includes Maj7, m7, dom7, ø7, °7, aug7'
-                      : 'Only triads'}
+                    {includeBorrowed
+                      ? 'Includes chords from parallel minor'
+                      : 'Only diatonic scale chords'}
                   </p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5">Changes apply on next question</p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">Only applies in major scale context</p>
+                </div>
+                <button
+                  data-testid="settings-borrowed-toggle"
+                  onClick={() => onSettingsChange({ includeBorrowed: !includeBorrowed })}
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
+                    includeBorrowed ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                    includeBorrowed ? 'translate-x-6' : 'translate-x-0.5'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 7th Chords - For number-to-chord and guess-scale modes */}
+          {(mode === 'number-to-chord' || mode === 'guess-scale') && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-[#1A1A1A]">{mode === 'guess-scale' ? 'Display 7th Chords' : '7th Chords'}</h4>
+                  <p className="text-xs text-[#9CA3AF] mt-1">
+                    {mode === 'guess-scale' 
+                      ? (include7ths ? 'Chords displayed with 7ths' : 'Chords displayed as triads')
+                      : (include7ths ? 'Includes Maj7, m7, dom7, ø7, °7, aug7' : 'Only triads')
+                    }
+                  </p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">
+                    {mode === 'guess-scale' ? 'New question generated on change' : 'Changes apply on next question'}
+                  </p>
                 </div>
                 <button
                   data-testid="settings-7th-toggle"
