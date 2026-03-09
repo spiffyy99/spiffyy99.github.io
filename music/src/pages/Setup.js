@@ -232,7 +232,7 @@ const Setup = () => {
               {/* Scale Types for Guess Scale Mode */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                 <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types in Pool</h3>
-                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected. These are the scales you'll guess from.</p>
+                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected. These scale types can appear in questions - you'll guess their root note.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
                   <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />

@@ -74,7 +74,7 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
             <h4 className="font-bold text-[#1A1A1A] mb-3">{mode === 'guess-scale' ? 'Scale Types in Pool' : 'Scale Types'}</h4>
             <p className="text-xs text-[#9CA3AF] mb-3">
               {mode === 'guess-scale' 
-                ? 'Scales you can guess from. New question on change.' 
+                ? 'Scale types that can appear in questions. New question on change.' 
                 : 'At least one must be selected'}
             </p>
             <div className="space-y-2">

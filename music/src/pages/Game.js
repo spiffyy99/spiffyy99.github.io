@@ -208,7 +208,7 @@ const Game = () => {
     }
     if (q.type === 'interval') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
-    if (q.type === 'guess-scale') return q.correctScale?.name || '';
+    if (q.type === 'guess-scale') return q.correctScale?.rootNote || '';
     return '';
   };
 
@@ -268,11 +268,12 @@ const Game = () => {
     submitAnswer(isCorrect);
   };
 
-  const handleScaleAnswer = (scaleType) => {
+  const handleScaleRootAnswer = (noteIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
     if (!q || q.type !== 'guess-scale') return;
-    const isCorrect = scaleType === q.correctScaleType;
+    const selectedNote = ALL_NOTES[noteIndex];
+    const isCorrect = selectedNote === q.correctScale?.rootNote;
     submitAnswer(isCorrect);
   };
 
@@ -639,7 +640,7 @@ const Game = () => {
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
-             config.mode === 'guess-scale' ? 'Which scale do these chords belong to?' :
+             config.mode === 'guess-scale' ? `This is a ${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'}. Which root note?` :
              'Transpose this chord'}
           </p>
           <div
@@ -787,20 +788,20 @@ const Game = () => {
           </div>
         )}
 
-        {/* Guess Scale Buttons */}
+        {/* Guess Scale Root Note Buttons */}
         {isGuessScaleMode && (
-          <div className="max-w-4xl mx-auto">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">Select Scale Type</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {enabledScaleTypes.map((scaleType) => (
+          <div className="max-w-5xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">Select Root Note</p>
+            <div className="grid grid-cols-6 md:grid-cols-12 gap-2 md:gap-3">
+              {ALL_NOTES.map((note, idx) => (
                 <button
-                  key={scaleType}
-                  data-testid={`scale-button-${scaleType}`}
-                  onClick={() => handleScaleAnswer(scaleType)}
+                  key={note}
+                  data-testid={`scale-root-button-${note}`}
+                  onClick={() => handleScaleRootAnswer(idx)}
                   disabled={!gameState.isGameActive || gameState.feedback}
-                  className="h-16 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 text-sm md:text-base"
+                  className="h-14 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-[10px] md:text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 px-1"
                 >
-                  {SCALE_TYPES[scaleType]?.name || scaleType}
+                  {note}
                 </button>
               ))}
             </div>
