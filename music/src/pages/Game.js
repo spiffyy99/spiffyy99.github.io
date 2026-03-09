@@ -81,17 +81,31 @@ const Game = () => {
     return scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
   };
 
+  const getInitialTranspositionState = () => {
+    if (config.mode !== 'transposition') return { sourceScale: null, targetScale: null };
+    
+    if (config.targetScaleSelection === 'random') {
+      const src = randomRoot();
+      const tgt = getRandomDifferentRoot(src);
+      return {
+        sourceScale: { rootNote: src, scaleType: getRandomScaleType() },
+        targetScale: { rootNote: tgt, scaleType: getRandomScaleType() }
+      };
+    } else {
+      return {
+        sourceScale: { rootNote: config.sourceRoot || 'C', scaleType: getRandomScaleType() },
+        targetScale: { rootNote: config.targetRoot || 'D', scaleType: getRandomScaleType() }
+      };
+    }
+  };
+
+  const transpState = getInitialTranspositionState();
+
   const [gameState, setGameState] = useState({
     sessionId: generateSessionId(),
     currentScale: getInitialScale(),
-    sourceScale: config.mode === 'transposition'
-      ? { rootNote: config.sourceRoot || 'C', scaleType: getRandomScaleType() }
-      : null,
-    targetScale: config.mode === 'transposition'
-      ? (config.targetScaleSelection === 'random'
-        ? { rootNote: getRandomDifferentRoot(config.sourceRoot || 'C'), scaleType: getRandomScaleType() }
-        : { rootNote: config.targetRoot || (config.sourceRoot === 'C' ? 'D' : 'C'), scaleType: getRandomScaleType() })
-      : null,
+    sourceScale: transpState.sourceScale,
+    targetScale: transpState.targetScale,
     currentQuestion: null,
     score: 0,
     totalQuestions: 0,
@@ -126,12 +140,16 @@ const Game = () => {
       return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths);
     }
     if (config.mode === 'transposition') {
-      const source = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
       const randomScaleType = getRandomScaleType();
-      const targetRootNote = config.targetScaleSelection === 'random'
-        ? getRandomDifferentRoot(source.rootNote)
-        : (gameState.targetScale?.rootNote || (source.rootNote === 'C' ? 'D' : 'C'));
-      return generateTranspositionQuestion(source.rootNote, randomScaleType, targetRootNote, randomScaleType, borrowed, sevenths);
+      if (config.targetScaleSelection === 'random') {
+        const src = randomRoot();
+        const tgt = getRandomDifferentRoot(src);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+      } else {
+        const src = config.sourceRoot || 'C';
+        const tgt = config.targetRoot || 'D';
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+      }
     }
     return null;
   }, [config.mode, config.scaleSelection, config.targetScaleSelection, gameState.currentScale, gameState.sourceScale, gameState.targetScale]);
@@ -390,21 +408,20 @@ const Game = () => {
 
 
   const handleSourceRootChange = (newRoot) => {
+    if (config.targetScaleSelection !== 'preselected') return;
     const scaleType = getRandomScaleType();
-    const tgtRoot = config.targetScaleSelection === 'random'
-      ? getRandomDifferentRoot(newRoot)
-      : (gameState.targetScale?.rootNote || (newRoot === 'C' ? 'D' : 'C'));
+    const tgtRoot = gameState.targetScale?.rootNote || 'D';
     const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current);
     setGameState(prev => ({
       ...prev,
       sourceScale: { rootNote: newRoot, scaleType },
-      targetScale: { rootNote: tgtRoot, scaleType },
       currentQuestion: newQ,
       feedback: null
     }));
   };
 
   const handleTargetRootChange = (newRoot) => {
+    if (config.targetScaleSelection !== 'preselected') return;
     const srcRoot = gameState.sourceScale?.rootNote || 'C';
     if (newRoot === srcRoot) return; // Prevent setting target same as source
     const scaleType = getRandomScaleType();
@@ -536,7 +553,7 @@ const Game = () => {
             <div className="flex items-center justify-center gap-8">
               <div className="text-center">
                 <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">From</p>
-                {config.timerMode === 'untimed' ? (
+                {config.targetScaleSelection === 'preselected' && config.timerMode === 'untimed' ? (
                   <select
                     data-testid="source-root-change"
                     value={gameState.sourceScale?.rootNote || 'C'}
