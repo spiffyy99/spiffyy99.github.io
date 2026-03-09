@@ -24,10 +24,7 @@ const Setup = () => {
 
   // Transposition
   const [sourceRoot, setSourceRoot] = useState('C');
-  const [sourceScaleType, setSourceScaleType] = useState('major');
   const [targetScaleSelection, setTargetScaleSelection] = useState('random');
-  const [targetRoot, setTargetRoot] = useState('D');
-  const [targetScaleType, setTargetScaleType] = useState('major');
 
   // Options
   const [includeBorrowed, setIncludeBorrowed] = useState(false);
@@ -62,10 +59,7 @@ const Setup = () => {
 
     if (mode === 'transposition') {
       gameConfig.sourceRoot = sourceRoot;
-      gameConfig.sourceScaleType = ensureValidScaleType(sourceScaleType);
       gameConfig.targetScaleSelection = targetScaleSelection;
-      gameConfig.targetRoot = targetRoot;
-      gameConfig.targetScaleType = ensureValidScaleType(targetScaleType);
     } else if (mode !== 'intervals' && mode !== 'interval-transpose') {
       gameConfig.scaleSelection = scaleSelection;
       gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
@@ -247,13 +241,6 @@ const Setup = () => {
               {/* Scale Selection */}
               {mode === 'transposition' ? (
                 <>
-                  {/* Single Scale Type for both source and target */}
-                  <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Type</h3>
-                    <p className="text-sm text-[#9CA3AF] mb-4">Applies to both source and target scales</p>
-                    <ScaleTypeSelect value={sourceScaleType} onChange={(e) => setSourceScaleType(e.target.value)} testId="source-scale-type-selector" />
-                  </div>
-
                   {/* Source Root Note */}
                   <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                     <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Source Root Note</h3>
@@ -262,7 +249,7 @@ const Setup = () => {
 
                   {/* Target Root Note */}
                   <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Target Root Note</h3>
+                    <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Target Root Note Selection</h3>
                     <div className="space-y-3 mb-4">
                       <button
                         data-testid="target-scale-random"
@@ -272,7 +259,7 @@ const Setup = () => {
                         }`}
                       >
                         <div className="font-bold text-[#1A1A1A]">Random Target Root</div>
-                        <div className="text-sm text-[#9CA3AF]">A new random target root for each question</div>
+                        <div className="text-sm text-[#9CA3AF]">A new random target root for each question (different from source)</div>
                       </button>
                       <button
                         data-testid="target-scale-preselected"
@@ -282,15 +269,9 @@ const Setup = () => {
                         }`}
                       >
                         <div className="font-bold text-[#1A1A1A]">Fixed Target Root</div>
-                        <div className="text-sm text-[#9CA3AF]">Keep the same target root note</div>
+                        <div className="text-sm text-[#9CA3AF]">Keep the same target root note (must be different from source)</div>
                       </button>
                     </div>
-                    {targetScaleSelection === 'preselected' && (
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
-                        <RootSelect value={targetRoot} onChange={(e) => setTargetRoot(e.target.value)} testId="target-root-selector" />
-                      </div>
-                    )}
                   </div>
                 </>
               ) : (

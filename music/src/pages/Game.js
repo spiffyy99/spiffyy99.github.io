@@ -68,16 +68,29 @@ const Game = () => {
     return { rootNote: config.selectedRoot || 'C', scaleType: config.selectedScaleType || 'major' };
   };
 
+  const getRandomDifferentRoot = (excludeRoot) => {
+    let newRoot;
+    do {
+      newRoot = randomRoot();
+    } while (newRoot === excludeRoot);
+    return newRoot;
+  };
+
+  const getRandomScaleType = () => {
+    const scaleTypes = enabledScaleTypesRef.current || ['major'];
+    return scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+  };
+
   const [gameState, setGameState] = useState({
     sessionId: generateSessionId(),
     currentScale: getInitialScale(),
     sourceScale: config.mode === 'transposition'
-      ? { rootNote: config.sourceRoot || 'C', scaleType: config.sourceScaleType || 'major' }
+      ? { rootNote: config.sourceRoot || 'C', scaleType: getRandomScaleType() }
       : null,
     targetScale: config.mode === 'transposition'
       ? (config.targetScaleSelection === 'random'
-        ? { rootNote: randomRoot(), scaleType: config.sourceScaleType || 'major' }
-        : { rootNote: config.targetRoot || 'D', scaleType: config.sourceScaleType || 'major' })
+        ? { rootNote: getRandomDifferentRoot(config.sourceRoot || 'C'), scaleType: getRandomScaleType() }
+        : { rootNote: config.targetRoot || (config.sourceRoot === 'C' ? 'D' : 'C'), scaleType: getRandomScaleType() })
       : null,
     currentQuestion: null,
     score: 0,
@@ -114,11 +127,11 @@ const Game = () => {
     }
     if (config.mode === 'transposition') {
       const source = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
-      const sharedType = source.scaleType;
+      const randomScaleType = getRandomScaleType();
       const targetRootNote = config.targetScaleSelection === 'random'
-        ? randomRoot()
-        : (gameState.targetScale?.rootNote || 'D');
-      return generateTranspositionQuestion(source.rootNote, sharedType, targetRootNote, sharedType, borrowed, sevenths);
+        ? getRandomDifferentRoot(source.rootNote)
+        : (gameState.targetScale?.rootNote || (source.rootNote === 'C' ? 'D' : 'C'));
+      return generateTranspositionQuestion(source.rootNote, randomScaleType, targetRootNote, randomScaleType, borrowed, sevenths);
     }
     return null;
   }, [config.mode, config.scaleSelection, config.targetScaleSelection, gameState.currentScale, gameState.sourceScale, gameState.targetScale]);
@@ -307,19 +320,7 @@ const Game = () => {
           }
         }
       }
-      // Fix for transposition mode
-      if (config.mode === 'transposition' && gameState.sourceScale) {
-        if (!newSettings.enabledScaleTypes.includes(gameState.sourceScale.scaleType)) {
-          const newScaleType = newSettings.enabledScaleTypes[0];
-          const src = { rootNote: gameState.sourceScale.rootNote, scaleType: newScaleType };
-          const tgtRoot = config.targetScaleSelection === 'random'
-            ? randomRoot()
-            : (gameState.targetScale?.rootNote || 'D');
-          const tgt = { rootNote: tgtRoot, scaleType: newScaleType };
-          const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current, include7thsRef.current);
-          setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-        }
-      }
+      // For transposition mode, scale type is randomized, so no need to adjust
     }
     if ('includeBorrowed' in newSettings) {
       setIncludeBorrowed(newSettings.includeBorrowed);
@@ -338,7 +339,8 @@ const Game = () => {
         } else if (config.mode === 'transposition') {
           const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
           const tgt = gameState.targetScale || { rootNote: 'D', scaleType: 'major' };
-          newQuestion = generateTranspositionQuestion(src.rootNote, src.scaleType, tgt.rootNote, tgt.scaleType, borrowed, false);
+          const randomScaleType = getRandomScaleType();
+          newQuestion = generateTranspositionQuestion(src.rootNote, randomScaleType, tgt.rootNote, randomScaleType, borrowed, false);
         }
         if (newQuestion) {
           setGameState(prev => ({
@@ -386,22 +388,12 @@ const Game = () => {
     }));
   };
 
-  // Transposition handlers
-  const handleTranspositionScaleTypeChange = (newScaleType) => {
-    const src = { rootNote: gameState.sourceScale?.rootNote || 'C', scaleType: newScaleType };
-    const tgtRoot = config.targetScaleSelection === 'random'
-      ? randomRoot()
-      : (gameState.targetScale?.rootNote || 'D');
-    const tgt = { rootNote: tgtRoot, scaleType: newScaleType };
-    const newQ = generateTranspositionQuestion(src.rootNote, newScaleType, tgt.rootNote, newScaleType, includeBorrowedRef.current);
-    setGameState(prev => ({ ...prev, sourceScale: src, targetScale: tgt, currentQuestion: newQ, feedback: null }));
-  };
 
   const handleSourceRootChange = (newRoot) => {
-    const scaleType = gameState.sourceScale?.scaleType || 'major';
+    const scaleType = getRandomScaleType();
     const tgtRoot = config.targetScaleSelection === 'random'
-      ? randomRoot()
-      : (gameState.targetScale?.rootNote || 'D');
+      ? getRandomDifferentRoot(newRoot)
+      : (gameState.targetScale?.rootNote || (newRoot === 'C' ? 'D' : 'C'));
     const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current);
     setGameState(prev => ({
       ...prev,
@@ -413,8 +405,9 @@ const Game = () => {
   };
 
   const handleTargetRootChange = (newRoot) => {
-    const scaleType = gameState.sourceScale?.scaleType || 'major';
     const srcRoot = gameState.sourceScale?.rootNote || 'C';
+    if (newRoot === srcRoot) return; // Prevent setting target same as source
+    const scaleType = getRandomScaleType();
     const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current);
     setGameState(prev => ({
       ...prev,
@@ -531,23 +524,12 @@ const Game = () => {
         {/* Transposition Scale Display - shared scale type + From/To roots */}
         {config.mode === 'transposition' && (
           <div className="text-center mb-8">
-            {/* Shared scale type */}
+            {/* Scale type display - randomly selected each question */}
             <div className="mb-4">
               <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2">Scale Type</p>
-              {config.timerMode === 'untimed' ? (
-                <select
-                  data-testid="transposition-scale-type-change"
-                  value={gameState.sourceScale?.scaleType || 'major'}
-                  onChange={(e) => handleTranspositionScaleTypeChange(e.target.value)}
-                  className="text-2xl md:text-3xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-3 py-1"
-                >
-                  {enabledScaleTypes.map(id => <option key={id} value={id}>{SCALE_TYPES[id].name}</option>)}
-                </select>
-              ) : (
-                <h3 className="text-2xl md:text-3xl font-bold text-[#002FA7]">
-                  {SCALE_TYPES[q.sourceScale?.scaleType || gameState.sourceScale?.scaleType]?.name}
-                </h3>
-              )}
+              <h3 className="text-2xl md:text-3xl font-bold text-[#002FA7]">
+                {SCALE_TYPES[q.sourceScale?.scaleType || gameState.sourceScale?.scaleType]?.name}
+              </h3>
             </div>
 
             {/* From → To roots */}
