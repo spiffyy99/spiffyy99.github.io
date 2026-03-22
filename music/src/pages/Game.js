@@ -8,6 +8,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import {
   ALL_NOTES,
   SCALE_TYPES,
+  ALL_SCALE_TYPE_IDS,
   DEGREE_NUMBERS,
   INTERVALS,
   generateSessionId,
@@ -53,8 +54,10 @@ const Game = () => {
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
   useEffect(() => { include7thsRef.current = include7ths; }, [include7ths]);
 
-  // Quality switch
-  const [selectedQuality, setSelectedQuality] = useState('major');
+  // Quality + note/degree: both start unset; answering completes when both are chosen (any order)
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [pendingNoteIndex, setPendingNoteIndex] = useState(null);
+  const [pendingDegreeIndex, setPendingDegreeIndex] = useState(null);
 
   // Modals
   const [showSettings, setShowSettings] = useState(false);
@@ -115,6 +118,12 @@ const Game = () => {
     isGameActive: true,
     timeRemaining: config.timerDuration || null
   });
+
+  useEffect(() => {
+    setSelectedQuality(null);
+    setPendingNoteIndex(null);
+    setPendingDegreeIndex(null);
+  }, [gameState.currentQuestion]);
 
   // Generate question
   const generateQuestion = useCallback(() => {
@@ -238,19 +247,39 @@ const Game = () => {
     }, 800);
   };
 
-  // Answer handlers
-  const handleNoteAnswer = (noteIndex) => {
+  // Answer handlers: auto-submit once both quality and note/degree are chosen (any order)
+  const handleNoteSelect = (noteIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
     if (!q) return;
-    submitAnswer(noteIndex === q.correctNoteIndex && selectedQuality === q.correctQuality);
+    setPendingNoteIndex(noteIndex);
+    if (selectedQuality !== null) {
+      submitAnswer(noteIndex === q.correctNoteIndex && selectedQuality === q.correctQuality);
+    }
   };
 
-  const handleDegreeAnswer = (degreeIndex) => {
+  const handleDegreeSelect = (degreeIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
     if (!q) return;
-    submitAnswer(degreeIndex === q.correctDegree && selectedQuality === q.correctAnswerQuality);
+    setPendingDegreeIndex(degreeIndex);
+    if (selectedQuality !== null) {
+      submitAnswer(degreeIndex === q.correctDegree && selectedQuality === q.correctAnswerQuality);
+    }
+  };
+
+  const handleQualitySelect = (qo) => {
+    if (!gameState.isGameActive || gameState.feedback) return;
+    const q = gameState.currentQuestion;
+    if (!q) return;
+    setSelectedQuality(qo);
+    const chordMode = config.mode === 'number-to-chord' || config.mode === 'transposition';
+    const degreeMode = config.mode === 'chord-to-number';
+    if (chordMode && pendingNoteIndex !== null) {
+      submitAnswer(pendingNoteIndex === q.correctNoteIndex && qo === q.correctQuality);
+    } else if (degreeMode && pendingDegreeIndex !== null) {
+      submitAnswer(pendingDegreeIndex === q.correctDegree && qo === q.correctAnswerQuality);
+    }
   };
 
   const handleIntervalAnswer = (answer) => {
@@ -568,7 +597,11 @@ const Game = () => {
                   onChange={(e) => handleScaleTypeChange(e.target.value)}
                   className="text-3xl md:text-5xl font-bold tracking-tighter text-[#002FA7] bg-transparent border-b-4 border-[#002FA7] focus:outline-none text-center cursor-pointer hover:bg-[#002FA7]/5 transition-colors px-3 py-1"
                 >
-                  {enabledScaleTypes.map(id => <option key={id} value={id}>{SCALE_TYPES[id].name}</option>)}
+                  {(config.scaleSelection === 'preselected' && (config.mode === 'number-to-chord' || config.mode === 'chord-to-number')
+                    ? ALL_SCALE_TYPE_IDS
+                    : enabledScaleTypes).map(id => (
+                    <option key={id} value={id}>{SCALE_TYPES[id].name}</option>
+                  ))}
                 </select>
               </div>
             ) : (
@@ -693,7 +726,8 @@ const Game = () => {
                 <button
                   key={qo}
                   data-testid={`quality-${qo}`}
-                  onClick={() => setSelectedQuality(qo)}
+                  type="button"
+                  onClick={() => handleQualitySelect(qo)}
                   className={`px-3 md:px-4 py-2 border-2 rounded-sm font-bold text-xs md:text-sm uppercase tracking-wider transition-all ${
                     selectedQuality === qo
                       ? 'border-[#002FA7] bg-[#002FA7] text-white'
@@ -714,9 +748,12 @@ const Game = () => {
                     <button
                       key={note}
                       data-testid={`note-button-${note}`}
-                      onClick={() => handleNoteAnswer(idx)}
+                      type="button"
+                      onClick={() => handleNoteSelect(idx)}
                       disabled={!gameState.isGameActive || gameState.feedback}
-                      className="h-14 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-[10px] md:text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 px-1"
+                      className={`h-14 md:h-20 w-full rounded-sm border-2 bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-[10px] md:text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 px-1 ${
+                        pendingNoteIndex === idx ? 'border-[#002FA7] bg-[#002FA7]/10 text-[#002FA7]' : 'border-[#E5E7EB]'
+                      }`}
                     >
                       {note}
                     </button>
@@ -734,9 +771,12 @@ const Game = () => {
                     <button
                       key={num}
                       data-testid={`degree-button-${num}`}
-                      onClick={() => handleDegreeAnswer(idx)}
+                      type="button"
+                      onClick={() => handleDegreeSelect(idx)}
                       disabled={!gameState.isGameActive || gameState.feedback}
-                      className="h-16 md:h-20 w-full rounded-sm border border-[#E5E7EB] bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-xl md:text-3xl font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50"
+                      className={`h-16 md:h-20 w-full rounded-sm border-2 bg-white hover:border-[#002FA7] hover:text-[#002FA7] hover:bg-blue-50 transition-all text-xl md:text-3xl font-bold flex items-center justify-center shadow-sm active:scale-95 disabled:opacity-50 ${
+                        pendingDegreeIndex === idx ? 'border-[#002FA7] bg-[#002FA7]/10 text-[#002FA7]' : 'border-[#E5E7EB]'
+                      }`}
                     >
                       {num}
                     </button>
@@ -828,6 +868,11 @@ const Game = () => {
         settings={{ enabledScaleTypes, includeBorrowed, include7ths }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
+        showScaleTypePool={
+          config.mode === 'guess-scale' ||
+          ((config.mode === 'number-to-chord' || config.mode === 'chord-to-number') && config.scaleSelection === 'random') ||
+          (config.mode === 'transposition' && config.targetScaleSelection === 'random')
+        }
       />
 
       <TimeUpModal

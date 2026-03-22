@@ -4,7 +4,7 @@ import { SCALE_TYPES } from '../utils/chordLogic';
 
 const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
 
-const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) => {
+const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, showScaleTypePool = true }) => {
   if (!isOpen) return null;
 
   const { enabledScaleTypes = ['major'], includeBorrowed = false, include7ths = false } = settings;
@@ -12,10 +12,11 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
   const majorEnabled = enabledScaleTypes.includes('major');
   const naturalMinorEnabled = enabledScaleTypes.includes('naturalMinor');
   const harmonicMinorEnabled = enabledScaleTypes.includes('harmonicMinor');
+  const melodicMinorEnabled = enabledScaleTypes.includes('melodicMinor');
   const otherModesEnabled = OTHER_MODES.some(m => enabledScaleTypes.includes(m));
 
   // Count enabled to prevent deselecting last
-  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
+  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, melodicMinorEnabled, otherModesEnabled].filter(Boolean).length;
 
   const toggleScaleTypes = (types, currentlyEnabled) => {
     // Prevent deselecting last option
@@ -70,43 +71,50 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode }) =>
 
         <div className="space-y-4">
           {/* Scale Types */}
-          <div className="border border-[#E5E7EB] rounded-sm p-4">
-            <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
-            <p className="text-xs text-[#9CA3AF] mb-3">
-                'At least one must be selected'
-            </p>
-            <div className="space-y-2">
-              <Checkbox
-                label="Major"
-                checked={majorEnabled}
-                onChange={() => toggleScaleTypes(['major'], majorEnabled)}
-                testId="settings-scale-major"
-                disabled={majorEnabled && enabledCount === 1}
-              />
-              <Checkbox
-                label="Natural Minor"
-                checked={naturalMinorEnabled}
-                onChange={() => toggleScaleTypes(['naturalMinor'], naturalMinorEnabled)}
-                testId="settings-scale-natural-minor"
-                disabled={naturalMinorEnabled && enabledCount === 1}
-              />
-              <Checkbox
-                label="Harmonic Minor"
-                checked={harmonicMinorEnabled}
-                onChange={() => toggleScaleTypes(['harmonicMinor'], harmonicMinorEnabled)}
-                testId="settings-scale-harmonic-minor"
-                disabled={harmonicMinorEnabled && enabledCount === 1}
-              />
-              <Checkbox
-                label="Other Modes"
-                subtitle="Dorian, Phrygian, Lydian, Mixolydian"
-                checked={otherModesEnabled}
-                onChange={() => toggleScaleTypes(OTHER_MODES, otherModesEnabled)}
-                testId="settings-scale-other-modes"
-                disabled={otherModesEnabled && enabledCount === 1}
-              />
+          {showScaleTypePool && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <h4 className="font-bold text-[#1A1A1A] mb-3">Scale Types</h4>
+              <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+              <div className="space-y-2">
+                <Checkbox
+                  label="Major"
+                  checked={majorEnabled}
+                  onChange={() => toggleScaleTypes(['major'], majorEnabled)}
+                  testId="settings-scale-major"
+                  disabled={majorEnabled && enabledCount === 1}
+                />
+                <Checkbox
+                  label="Natural Minor"
+                  checked={naturalMinorEnabled}
+                  onChange={() => toggleScaleTypes(['naturalMinor'], naturalMinorEnabled)}
+                  testId="settings-scale-natural-minor"
+                  disabled={naturalMinorEnabled && enabledCount === 1}
+                />
+                <Checkbox
+                  label="Harmonic Minor"
+                  checked={harmonicMinorEnabled}
+                  onChange={() => toggleScaleTypes(['harmonicMinor'], harmonicMinorEnabled)}
+                  testId="settings-scale-harmonic-minor"
+                  disabled={harmonicMinorEnabled && enabledCount === 1}
+                />
+                <Checkbox
+                  label="Melodic Minor"
+                  checked={melodicMinorEnabled}
+                  onChange={() => toggleScaleTypes(['melodicMinor'], melodicMinorEnabled)}
+                  testId="settings-scale-melodic-minor"
+                  disabled={melodicMinorEnabled && enabledCount === 1}
+                />
+                <Checkbox
+                  label="Other Modes"
+                  subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                  checked={otherModesEnabled}
+                  onChange={() => toggleScaleTypes(OTHER_MODES, otherModesEnabled)}
+                  testId="settings-scale-other-modes"
+                  disabled={otherModesEnabled && enabledCount === 1}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Borrowed Chords - Not shown for guess-scale mode */}
           {mode !== 'guess-scale' && (

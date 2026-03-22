@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
-import { ALL_NOTES, SCALE_TYPES } from '../utils/chordLogic';
+import { ALL_NOTES, SCALE_TYPES, ALL_SCALE_TYPE_IDS } from '../utils/chordLogic';
 import ThemeToggle from '../components/ThemeToggle';
 
 const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
@@ -15,6 +15,7 @@ const Setup = () => {
   const [majorEnabled, setMajorEnabled] = useState(true);
   const [naturalMinorEnabled, setNaturalMinorEnabled] = useState(false);
   const [harmonicMinorEnabled, setHarmonicMinorEnabled] = useState(false);
+  const [melodicMinorEnabled, setMelodicMinorEnabled] = useState(false);
   const [otherModesEnabled, setOtherModesEnabled] = useState(false);
 
   // Scale selection
@@ -38,6 +39,7 @@ const Setup = () => {
     if (majorEnabled) types.push('major');
     if (naturalMinorEnabled) types.push('naturalMinor');
     if (harmonicMinorEnabled) types.push('harmonicMinor');
+    if (melodicMinorEnabled) types.push('melodicMinor');
     if (otherModesEnabled) types.push(...OTHER_MODES);
     return types.length > 0 ? types : ['major'];
   };
@@ -47,8 +49,15 @@ const Setup = () => {
   const ensureValidScaleType = (current) =>
     availableScaleTypes.includes(current) ? current : availableScaleTypes[0];
 
+  const ensureValidPreselectedScaleType = (current) =>
+    ALL_SCALE_TYPE_IDS.includes(current) ? current : ALL_SCALE_TYPE_IDS[0];
+
   const handleStartGame = () => {
-    const enabledScaleTypes = getEnabledScaleTypes();
+    const useFullScalePool =
+      (mode === 'number-to-chord' || mode === 'chord-to-number') && scaleSelection === 'preselected';
+    const transpositionFullPool = mode === 'transposition' && targetScaleSelection === 'preselected';
+    const enabledScaleTypes =
+      useFullScalePool || transpositionFullPool ? ALL_SCALE_TYPE_IDS : getEnabledScaleTypes();
     const gameConfig = {
       mode,
       enabledScaleTypes,
@@ -70,7 +79,11 @@ const Setup = () => {
     } else if (mode !== 'intervals' && mode !== 'interval-transpose') {
       gameConfig.scaleSelection = scaleSelection;
       gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
-      gameConfig.selectedScaleType = scaleSelection === 'random' ? null : ensureValidScaleType(selectedScaleType);
+      gameConfig.selectedScaleType =
+        scaleSelection === 'random' ? null
+          : ((mode === 'number-to-chord' || mode === 'chord-to-number') && scaleSelection === 'preselected')
+            ? ensureValidPreselectedScaleType(selectedScaleType)
+            : ensureValidScaleType(selectedScaleType);
     }
 
     navigate('/game', { state: gameConfig });
@@ -90,7 +103,7 @@ const Setup = () => {
   const isGuessScaleMode = mode === 'guess-scale';
 
   // Count enabled scale types to prevent deselecting the last one
-  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, otherModesEnabled].filter(Boolean).length;
+  const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, melodicMinorEnabled, otherModesEnabled].filter(Boolean).length;
 
   // Toggle functions that prevent deselecting the last option
   const toggleMajor = () => {
@@ -104,6 +117,10 @@ const Setup = () => {
   const toggleHarmonicMinor = () => {
     if (harmonicMinorEnabled && enabledCount === 1) return;
     setHarmonicMinorEnabled(!harmonicMinorEnabled);
+  };
+  const toggleMelodicMinor = () => {
+    if (melodicMinorEnabled && enabledCount === 1) return;
+    setMelodicMinorEnabled(!melodicMinorEnabled);
   };
   const toggleOtherModes = () => {
     if (otherModesEnabled && enabledCount === 1) return;
@@ -131,14 +148,14 @@ const Setup = () => {
     </button>
   );
 
-  const ScaleTypeSelect = ({ value, onChange, testId }) => (
+  const ScaleTypeSelect = ({ value, onChange, testId, useAllScaleTypes }) => (
     <select
       data-testid={testId}
-      value={ensureValidScaleType(value)}
+      value={useAllScaleTypes ? ensureValidPreselectedScaleType(value) : ensureValidScaleType(value)}
       onChange={onChange}
       className="w-full p-3 border-2 border-[#E5E7EB] rounded-sm focus:border-[#002FA7] focus:outline-none text-lg"
     >
-      {availableScaleTypes.map(id => (
+      {(useAllScaleTypes ? ALL_SCALE_TYPE_IDS : availableScaleTypes).map(id => (
         <option key={id} value={id}>{SCALE_TYPES[id].name}</option>
       ))}
     </select>
@@ -229,14 +246,15 @@ const Setup = () => {
             <TimerSection />
           ) : isGuessScaleMode ? (
             <>
-              {/* Scale Types for Guess Scale Mode */}
+              {/* Guess the Scale — always random; pool defines which scale types appear */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types</h3>
-                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Selection</h3>
+                <p className="text-xs text-[#9CA3AF] mb-3">Each question uses a random scale from your selection — at least one scale type must be selected</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
                   <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
                   <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
+                  <ScaleCheckbox label="Melodic Minor" checked={melodicMinorEnabled} onChange={toggleMelodicMinor} testId="scale-type-melodic-minor" disabled={melodicMinorEnabled && enabledCount === 1} />
                   <ScaleCheckbox
                     label="Other Modes"
                     subtitle="Dorian, Phrygian, Lydian, Mixolydian"
@@ -279,25 +297,6 @@ const Setup = () => {
             </>
           ) : (
             <>
-              {/* Scale Types */}
-              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Types</h3>
-                <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
-                  <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
-                  <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
-                  <ScaleCheckbox
-                    label="Other Modes"
-                    subtitle="Dorian, Phrygian, Lydian, Mixolydian"
-                    checked={otherModesEnabled}
-                    onChange={toggleOtherModes}
-                    testId="scale-type-other-modes"
-                    disabled={otherModesEnabled && enabledCount === 1}
-                  />
-                </div>
-              </div>
-
               {/* Scale Selection */}
               {mode === 'transposition' ? (
                 <>
@@ -326,6 +325,26 @@ const Setup = () => {
                         <div className="text-sm text-[#9CA3AF]">Select specific source and target root notes (cannot be the same)</div>
                       </button>
                     </div>
+                    {targetScaleSelection === 'random' && (
+                      <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
+                        <h4 className="text-lg font-medium tracking-tight text-[#1A1A1A] mb-1">Scale types in pool</h4>
+                        <p className="text-xs text-[#9CA3AF] mb-3">Random scale type each question — at least one must be selected</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                          <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                          <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
+                          <ScaleCheckbox label="Melodic Minor" checked={melodicMinorEnabled} onChange={toggleMelodicMinor} testId="scale-type-melodic-minor" disabled={melodicMinorEnabled && enabledCount === 1} />
+                          <ScaleCheckbox
+                            label="Other Modes"
+                            subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                            checked={otherModesEnabled}
+                            onChange={toggleOtherModes}
+                            testId="scale-type-other-modes"
+                            disabled={otherModesEnabled && enabledCount === 1}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Source and Target Root Selectors - only for preselected mode */}
@@ -374,6 +393,26 @@ const Setup = () => {
                       <div className="text-sm text-[#9CA3AF]">Practice one specific scale</div>
                     </button>
                   </div>
+                  {scaleSelection === 'random' && (
+                    <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
+                      <h4 className="text-lg font-medium tracking-tight text-[#1A1A1A] mb-1">Scale types in pool</h4>
+                      <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                        <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                        <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
+                        <ScaleCheckbox label="Melodic Minor" checked={melodicMinorEnabled} onChange={toggleMelodicMinor} testId="scale-type-melodic-minor" disabled={melodicMinorEnabled && enabledCount === 1} />
+                        <ScaleCheckbox
+                          label="Other Modes"
+                          subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                          checked={otherModesEnabled}
+                          onChange={toggleOtherModes}
+                          testId="scale-type-other-modes"
+                          disabled={otherModesEnabled && enabledCount === 1}
+                        />
+                      </div>
+                    </div>
+                  )}
                   {scaleSelection === 'preselected' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div>
@@ -382,7 +421,12 @@ const Setup = () => {
                       </div>
                       <div>
                         <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Scale Type</label>
-                        <ScaleTypeSelect value={selectedScaleType} onChange={(e) => setSelectedScaleType(e.target.value)} testId="scale-type-selector" />
+                        <ScaleTypeSelect
+                          value={selectedScaleType}
+                          onChange={(e) => setSelectedScaleType(e.target.value)}
+                          testId="scale-type-selector"
+                          useAllScaleTypes
+                        />
                       </div>
                     </div>
                   )}

@@ -37,8 +37,26 @@ export const SCALE_TYPES = {
     name: 'Mixolydian',
     intervals: [0, 2, 4, 5, 7, 9, 10],
     qualities: ['major', 'minor', 'dim', 'major', 'minor', 'minor', 'major']
+  },
+  // Ascending melodic minor only (same intervals in both directions for this game)
+  melodicMinor: {
+    name: 'Melodic Minor',
+    intervals: [0, 2, 3, 5, 7, 9, 11],
+    qualities: ['minor', 'minor', 'aug', 'major', 'major', 'dim', 'dim']
   }
 };
+
+/** Every scale type available when practicing a fixed scale (preselected setup). */
+export const ALL_SCALE_TYPE_IDS = [
+  'major',
+  'naturalMinor',
+  'harmonicMinor',
+  'melodicMinor',
+  'dorian',
+  'phrygian',
+  'lydian',
+  'mixolydian'
+];
 
 export const DEGREE_NUMBERS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 
@@ -93,6 +111,12 @@ export const SEVENTH_CHORD_MAP = {
     major: { 0: 'dom7', 3: 'maj7', 6: 'maj7' },
     minor: { 1: 'min7', 4: 'min7', 5: 'min7' },
     dim: { 2: 'halfdim7' }
+  },
+  melodicMinor: {
+    minor: { 0: 'min7', 1: 'min7' },
+    aug: { 2: 'aug7' },
+    major: { 3: 'maj7', 4: 'dom7' },
+    dim: { 5: 'halfdim7', 6: 'halfdim7' }
   }
 };
 
