@@ -520,6 +520,43 @@ export const generateRandomNotePair = () => {
   return { note1, note2, correctInterval: interval.name };
 };
 
+// Generate an interval question using scale degrees (1-7) in a selected scale type.
+// Example: Melodic Minor, 3 → 7
+export const generateRelativeIntervalQuestion = (enabledScaleTypes) => {
+  const scaleTypes =
+    enabledScaleTypes && enabledScaleTypes.length > 0 ? enabledScaleTypes : ['major'];
+  const scaleType = scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+
+  const scale = SCALE_TYPES[scaleType];
+  if (!scale) return null;
+
+  const degree1Index = Math.floor(Math.random() * 7);
+  let degree2Index = Math.floor(Math.random() * 7);
+  while (degree2Index === degree1Index) {
+    degree2Index = Math.floor(Math.random() * 7);
+  }
+
+  const degree1 = degree1Index + 1;
+  const degree2 = degree2Index + 1;
+
+  // Ascending interval from degree1 to degree2 (wrap within the octave)
+  let semitones = scale.intervals[degree2Index] - scale.intervals[degree1Index];
+  if (semitones < 0) semitones += 12;
+  if (semitones === 0) semitones = 12;
+
+  const interval =
+    INTERVALS.find(i => i.semitones === semitones) ||
+    INTERVALS.find(i => (i.semitones % 12) === (semitones % 12));
+
+  return {
+    type: 'interval-relative',
+    scaleType,
+    degree1,
+    degree2,
+    correctInterval: interval?.name || 'P5',
+  };
+};
+
 export const transposeByInterval = (startNote, intervalName, direction) => {
   const startIndex = ALL_NOTES.indexOf(startNote);
   if (startIndex === -1) return null;

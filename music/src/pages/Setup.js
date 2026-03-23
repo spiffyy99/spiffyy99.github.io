@@ -34,6 +34,11 @@ const Setup = () => {
   const [timerMode, setTimerMode] = useState('untimed');
   const [timerDuration, setTimerDuration] = useState('60');
 
+  // Interval recognition sub-mode
+  // - absolute: two actual notes, identify the interval between them
+  // - relative: scale type + two scale degrees (1-7), identify the interval between degrees
+  const [intervalRecognitionSubmode, setIntervalRecognitionSubmode] = useState('absolute');
+
   const getEnabledScaleTypes = () => {
     const types = [];
     if (majorEnabled) types.push('major');
@@ -84,6 +89,10 @@ const Setup = () => {
           : ((mode === 'number-to-chord' || mode === 'chord-to-number') && scaleSelection === 'preselected')
             ? ensureValidPreselectedScaleType(selectedScaleType)
             : ensureValidScaleType(selectedScaleType);
+    }
+
+    if (mode === 'intervals') {
+      gameConfig.intervalRecognitionSubmode = intervalRecognitionSubmode;
     }
 
     navigate('/game', { state: gameConfig });
@@ -243,7 +252,92 @@ const Setup = () => {
 
         <div className="space-y-6 mb-12">
           {!isNonIntervalMode ? (
-            <TimerSection />
+            <>
+              {mode === 'intervals' && (
+                <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                  <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Interval Sub-Mode</h3>
+                  <p className="text-xs text-[#9CA3AF] mb-3">Choose what the interval is based on</p>
+
+                  <div className="space-y-3">
+                    <button
+                      data-testid="interval-absolute-submode"
+                      type="button"
+                      onClick={() => setIntervalRecognitionSubmode('absolute')}
+                      className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                        intervalRecognitionSubmode === 'absolute'
+                          ? 'border-[#002FA7] bg-[#002FA7]/5'
+                          : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                      }`}
+                    >
+                      <div className="font-bold text-[#1A1A1A]">Absolute Notes</div>
+                      <div className="text-sm text-[#9CA3AF]">Two notes, identify the interval</div>
+                    </button>
+
+                    <button
+                      data-testid="interval-relative-submode"
+                      type="button"
+                      onClick={() => setIntervalRecognitionSubmode('relative')}
+                      className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                        intervalRecognitionSubmode === 'relative'
+                          ? 'border-[#002FA7] bg-[#002FA7]/5'
+                          : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                      }`}
+                    >
+                      <div className="font-bold text-[#1A1A1A]">Relative Degrees</div>
+                      <div className="text-sm text-[#9CA3AF]">Scale type + 1-7 degrees (e.g. 3 → 7)</div>
+                    </button>
+                  </div>
+
+                  {intervalRecognitionSubmode === 'relative' && (
+                    <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
+                      <h4 className="text-lg font-medium tracking-tight text-[#1A1A1A] mb-1">Scale types in pool</h4>
+                      <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <ScaleCheckbox
+                          label="Major"
+                          checked={majorEnabled}
+                          onChange={toggleMajor}
+                          testId="scale-type-major"
+                          disabled={majorEnabled && enabledCount === 1}
+                        />
+                        <ScaleCheckbox
+                          label="Natural Minor"
+                          checked={naturalMinorEnabled}
+                          onChange={toggleNaturalMinor}
+                          testId="scale-type-natural-minor"
+                          disabled={naturalMinorEnabled && enabledCount === 1}
+                        />
+                        <ScaleCheckbox
+                          label="Harmonic Minor"
+                          checked={harmonicMinorEnabled}
+                          onChange={toggleHarmonicMinor}
+                          testId="scale-type-harmonic-minor"
+                          disabled={harmonicMinorEnabled && enabledCount === 1}
+                        />
+                        <ScaleCheckbox
+                          label="Melodic Minor"
+                          checked={melodicMinorEnabled}
+                          onChange={toggleMelodicMinor}
+                          testId="scale-type-melodic-minor"
+                          disabled={melodicMinorEnabled && enabledCount === 1}
+                        />
+                        <ScaleCheckbox
+                          label="Other Modes"
+                          subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                          checked={otherModesEnabled}
+                          onChange={toggleOtherModes}
+                          testId="scale-type-other-modes"
+                          disabled={otherModesEnabled && enabledCount === 1}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <TimerSection />
+            </>
           ) : isGuessScaleMode ? (
             <>
               {/* Guess the Scale — always random; pool defines which scale types appear */}

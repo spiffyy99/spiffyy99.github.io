@@ -18,6 +18,7 @@ import {
   generateTranspositionQuestion,
   generateRandomNotePair,
   generateIntervalTransposition,
+  generateRelativeIntervalQuestion,
   generateGuessScaleQuestion,
   buildChordDisplay,
   formatRomanNumeral,
@@ -135,6 +136,10 @@ const Game = () => {
       return { ...generateIntervalTransposition(), type: 'interval-transpose' };
     }
     if (config.mode === 'intervals') {
+      const submode = config.intervalRecognitionSubmode || 'absolute';
+      if (submode === 'relative') {
+        return generateRelativeIntervalQuestion(scaleTypes) || { ...generateRandomNotePair(), type: 'interval' };
+      }
       return { ...generateRandomNotePair(), type: 'interval' };
     }
     if (config.mode === 'guess-scale') {
@@ -165,7 +170,17 @@ const Game = () => {
       }
     }
     return null;
-  }, [config.mode, config.scaleSelection, config.targetScaleSelection, gameState.currentScale, gameState.sourceScale, gameState.targetScale]);
+  }, [
+    config.mode,
+    config.scaleSelection,
+    config.intervalRecognitionSubmode,
+    config.targetScaleSelection,
+    config.sourceRoot,
+    config.targetRoot,
+    gameState.currentScale,
+    gameState.sourceScale,
+    gameState.targetScale,
+  ]);
 
   // Initialize first question
   useEffect(() => {
@@ -215,7 +230,7 @@ const Game = () => {
       }
       return formatRomanNumeral(q.correctDegree, q.correctAnswerQuality, false);
     }
-    if (q.type === 'interval') return q.correctInterval;
+    if (q.type === 'interval' || q.type === 'interval-relative') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
     if (q.type === 'guess-scale') return q.correctScale?.rootNote || '';
     return '';
@@ -289,7 +304,7 @@ const Game = () => {
     let isCorrect = false;
     if (q.type === 'interval-transpose') {
       isCorrect = answer === q.correctNote;
-    } else if (q.type === 'interval') {
+    } else if (q.type === 'interval' || q.type === 'interval-relative') {
       const correctSemi = INTERVALS.find(i => i.name === q.correctInterval)?.semitones % 12;
       const answerSemi = INTERVALS.find(i => i.name === answer)?.semitones % 12;
       isCorrect = correctSemi === answerSemi;
@@ -534,6 +549,9 @@ const Game = () => {
     if (q.type === 'number-to-chord') return q.romanNumeral;
     if (q.type === 'chord-to-number' || q.type === 'transposition') return q.chordDisplay;
     if (q.type === 'interval') return `${q.note1} \u2192 ${q.note2}`;
+    if (q.type === 'interval-relative') {
+      return `${SCALE_TYPES[q.scaleType]?.name || 'scale'}: ${q.degree1} \u2192 ${q.degree2}`;
+    }
     if (q.type === 'interval-transpose') return q.startNote;
     return '';
   };
