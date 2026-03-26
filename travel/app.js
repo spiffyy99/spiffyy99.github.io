@@ -510,6 +510,9 @@
           const d = addDays(currentDate, t);
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
+          // If it's a weekday, not a holiday, not requiring PTO, and it's a travel day with redeye,
+          // mark it as redeye travel
+          const isRedeyeTravel = isWeekday(d) && !off && !model.ptoOffsets.includes(t) && redeyeOK;
           days.push({
             dateISO: isoDate(d),
             kind: "travel",
@@ -524,6 +527,7 @@
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,
+            isRedeyeTravel,
           });
         }
         currentDate = addDays(currentDate, model.travelDays);
@@ -549,7 +553,7 @@
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country),
+            label: formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country),
             ptoRequired,
             workPlusFly,
           });
@@ -1174,8 +1178,14 @@
         ptoTd.textContent = "No (Weekend)";
       } else if (holidayInfo) {
         ptoTd.textContent = "No (Holiday)";
+      } else if (day.isRedeyeTravel) {
+        ptoTd.textContent = "No (Work)";
+      } else if (day.kind === "travel") {
+        // Travel day on a weekday that doesn't need PTO (likely due to optimization)
+        ptoTd.textContent = "No (Work)";
       } else {
-        ptoTd.textContent = "No";
+        // This should rarely happen - only for edge cases
+        ptoTd.textContent = "No (Weekend)";
       }
 
       tr.appendChild(dateTd);
@@ -1229,7 +1239,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     const routeStops = [home, ...orderedCities, home];
     const routeText = document.createElement("span");
     routeText.className = "routeText";
-    routeText.textContent = routeStops.map((c) => c.displayName).join(" → ");
+    routeText.textContent = routeStops.map((c) => c.cityName || c.displayName).join(" → ");
     routeWrap.appendChild(routeLabel);
     routeWrap.appendChild(routeText);
     wrap.appendChild(routeWrap);
@@ -1406,7 +1416,7 @@ addDestinationBtn.addEventListener("click", () => {
       const totalStayDays = destinationList.reduce((sum, d) => sum + d.stayDays, 0);
 
       if (totalStayDays > windowDays) {
-        errorBox.textContent = `Instant validation: you want ${totalStayDays} city days, but your date window is only ${windowDays} days.`;
+        errorBox.textContent = `Input error: you want ${totalStayDays} city days, but your date window is only ${windowDays} days.`;
         errorBox.style.display = "block";
         return;
       }
@@ -1658,6 +1668,7 @@ addDestinationBtn.addEventListener("click", () => {
           const d = addDays(currentDate, t);
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
+          const isRedeyeTravel = isWeekday(d) && !off && !model.ptoOffsets.includes(t) && redeyeOK;
           days.push({
             dateISO: isoDate(d),
             kind: "travel",
@@ -1672,6 +1683,7 @@ addDestinationBtn.addEventListener("click", () => {
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,
+            isRedeyeTravel,
           });
         }
         currentDate = addDays(currentDate, model.travelDays);
@@ -1694,7 +1706,7 @@ addDestinationBtn.addEventListener("click", () => {
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country),
+            label: formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country),
             ptoRequired,
             workPlusFly,
           });

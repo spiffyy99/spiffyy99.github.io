@@ -357,7 +357,8 @@ thead th{
 }
 
 .destRow .daysCell{
-  flex: 0 0 120px;
+  flex: 0 1 100px;
+  min-width: 80px;
 }
 
 .destRow .daysCell input{
@@ -459,5 +460,21 @@ thead th{
 
 @keyframes spin{
   to { transform: rotate(360deg); }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 500px) {
+  .destRow .cityCell {
+    flex: 1 1 150px;
+  }
+  
+  .destRow .daysCell {
+    flex: 0 1 75px;
+    min-width: 70px;
+  }
+  
+  .destRow .removeCell {
+    flex: 0 0 32px;
+  }
 }
 
