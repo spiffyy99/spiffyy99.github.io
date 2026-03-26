@@ -63,9 +63,9 @@
       return { travelDays: 2, ptoOffsets, noTravelDay: false, isRedeye: false };
     }
 
-    // Very long flights (14h+): 3 travel days
-    const ptoOffsets = redeyeOK ? [1, 2] : [0, 1, 2];
-    return { travelDays: 3, ptoOffsets, noTravelDay: false, isRedeye: false };
+    // Very long flights (14h+): cap at 2 travel days (3-day blocks are too disruptive)
+    const ptoOffsets2 = redeyeOK ? [1] : [0, 1];
+    return { travelDays: 2, ptoOffsets: ptoOffsets2, noTravelDay: false, isRedeye: false };
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
@@ -495,14 +495,17 @@
         // Annotate the last city day already in the schedule with a departure note
         if (days.length > 0) {
           const lastDay = days[days.length - 1];
+          const lastDate = parseISODate(lastDay.dateISO);
           const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
-            if (!lastDay.ptoRequired) {
-              lastDay.workPlusFly = true;
-            }
+          }
+          // If the departure day is a weekday non-holiday, person works then departs: no PTO needed
+          if (isWeekday(lastDate) && !ptoOffSet.has(lastDay.dateISO)) {
+            lastDay.ptoRequired = false;
+            lastDay.workPlusFly = true;
           }
         }
       } else {
@@ -913,7 +916,7 @@
         const data = await res.json();
         
         // Filter to only include reasonable cities (population > 50000 or no population data)
-        const cityResults = (data.results || [])
+        const rawCityResults = (data.results || [])
           .filter((r) => {
             // Filter out very small places
             if (r.population && r.population < 50000) return false;
@@ -921,7 +924,7 @@
             if (r.feature_code && !["PPL", "PPLA", "PPLA2", "PPLA3", "PPLC"].includes(r.feature_code)) return false;
             return true;
           })
-          .slice(0, 3)
+          .slice(0, 6)
           .map((r) => ({
             name: r.name,
             admin1: r.admin1,
@@ -930,10 +933,21 @@
             longitude: r.longitude,
             iataCode: null,
           }));
-        
+
+        // Deduplicate geocoding results by name+country (API sometimes returns same city twice)
+        const seenCityKeys = new Set();
+        const cityResults = [];
+        for (const r of rawCityResults) {
+          const key = `${(r.name || "").toLowerCase()},${(r.country || "").toLowerCase()}`;
+          if (!seenCityKeys.has(key)) {
+            seenCityKeys.add(key);
+            cityResults.push(r);
+          }
+        }
+
         // Airports first, then cities. Always show cities — they are distinct entries
         // (user may want to type a city name rather than pick an airport code).
-        const combined = [...airportResults, ...cityResults];
+        const combined = [...airportResults, ...cityResults.slice(0, 3)];
         
         showList(combined.slice(0, 6));
       } catch (e) {
@@ -1292,7 +1306,7 @@ addDestinationBtn.addEventListener("click", () => {
   const startDateISO = $("startDate").value;
   const endDateISO = $("endDate").value;
   const redeyeOK = $("redeyeOk").checked;
-  const travelDayThresholdH = Number($("travelDayThreshold").value) || 3;
+  const travelDayThresholdH = (() => { const v = Number($("travelDayThreshold").value); return isNaN(v) ? 3 : v; })();
   const objective = $("objective").value;
       const extraPtoInputs = Array.from(extraPtoOffContainer.querySelectorAll("input[data-role='extraPtoOff']"))
         .map((el) => el.value)
@@ -1312,6 +1326,21 @@ addDestinationBtn.addEventListener("click", () => {
 
       if (destinationList.length === 0) {
         errorBox.textContent = "Please add at least one destination city.";
+        errorBox.style.display = "block";
+        return;
+      }
+
+      // Auto-remove any destination that matches the home city (case-insensitive).
+      const homeCityLower = homeCity.toLowerCase().trim();
+      const dedupedDestinations = destinationList.filter((d) => d.city.toLowerCase().trim() !== homeCityLower);
+      if (dedupedDestinations.length < destinationList.length) {
+        // Silently removed home city from destinations; update the list
+        destinationList.length = 0;
+        dedupedDestinations.forEach((d) => destinationList.push(d));
+      }
+
+      if (destinationList.length === 0) {
+        errorBox.textContent = "Please add at least one destination city (different from your home city).";
         errorBox.style.display = "block";
         return;
       }
@@ -1363,9 +1392,11 @@ addDestinationBtn.addEventListener("click", () => {
       const airportCache = loadCache(STORAGE_KEYS.airport);
       const flightCache = loadCache(STORAGE_KEYS.flight);
 
+      const loadingEl = $("loadingIndicator");
       try {
         const workBtn = e.submitter;
         if (workBtn && workBtn.disabled !== undefined) workBtn.disabled = true;
+        if (loadingEl) loadingEl.style.display = "flex";
 
         $("resultsSummary").innerHTML = "";
         $("itineraryTableWrap").innerHTML = "";
@@ -1510,6 +1541,7 @@ addDestinationBtn.addEventListener("click", () => {
       } finally {
         const submitBtn = e.submitter;
         if (submitBtn && submitBtn.disabled !== undefined) submitBtn.disabled = false;
+        if (loadingEl) loadingEl.style.display = "none";
       }
     });
   });
@@ -1555,14 +1587,17 @@ addDestinationBtn.addEventListener("click", () => {
         // Annotate the last city day already in the schedule with a departure note
         if (days.length > 0) {
           const lastDay = days[days.length - 1];
+          const lastDate = parseISODate(lastDay.dateISO);
           const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
-            if (!lastDay.ptoRequired) {
-              lastDay.workPlusFly = true;
-            }
+          }
+          // If the departure day is a weekday non-holiday, person works then departs: no PTO needed
+          if (isWeekday(lastDate) && !ptoOffSet.has(lastDay.dateISO)) {
+            lastDay.ptoRequired = false;
+            lastDay.workPlusFly = true;
           }
         }
       } else {

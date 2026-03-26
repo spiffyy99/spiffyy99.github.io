@@ -411,3 +411,27 @@ thead th{
   margin-top: 2px;
 }
 
+.loadingIndicator{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.spinner{
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin{
+  to { transform: rotate(360deg); }
+}
+
