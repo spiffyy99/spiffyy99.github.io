@@ -1019,7 +1019,7 @@
       input.className = "cityInput";
       input.type = "text";
       input.value = d.city || "";
-      input.placeholder = "Destination airport/city (e.g., Paris, France or LHR)";
+      input.placeholder = "Destination airport/city";
       input.required = false;
       input.dataset.role = "city";
       input.autocomplete = "off";
@@ -1315,7 +1315,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
 
 addDestinationBtn.addEventListener("click", () => {
   const current = readDestinationsFromDOM(destinationsContainer);
-  current.push({ city: "", stayDays: null });
+  if (current.length < 10) current.push({ city: "", stayDays: null });
   renderDestinations(destinationsContainer, current);
   });
 

@@ -23,7 +23,7 @@
           <div class="grid">
             <div class="field">
               <label for="homeCity">Home airport/city</label>
-              <input id="homeCity" name="homeCity" type="text" placeholder="e.g., Austin, TX or JFK" required autocomplete="off" />
+              <input id="homeCity" name="homeCity" type="text" placeholder="e.g. Austin, TX or JFK" required autocomplete="off" />
             </div>
 
             <div class="field">
@@ -37,7 +37,9 @@
             </div>
           </div>
 
-          <div class="sectionTitle">Destinations</div>
+          <div class="sectionTitle">Destinations (e.g. Paris, France or LHR)</div>
+          <label>Max 10</label>
+
           <div id="destinations"></div>
 
           <div class="row">
@@ -70,7 +72,7 @@
 
             <div class="field checkboxField">
               <label class="checkboxLabel">
-                <input id="redeyeOk" name="redeyeOk" type="checkbox" checked />
+                <input id="redeyeOk" name="redeyeOk" type="checkbox" unchecked />
                 OK with red-eye (overnight) flights?
               </label>
               <div class="hint">If checked, flights under the threshold above can depart overnight without using a travel day or PTO.</div>
@@ -88,7 +90,7 @@
 
           <div class="sectionTitle">Flight-time estimate (optional)</div>
           <div class="hint" style="margin-bottom: 10px;">
-            An AeroDataBox API key can be optionally provided to improve distance calculations. If not provided, a best manual estimate will be made.
+            An AeroDataBox API key can be optionally provided to improve distance calculations. If not provided, a best effort manual estimate will be made.
           </div>
           <div class="grid">
             <div class="field">

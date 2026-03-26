@@ -147,12 +147,13 @@ input[type="checkbox"]{
 
 .btn.primary{
   background: var(--primary);
-  color: white;
+  color: var(--bg);
   border-color: var(--primary);
 }
 
 .btn.secondary{
   background: var(--secondary);
+  color: var(--text);
 }
 
 .checkboxField{
