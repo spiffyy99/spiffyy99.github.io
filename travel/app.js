@@ -492,20 +492,16 @@
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
       if (model.noTravelDay) {
-        // Annotate the last city day already in the schedule with a departure note
+        // Annotate the last city day already in the schedule with a departure note.
+        // This is purely cosmetic — the person is already on vacation at that city,
+        // so ptoRequired is unchanged (still Yes for weekdays).
         if (days.length > 0) {
           const lastDay = days[days.length - 1];
-          const lastDate = parseISODate(lastDay.dateISO);
           const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
-          }
-          // If the departure day is a weekday non-holiday, person works then departs: no PTO needed
-          if (isWeekday(lastDate) && !ptoOffSet.has(lastDay.dateISO)) {
-            lastDay.ptoRequired = false;
-            lastDay.workPlusFly = true;
           }
         }
       } else {
@@ -538,18 +534,24 @@
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          const ptoRequired = isWeekday(d) && !off;
-          
-          // First day of city: note if there was a short flight (for display)
-          const flightNote = (s === 0 && model.noTravelDay) 
-            ? ` (incl. ${formatHours(durationHours)} flight)` 
-            : "";
-          
+          let ptoRequired = isWeekday(d) && !off;
+          let workPlusFly = false;
+
+          // For the outbound leg with noTravelDay, the very first city day is also the
+          // home-departure day: the person works from home then catches an evening/redeye
+          // flight. Only apply this to the outbound leg (not between-city or return legs,
+          // where the departure day is a vacation day at the previous destination).
+          if (s === 0 && leg.type === "outbound" && model.noTravelDay && isWeekday(d) && !off) {
+            ptoRequired = false;
+            workPlusFly = true;
+          }
+
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country) + flightNote,
+            label: formatCityLabel(leg.to.displayName, leg.to.country),
             ptoRequired,
+            workPlusFly,
           });
           tripDays++;
         }
@@ -918,14 +920,21 @@
         }
         const data = await res.json();
         
-        // Filter to only include reasonable cities (population > 50000 or no population data)
+        // Filter to only include significant cities.
+        // Administrative centers (PPLA/PPLC) are always included regardless of population.
+        // Generic populated places (PPL or no code) must have a known population >= 100k
+        // to avoid villages whose names share a prefix with a major city (e.g. "Chongqingcun").
         const rawCityResults = (data.results || [])
           .filter((r) => {
-            // Filter out very small places
-            if (r.population && r.population < 50000) return false;
-            // Prioritize cities and towns
-            if (r.feature_code && !["PPL", "PPLA", "PPLA2", "PPLA3", "PPLC"].includes(r.feature_code)) return false;
-            return true;
+            const code = r.feature_code;
+            const pop = r.population;
+            if (["PPLC", "PPLA", "PPLA2", "PPLA3"].includes(code)) {
+              return true; // always include administrative/political centers
+            }
+            if (code === "PPL" || !code) {
+              return pop != null && pop >= 100000; // require meaningful population
+            }
+            return false; // exclude any other feature type (hamlets, sections, etc.)
           })
           .slice(0, 6)
           .map((r) => ({
@@ -1633,20 +1642,15 @@ addDestinationBtn.addEventListener("click", () => {
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
 
       if (model.noTravelDay) {
-        // Annotate the last city day already in the schedule with a departure note
+        // Annotate the last city day already in the schedule with a departure note.
+        // Purely cosmetic — ptoRequired is unchanged (vacation day at prior city).
         if (days.length > 0) {
           const lastDay = days[days.length - 1];
-          const lastDate = parseISODate(lastDay.dateISO);
           const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
-          }
-          // If the departure day is a weekday non-holiday, person works then departs: no PTO needed
-          if (isWeekday(lastDate) && !ptoOffSet.has(lastDay.dateISO)) {
-            lastDay.ptoRequired = false;
-            lastDay.workPlusFly = true;
           }
         }
       } else {
@@ -1677,17 +1681,22 @@ addDestinationBtn.addEventListener("click", () => {
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          const ptoRequired = isWeekday(d) && !off;
-          
-          const flightNote = (s === 0 && model.noTravelDay) 
-            ? ` (incl. ${formatHours(durationHours)} flight)` 
-            : "";
-          
+          let ptoRequired = isWeekday(d) && !off;
+          let workPlusFly = false;
+
+          // Outbound noTravelDay: first city day is also the home-departure day.
+          // Person works from home then catches the flight — no PTO needed.
+          if (s === 0 && leg.type === "outbound" && model.noTravelDay && isWeekday(d) && !off) {
+            ptoRequired = false;
+            workPlusFly = true;
+          }
+
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country) + flightNote,
+            label: formatCityLabel(leg.to.displayName, leg.to.country),
             ptoRequired,
+            workPlusFly,
           });
           tripDays++;
         }
