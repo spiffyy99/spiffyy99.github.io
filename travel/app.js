@@ -563,6 +563,7 @@
 
     return {
       days,
+      orderedCities, // Preserved so callers don't need to re-derive order from labels
       ptoRequired: ptoRequiredTotal,
       totalFlightHoursHeuristic,
       tripStartISO,
@@ -701,7 +702,9 @@
 
     let best = null;
     const capForExact = 8;
-    const START_CANDIDATE_CAP = 60;
+    // Use more start-date candidates for small city counts (exact search) to reduce
+    // the risk of declaring one order "better" due to missing its optimal start date.
+    const START_CANDIDATE_CAP = n <= 5 ? 180 : 80;
     if (n <= capForExact) {
       const orders = permute(cities);
       for (const orderedCities of orders) {
@@ -1203,32 +1206,48 @@
     return `${h}h ${m}m`;
   }
 
-function renderSummary(best, flightTotalHours) {
+function renderSummary(best, flightTotalHours, home, orderedCities) {
   const wrap = $("resultsSummary");
-  
   wrap.innerHTML = "";
-  const cells = [
-  { k: "Best start", v: best.tripStartISO },
-  { k: "Trip ends", v: best.tripEndISO },
-  { k: "PTO required", v: String(best.ptoRequired) },
-  { k: "Days in destination", v: String(best.tripDays || best.days.filter(d => d.kind === "city").length) },
-  { k: "Total calendar days", v: String(best.days.length) },
-  { k: "Total flight time", v: formatHours(flightTotalHours) },
-  ];
-    cells.forEach((c) => {
-      const item = document.createElement("div");
-      item.className = "summaryItem";
-      const k = document.createElement("div");
-      k.className = "k";
-      k.textContent = c.k;
-      const v = document.createElement("div");
-      v.className = "v";
-      v.textContent = c.v;
-      item.appendChild(k);
-      item.appendChild(v);
-      wrap.appendChild(item);
-    });
+
+  // Route display (full-width row)
+  if (home && orderedCities && orderedCities.length) {
+    const routeWrap = document.createElement("div");
+    routeWrap.className = "routeRow";
+    const routeLabel = document.createElement("span");
+    routeLabel.className = "routeLabel";
+    routeLabel.textContent = "Optimized route:";
+    const routeStops = [home, ...orderedCities, home];
+    const routeText = document.createElement("span");
+    routeText.className = "routeText";
+    routeText.textContent = routeStops.map((c) => c.displayName).join(" → ");
+    routeWrap.appendChild(routeLabel);
+    routeWrap.appendChild(routeText);
+    wrap.appendChild(routeWrap);
   }
+
+  const cells = [
+    { k: "Best start", v: best.tripStartISO },
+    { k: "Trip ends", v: best.tripEndISO },
+    { k: "PTO required", v: String(best.ptoRequired) },
+    { k: "Days in destination", v: String(best.tripDays || best.days.filter(d => d.kind === "city").length) },
+    { k: "Total calendar days", v: String(best.days.length) },
+    { k: "Total flight time", v: formatHours(flightTotalHours) },
+  ];
+  cells.forEach((c) => {
+    const item = document.createElement("div");
+    item.className = "summaryItem";
+    const k = document.createElement("div");
+    k.className = "k";
+    k.textContent = c.k;
+    const v = document.createElement("div");
+    v.className = "v";
+    v.textContent = c.v;
+    item.appendChild(k);
+    item.appendChild(v);
+    wrap.appendChild(item);
+  });
+}
 
   // ---- Main flow ----
 
@@ -1463,9 +1482,8 @@ addDestinationBtn.addEventListener("click", () => {
           return;
         }
 
-        // Flight segments: heuristic by default.
-        // We don't return the ordered city list directly from the optimizer, so infer it from the simulation day labels.
-        const orderedCities = deriveOrderedCitiesFromBest(best, home, cities);
+        // Use the city order stored in the best simulation result directly — no label parsing needed.
+        const orderedCities = best.orderedCities;
         const legList = buildLegs(home, orderedCities);
 
         let finalBest = best;
@@ -1533,7 +1551,7 @@ addDestinationBtn.addEventListener("click", () => {
           }
         }
 
-        renderSummary(finalBest, totalFlightHours);
+        renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities);
         renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
       } catch (err) {
         errorBox.textContent = `Something went wrong: ${err?.message || String(err)}`;
@@ -1649,6 +1667,7 @@ addDestinationBtn.addEventListener("click", () => {
     const ptoRequiredTotal = days.reduce((sum, x) => sum + (x.ptoRequired ? 1 : 0), 0);
     return {
       days,
+      orderedCities,
       ptoRequired: ptoRequiredTotal,
       totalFlightHoursHeuristic,
       tripStartISO: days[0]?.dateISO,
