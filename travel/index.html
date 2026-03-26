@@ -54,12 +54,24 @@
               </select>
             </div>
 
+            <div class="field">
+              <label for="travelDayThreshold">Flights requiring a travel day</label>
+              <select id="travelDayThreshold" name="travelDayThreshold">
+                <option value="2">2+ hours</option>
+                <option value="3" selected>3+ hours</option>
+                <option value="4">4+ hours</option>
+                <option value="5">5+ hours</option>
+                <option value="6">6+ hours</option>
+              </select>
+              <div class="hint">Shorter flights can be taken same-day without a dedicated travel day.</div>
+            </div>
+
             <div class="field checkboxField">
               <label class="checkboxLabel">
                 <input id="redeyeOk" name="redeyeOk" type="checkbox" checked />
-                Include red-eye (overnight) flights?
+                OK with red-eye (overnight) flights?
               </label>
-              <div class="hint">Affects the heuristic PTO impact of longer flights.</div>
+              <div class="hint">If checked, flights under the threshold above can depart overnight without using a travel day or PTO.</div>
             </div>
           </div>
 

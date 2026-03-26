@@ -18,43 +18,54 @@
   const AVG_SPEED_KMH = 800;
 
   // Travel-block model thresholds (based on estimated flight duration hours).
-  // Updated to be more realistic:
-  // - Flights under 4 hours: half-day travel (no full day needed)
-  // - Flights 4-8 hours: 1 calendar travel day  
+  // These are the upper bounds for multi-day travel:
   // - Flights 8-14 hours: 2 calendar travel days
   // - Flights 14+ hours: 3 calendar travel days
   const TRAVEL_THRESHOLDS_H = {
-    halfDay: 4,   // <= halfDay => half-day travel (still 1 day in calendar but no PTO)
-    short: 8,     // <= short => 1 calendar travel day
-    medium: 14,   // <= medium => 2 calendar travel days
+    medium: 14,   // <= medium => up to 2 calendar travel days
   };
 
-  // PTO impact model for multi-day travel blocks (heuristic).
-  // We use a simplified rule because we don't have exact departure/arrival times:
-  // - very short flight (<4h) => no PTO (can fly morning/evening same day)
-  // - single-day travel (4-8h) => 0 PTO (assumes you can work before leaving)
-  // - multi-day travel => redeyeOK reduces PTO impact
-  function travelBlockModel(durationHours, redeyeOK) {
-    // Very short flights (under 4 hours): half-day travel, no PTO needed
-    if (durationHours <= TRAVEL_THRESHOLDS_H.halfDay) {
-      return { travelDays: 1, ptoOffsets: [], isHalfDay: true };
+  // Travel block model with configurable threshold
+  // - travelDayThresholdH: user-set threshold (in hours) for what requires a travel day
+  // - redeyeOK: if true, flights under threshold can be overnight without using a travel day
+  // - durationHours: estimated flight duration
+  //
+  // Returns:
+  // - travelDays: number of calendar days consumed by travel (0 = no dedicated travel day)
+  // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
+  // - noTravelDay: true if flight doesn't need a dedicated travel day
+  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3) {
+    // If flight is under user's threshold AND user is OK with red-eyes,
+    // no dedicated travel day needed - fly overnight or same-day
+    if (durationHours < travelDayThresholdH && redeyeOK) {
+      return { travelDays: 0, ptoOffsets: [], noTravelDay: true };
     }
     
-    if (durationHours <= TRAVEL_THRESHOLDS_H.short) {
-      return { travelDays: 1, ptoOffsets: [] }; // first (and only) travel day consumes no PTO
+    // If flight is under threshold but user doesn't want red-eyes,
+    // still no travel day but may need to leave during work hours
+    if (durationHours < travelDayThresholdH) {
+      return { travelDays: 0, ptoOffsets: [], noTravelDay: true };
+    }
+    
+    // Flight is at or above threshold - needs dedicated travel day(s)
+    // Short-medium flights (threshold to 8h): 1 travel day
+    if (durationHours <= 8) {
+      // If redeyeOK, can take overnight and arrive refreshed - no PTO needed
+      // If not redeyeOK, the travel day itself may need PTO
+      const ptoOffsets = redeyeOK ? [] : [0];
+      return { travelDays: 1, ptoOffsets, noTravelDay: false };
     }
 
+    // Long flights (8-14h): 2 travel days
     if (durationHours <= TRAVEL_THRESHOLDS_H.medium) {
-      const travelDays = 2;
-      // redeyeOK => count PTO on the *first* travel day only; no PTO on the second
-      const ptoOffsets = redeyeOK ? [0] : [0, 1];
-      return { travelDays, ptoOffsets };
+      // redeyeOK => overnight flight means arrival day is rest, no PTO on departure
+      const ptoOffsets = redeyeOK ? [1] : [0, 1];
+      return { travelDays: 2, ptoOffsets, noTravelDay: false };
     }
 
-    const travelDays = 3;
-    // Longer flights: redeyeOK reduces PTO impact but doesn't eliminate it entirely.
-    const ptoOffsets = redeyeOK ? [0, 1] : [0, 1, 2];
-    return { travelDays, ptoOffsets };
+    // Very long flights (14h+): 3 travel days
+    const ptoOffsets = redeyeOK ? [1, 2] : [0, 1, 2];
+    return { travelDays: 3, ptoOffsets, noTravelDay: false };
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
@@ -462,11 +473,12 @@
     return legs;
   }
 
-  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet }) {
+  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3 }) {
     // Produce day-by-day entries + PTO required + heuristic flight hours.
     const days = [];
     let currentDate = parseISODate(startISO);
     let totalFlightHoursHeuristic = 0;
+    let tripDays = 0; // Days actually in destination (excluding travel-only days)
 
     const legs = buildLegs(home, orderedCities);
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
@@ -475,28 +487,38 @@
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK);
-      for (let t = 0; t < model.travelDays; t++) {
-        const d = addDays(currentDate, t);
-        const off = ptoOffSet.has(isoDate(d));
-        const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
-        days.push({
-          dateISO: isoDate(d),
-          kind: "travel",
-          label:
-            leg.type === "outbound"
-              ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-              : leg.type === "return"
-                ? `Return travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-                : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
-          ptoRequired,
-          flightDurationHours: durationHours,
-          fromIata: leg.from.airport?.iataCode,
-          toIata: leg.to.airport?.iataCode,
-          isHalfDay: model.isHalfDay || false,
-        });
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
+      
+      // If noTravelDay, we don't add separate travel day entries
+      // The flight happens overnight or same-day alongside other activities
+      if (model.noTravelDay) {
+        // For outbound: flight happens before first city day (overnight arrival)
+        // For return: flight happens after last city day (depart evening)
+        // No calendar days consumed by travel itself
+      } else {
+        // Add travel day entries
+        for (let t = 0; t < model.travelDays; t++) {
+          const d = addDays(currentDate, t);
+          const off = ptoOffSet.has(isoDate(d));
+          const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
+          days.push({
+            dateISO: isoDate(d),
+            kind: "travel",
+            label:
+              leg.type === "outbound"
+                ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
+                : leg.type === "return"
+                  ? `Return: ${leg.from.displayName} -> ${leg.to.displayName}`
+                  : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
+            ptoRequired,
+            flightDurationHours: durationHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            noTravelDay: false,
+          });
+        }
+        currentDate = addDays(currentDate, model.travelDays);
       }
-      currentDate = addDays(currentDate, model.travelDays);
 
       // After travel, if the arrival is a city (not home), add stay days.
       if (leg.to !== home) {
@@ -504,14 +526,24 @@
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off;
+          
+          // First day of city: note if there was a short flight (for display)
+          const flightNote = (s === 0 && model.noTravelDay) 
+            ? ` (incl. ${formatHours(durationHours)} flight)` 
+            : "";
+          
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country),
+            label: formatCityLabel(leg.to.displayName, leg.to.country) + flightNote,
             ptoRequired,
           });
+          tripDays++;
         }
         currentDate = addDays(currentDate, leg.to.stayDays);
+      } else if (model.noTravelDay && leg.type === "return") {
+        // Return flight with no travel day - note it on the last city day if possible
+        // This is handled by the UI showing total flight time
       }
     }
 
@@ -525,6 +557,7 @@
       totalFlightHoursHeuristic,
       tripStartISO,
       tripEndISO,
+      tripDays, // Days in destination cities
       // Store for recomputation if we fetch real flight durations later.
       heuristicTravelByLeg: legs.map((leg) => {
         const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
@@ -580,13 +613,13 @@
     return capped;
   }
 
-  function computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK }) {
+  function computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH = 3 }) {
     // We need a fixed template length for feasibility pruning.
     const legs = buildLegs(home, orderedCities);
     let total = 0;
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
-      const model = travelBlockModel(durationHours, redeyeOK);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
       total += model.travelDays;
       if (leg.to !== home) total += leg.to.stayDays;
     }
@@ -652,7 +685,7 @@
     return bestRoute;
   }
 
-  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective }) {
+  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3 }) {
     const n = cities.length;
     if (n === 0) return null;
 
@@ -662,22 +695,22 @@
     if (n <= capForExact) {
       const orders = permute(cities);
       for (const orderedCities of orders) {
-        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK });
+        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH });
         const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
         const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
         for (const startISO of candidatesCapped) {
-          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet });
+          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH });
           best = compareItineraries(best, sim, objective);
         }
       }
     } else {
       // For > 8 cities: heuristic route only. Start date still optimized by PTO.
       const route = heuristicOrder({ home, cities });
-      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, redeyeOK });
+      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, redeyeOK, travelDayThresholdH });
       const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
       const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
       for (const startISO of candidatesCapped) {
-        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet });
+        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH });
         best = compareItineraries(best, sim, objective);
       }
     }
@@ -814,7 +847,10 @@
       "SYD": { name: "Sydney", city: "Sydney", country: "Australia" },
       "MEL": { name: "Melbourne", city: "Melbourne", country: "Australia" },
       "YYZ": { name: "Toronto Pearson", city: "Toronto", country: "Canada" },
+      "YTZ": { name: "Toronto Billy Bishop", city: "Toronto", country: "Canada" },
       "YVR": { name: "Vancouver", city: "Vancouver", country: "Canada" },
+      "YUL": { name: "Montreal Trudeau", city: "Montreal", country: "Canada" },
+      "YYC": { name: "Calgary", city: "Calgary", country: "Canada" },
       "MEX": { name: "Mexico City", city: "Mexico City", country: "Mexico" },
       "CUN": { name: "Cancun", city: "Cancun", country: "Mexico" },
       "GRU": { name: "Sao Paulo Guarulhos", city: "Sao Paulo", country: "Brazil" },
@@ -832,39 +868,39 @@
       }
       
       const upperQuery = query.toUpperCase().trim();
+      const lowerQuery = query.toLowerCase().trim();
       const items = [];
       
-      // Check if query matches a known airport code
-      if (/^[A-Za-z]{3}$/.test(upperQuery) && MAJOR_AIRPORTS[upperQuery]) {
-        const ap = MAJOR_AIRPORTS[upperQuery];
-        items.push({
-          name: `${ap.name} (${upperQuery})`,
-          admin1: ap.city,
-          country: ap.country,
-          iataCode: upperQuery,
-        });
-      }
-      
-      // Also search airport codes that start with query
-      if (query.length >= 2) {
-        for (const [code, ap] of Object.entries(MAJOR_AIRPORTS)) {
-          if (code.startsWith(upperQuery) && code !== upperQuery) {
-            items.push({
-              name: `${ap.name} (${code})`,
-              admin1: ap.city,
-              country: ap.country,
-              iataCode: code,
-            });
-          }
+      // Search airports by code OR by name/city
+      for (const [code, ap] of Object.entries(MAJOR_AIRPORTS)) {
+        const matchesCode = code.startsWith(upperQuery);
+        const matchesName = ap.name.toLowerCase().includes(lowerQuery);
+        const matchesCity = ap.city.toLowerCase().includes(lowerQuery);
+        
+        if (matchesCode || matchesName || matchesCity) {
+          items.push({
+            name: `${ap.name} (${code})`,
+            admin1: ap.city,
+            country: ap.country,
+            iataCode: code,
+            // Prioritize exact code matches, then name matches
+            priority: code === upperQuery ? 0 : (matchesCode ? 1 : 2),
+          });
         }
       }
+      
+      // Sort by priority (exact matches first)
+      items.sort((a, b) => a.priority - b.priority);
+      
+      // Limit airport results
+      const airportResults = items.slice(0, 4);
       
       try {
         // Use Open-Meteo geocoding for city suggestions
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
         const res = await fetch(url);
         if (!res.ok) {
-          if (items.length) showList(items);
+          if (airportResults.length) showList(airportResults);
           return;
         }
         const data = await res.json();
@@ -878,7 +914,7 @@
             if (r.feature_code && !["PPL", "PPLA", "PPLA2", "PPLA3", "PPLC"].includes(r.feature_code)) return false;
             return true;
           })
-          .slice(0, 4)
+          .slice(0, 3)
           .map((r) => ({
             name: r.name,
             admin1: r.admin1,
@@ -888,11 +924,23 @@
             iataCode: null,
           }));
         
-        items.push(...cityResults);
-        showList(items.slice(0, 5));
+        // Combine: airports first, then cities (avoid duplicates)
+        const combined = [...airportResults];
+        for (const city of cityResults) {
+          // Skip if we already have an airport for this city
+          const alreadyHas = combined.some((a) => 
+            a.admin1?.toLowerCase() === city.name.toLowerCase() ||
+            a.iataCode && city.name.toLowerCase().includes(a.admin1?.toLowerCase() || "")
+          );
+          if (!alreadyHas) {
+            combined.push(city);
+          }
+        }
+        
+        showList(combined.slice(0, 6));
       } catch (e) {
         // Show airport matches if API fails
-        if (items.length) showList(items);
+        if (airportResults.length) showList(airportResults);
       }
     }
     
@@ -1141,17 +1189,18 @@
     return `${h}h ${m}m`;
   }
 
-  function renderSummary(best, flightTotalHours) {
-    const wrap = $("resultsSummary");
-
-    wrap.innerHTML = "";
-    const cells = [
-      { k: "Best start", v: best.tripStartISO },
-      { k: "Trip ends", v: best.tripEndISO },
-      { k: "PTO required", v: String(best.ptoRequired) },
-      { k: "Trip length (calendar days)", v: String(best.days.length) },
-      { k: "Total travel time (flight est.)", v: formatHours(flightTotalHours) },
-    ];
+function renderSummary(best, flightTotalHours) {
+  const wrap = $("resultsSummary");
+  
+  wrap.innerHTML = "";
+  const cells = [
+  { k: "Best start", v: best.tripStartISO },
+  { k: "Trip ends", v: best.tripEndISO },
+  { k: "PTO required", v: String(best.ptoRequired) },
+  { k: "Days in destination", v: String(best.tripDays || best.days.filter(d => d.kind === "city").length) },
+  { k: "Total calendar days", v: String(best.days.length) },
+  { k: "Total flight time", v: formatHours(flightTotalHours) },
+  ];
     cells.forEach((c) => {
       const item = document.createElement("div");
       item.className = "summaryItem";
@@ -1222,11 +1271,11 @@
     renderHolidayDefaults(holidayDefaults);
     renderExtraPtoDays(extraPtoOffContainer, 0);
 
-    addDestinationBtn.addEventListener("click", () => {
-      const current = readDestinationsFromDOM(destinationsContainer);
-      current.push({ city: "", stayDays: 5 });
-      renderDestinations(destinationsContainer, current);
-    });
+addDestinationBtn.addEventListener("click", () => {
+  const current = readDestinationsFromDOM(destinationsContainer);
+  current.push({ city: "", stayDays: null });
+  renderDestinations(destinationsContainer, current);
+  });
 
     addExtraPtoOffBtn.addEventListener("click", () => {
       addExtraPtoDayRow(extraPtoOffContainer);
@@ -1239,11 +1288,12 @@
       errorBox.style.display = "none";
       errorBox.textContent = "";
 
-      const homeCity = $("homeCity").value.trim();
-      const startDateISO = $("startDate").value;
-      const endDateISO = $("endDate").value;
-      const redeyeOK = $("redeyeOk").checked;
-      const objective = $("objective").value;
+  const homeCity = $("homeCity").value.trim();
+  const startDateISO = $("startDate").value;
+  const endDateISO = $("endDate").value;
+  const redeyeOK = $("redeyeOk").checked;
+  const travelDayThresholdH = Number($("travelDayThreshold").value) || 3;
+  const objective = $("objective").value;
       const extraPtoInputs = Array.from(extraPtoOffContainer.querySelectorAll("input[data-role='extraPtoOff']"))
         .map((el) => el.value)
         .filter(Boolean);
@@ -1372,6 +1422,7 @@
           redeyeOK,
           ptoOffSet,
           objective,
+          travelDayThresholdH,
         });
 
         if (!best) {
@@ -1441,6 +1492,7 @@
               redeyeOK,
               ptoOffSet,
               legDurationsHours: flightSegments.map((s) => s.durationMinutes / 60),
+              travelDayThresholdH,
             });
             // Only accept the overridden itinerary if it still fits within the user's end date.
             if (overridden && overridden.days.length && overridden.tripEndISO <= endDateISO) {
@@ -1482,53 +1534,64 @@
     return orderedCities;
   }
 
-  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours }) {
+  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours, travelDayThresholdH = 3 }) {
     const days = [];
     let currentDate = parseISODate(startISO);
     const legs = buildLegs(home, orderedCities);
     if (legDurationsHours.length !== legs.length) return null;
 
     let totalFlightHoursHeuristic = 0;
+    let tripDays = 0;
+    
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
       const leg = legs[legIdx];
       const durationHours = legDurationsHours[legIdx];
       if (!Number.isFinite(durationHours)) return null;
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK);
-      for (let t = 0; t < model.travelDays; t++) {
-        const d = addDays(currentDate, t);
-        const off = ptoOffSet.has(isoDate(d));
-        const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
-        days.push({
-          dateISO: isoDate(d),
-          kind: "travel",
-          label:
-            leg.type === "outbound"
-              ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-              : leg.type === "return"
-                ? `Return travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-                : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
-          ptoRequired,
-          flightDurationHours: durationHours,
-          fromIata: leg.from.airport?.iataCode,
-          toIata: leg.to.airport?.iataCode,
-          isHalfDay: model.isHalfDay || false,
-        });
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
+      
+      if (!model.noTravelDay) {
+        for (let t = 0; t < model.travelDays; t++) {
+          const d = addDays(currentDate, t);
+          const off = ptoOffSet.has(isoDate(d));
+          const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
+          days.push({
+            dateISO: isoDate(d),
+            kind: "travel",
+            label:
+              leg.type === "outbound"
+                ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
+                : leg.type === "return"
+                  ? `Return: ${leg.from.displayName} -> ${leg.to.displayName}`
+                  : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
+            ptoRequired,
+            flightDurationHours: durationHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            noTravelDay: false,
+          });
+        }
+        currentDate = addDays(currentDate, model.travelDays);
       }
-      currentDate = addDays(currentDate, model.travelDays);
 
       if (leg.to !== home) {
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off;
+          
+          const flightNote = (s === 0 && model.noTravelDay) 
+            ? ` (incl. ${formatHours(durationHours)} flight)` 
+            : "";
+          
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: formatCityLabel(leg.to.displayName, leg.to.country),
+            label: formatCityLabel(leg.to.displayName, leg.to.country) + flightNote,
             ptoRequired,
           });
+          tripDays++;
         }
         currentDate = addDays(currentDate, leg.to.stayDays);
       }
@@ -1541,6 +1604,7 @@
       totalFlightHoursHeuristic,
       tripStartISO: days[0]?.dateISO,
       tripEndISO: days[days.length - 1]?.dateISO,
+      tripDays,
     };
   }
 })();
