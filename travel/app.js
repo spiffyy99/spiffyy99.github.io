@@ -726,7 +726,7 @@
       const city = row.querySelector("input[data-role='city']").value.trim();
       const stayDaysRaw = row.querySelector("input[data-role='stayDays']").value;
       const stayDays = Number(stayDaysRaw);
-      return { city, stayDays: Number.isFinite(stayDays) && stayDays > 0 ? stayDays : 5 };
+      return { city, stayDays: Number.isFinite(stayDays) && stayDays > 0 ? stayDays : null };
     });
   }
 
@@ -924,18 +924,9 @@
             iataCode: null,
           }));
         
-        // Combine: airports first, then cities (avoid duplicates)
-        const combined = [...airportResults];
-        for (const city of cityResults) {
-          // Skip if we already have an airport for this city
-          const alreadyHas = combined.some((a) => 
-            a.admin1?.toLowerCase() === city.name.toLowerCase() ||
-            a.iataCode && city.name.toLowerCase().includes(a.admin1?.toLowerCase() || "")
-          );
-          if (!alreadyHas) {
-            combined.push(city);
-          }
-        }
+        // Airports first, then cities. Always show cities — they are distinct entries
+        // (user may want to type a city name rather than pick an airport code).
+        const combined = [...airportResults, ...cityResults];
         
         showList(combined.slice(0, 6));
       } catch (e) {
