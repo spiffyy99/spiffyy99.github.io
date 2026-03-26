@@ -36,15 +36,15 @@
   // - noTravelDay: true if flight doesn't need a dedicated travel day
   function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3) {
     // If flight is under user's threshold AND user is OK with red-eyes,
-    // no dedicated travel day needed - fly overnight or same-day
+    // no dedicated travel day needed - fly overnight (red-eye)
     if (durationHours < travelDayThresholdH && redeyeOK) {
-      return { travelDays: 0, ptoOffsets: [], noTravelDay: true };
+      return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: true };
     }
     
     // If flight is under threshold but user doesn't want red-eyes,
-    // still no travel day but may need to leave during work hours
+    // still no travel day - work day then catch evening flight
     if (durationHours < travelDayThresholdH) {
-      return { travelDays: 0, ptoOffsets: [], noTravelDay: true };
+      return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: false };
     }
     
     // Flight is at or above threshold - needs dedicated travel day(s)
@@ -53,19 +53,19 @@
       // If redeyeOK, can take overnight and arrive refreshed - no PTO needed
       // If not redeyeOK, the travel day itself may need PTO
       const ptoOffsets = redeyeOK ? [] : [0];
-      return { travelDays: 1, ptoOffsets, noTravelDay: false };
+      return { travelDays: 1, ptoOffsets, noTravelDay: false, isRedeye: false };
     }
 
     // Long flights (8-14h): 2 travel days
     if (durationHours <= TRAVEL_THRESHOLDS_H.medium) {
       // redeyeOK => overnight flight means arrival day is rest, no PTO on departure
       const ptoOffsets = redeyeOK ? [1] : [0, 1];
-      return { travelDays: 2, ptoOffsets, noTravelDay: false };
+      return { travelDays: 2, ptoOffsets, noTravelDay: false, isRedeye: false };
     }
 
     // Very long flights (14h+): 3 travel days
     const ptoOffsets = redeyeOK ? [1, 2] : [0, 1, 2];
-    return { travelDays: 3, ptoOffsets, noTravelDay: false };
+    return { travelDays: 3, ptoOffsets, noTravelDay: false, isRedeye: false };
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
@@ -492,9 +492,19 @@
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
       if (model.noTravelDay) {
-        // For outbound: flight happens before first city day (overnight arrival)
-        // For return: flight happens after last city day (depart evening)
-        // No calendar days consumed by travel itself
+        // Annotate the last city day already in the schedule with a departure note
+        if (days.length > 0) {
+          const lastDay = days[days.length - 1];
+          const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
+          if (model.isRedeye) {
+            lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
+          } else {
+            lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+            if (!lastDay.ptoRequired) {
+              lastDay.workPlusFly = true;
+            }
+          }
+        }
       } else {
         // Add travel day entries
         for (let t = 0; t < model.travelDays; t++) {
@@ -541,9 +551,6 @@
           tripDays++;
         }
         currentDate = addDays(currentDate, leg.to.stayDays);
-      } else if (model.noTravelDay && leg.type === "return") {
-        // Return flight with no travel day - note it on the last city day if possible
-        // This is handled by the UI showing total flight time
       }
     }
 
@@ -1135,6 +1142,8 @@
       
       if (day.ptoRequired) {
         ptoTd.textContent = "Yes";
+      } else if (day.workPlusFly) {
+        ptoTd.textContent = "No (Work)";
       } else if (isWeekend) {
         ptoTd.textContent = "No (Weekend)";
       } else if (holidayInfo) {
@@ -1541,8 +1550,22 @@ addDestinationBtn.addEventListener("click", () => {
       totalFlightHoursHeuristic += durationHours;
 
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
-      
-      if (!model.noTravelDay) {
+
+      if (model.noTravelDay) {
+        // Annotate the last city day already in the schedule with a departure note
+        if (days.length > 0) {
+          const lastDay = days[days.length - 1];
+          const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
+          if (model.isRedeye) {
+            lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
+          } else {
+            lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+            if (!lastDay.ptoRequired) {
+              lastDay.workPlusFly = true;
+            }
+          }
+        }
+      } else {
         for (let t = 0; t < model.travelDays; t++) {
           const d = addDays(currentDate, t);
           const off = ptoOffSet.has(isoDate(d));
