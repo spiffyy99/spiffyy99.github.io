@@ -507,7 +507,7 @@
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: `${leg.to.displayName} (${leg.to.country || "—"})`,
+            label: formatCityLabel(leg.to.displayName, leg.to.country),
             ptoRequired,
           });
         }
@@ -773,41 +773,126 @@
       });
     }
     
+    // Known major airports for IATA code lookups
+    const MAJOR_AIRPORTS = {
+      "JFK": { name: "New York JFK", city: "New York", country: "United States" },
+      "LGA": { name: "New York LaGuardia", city: "New York", country: "United States" },
+      "EWR": { name: "Newark", city: "Newark", country: "United States" },
+      "LAX": { name: "Los Angeles", city: "Los Angeles", country: "United States" },
+      "ORD": { name: "Chicago O'Hare", city: "Chicago", country: "United States" },
+      "DFW": { name: "Dallas Fort Worth", city: "Dallas", country: "United States" },
+      "DEN": { name: "Denver", city: "Denver", country: "United States" },
+      "SFO": { name: "San Francisco", city: "San Francisco", country: "United States" },
+      "SEA": { name: "Seattle-Tacoma", city: "Seattle", country: "United States" },
+      "ATL": { name: "Atlanta", city: "Atlanta", country: "United States" },
+      "BOS": { name: "Boston Logan", city: "Boston", country: "United States" },
+      "MIA": { name: "Miami", city: "Miami", country: "United States" },
+      "PHX": { name: "Phoenix", city: "Phoenix", country: "United States" },
+      "IAH": { name: "Houston George Bush", city: "Houston", country: "United States" },
+      "AUS": { name: "Austin-Bergstrom", city: "Austin", country: "United States" },
+      "LHR": { name: "London Heathrow", city: "London", country: "United Kingdom" },
+      "LGW": { name: "London Gatwick", city: "London", country: "United Kingdom" },
+      "CDG": { name: "Paris Charles de Gaulle", city: "Paris", country: "France" },
+      "ORY": { name: "Paris Orly", city: "Paris", country: "France" },
+      "FRA": { name: "Frankfurt", city: "Frankfurt", country: "Germany" },
+      "AMS": { name: "Amsterdam Schiphol", city: "Amsterdam", country: "Netherlands" },
+      "MAD": { name: "Madrid Barajas", city: "Madrid", country: "Spain" },
+      "BCN": { name: "Barcelona El Prat", city: "Barcelona", country: "Spain" },
+      "FCO": { name: "Rome Fiumicino", city: "Rome", country: "Italy" },
+      "MXP": { name: "Milan Malpensa", city: "Milan", country: "Italy" },
+      "DUB": { name: "Dublin", city: "Dublin", country: "Ireland" },
+      "ZRH": { name: "Zurich", city: "Zurich", country: "Switzerland" },
+      "VIE": { name: "Vienna", city: "Vienna", country: "Austria" },
+      "NRT": { name: "Tokyo Narita", city: "Tokyo", country: "Japan" },
+      "HND": { name: "Tokyo Haneda", city: "Tokyo", country: "Japan" },
+      "ICN": { name: "Seoul Incheon", city: "Seoul", country: "South Korea" },
+      "PEK": { name: "Beijing Capital", city: "Beijing", country: "China" },
+      "PVG": { name: "Shanghai Pudong", city: "Shanghai", country: "China" },
+      "HKG": { name: "Hong Kong", city: "Hong Kong", country: "Hong Kong" },
+      "SIN": { name: "Singapore Changi", city: "Singapore", country: "Singapore" },
+      "BKK": { name: "Bangkok Suvarnabhumi", city: "Bangkok", country: "Thailand" },
+      "SYD": { name: "Sydney", city: "Sydney", country: "Australia" },
+      "MEL": { name: "Melbourne", city: "Melbourne", country: "Australia" },
+      "YYZ": { name: "Toronto Pearson", city: "Toronto", country: "Canada" },
+      "YVR": { name: "Vancouver", city: "Vancouver", country: "Canada" },
+      "MEX": { name: "Mexico City", city: "Mexico City", country: "Mexico" },
+      "CUN": { name: "Cancun", city: "Cancun", country: "Mexico" },
+      "GRU": { name: "Sao Paulo Guarulhos", city: "Sao Paulo", country: "Brazil" },
+      "EZE": { name: "Buenos Aires Ezeiza", city: "Buenos Aires", country: "Argentina" },
+      "DXB": { name: "Dubai", city: "Dubai", country: "United Arab Emirates" },
+      "IST": { name: "Istanbul", city: "Istanbul", country: "Turkey" },
+      "CPT": { name: "Cape Town", city: "Cape Town", country: "South Africa" },
+      "JNB": { name: "Johannesburg", city: "Johannesburg", country: "South Africa" },
+    };
+    
     async function fetchSuggestions(query) {
       if (query.length < 2) {
         hideList();
         return;
       }
       
+      const upperQuery = query.toUpperCase().trim();
+      const items = [];
+      
+      // Check if query matches a known airport code
+      if (/^[A-Za-z]{3}$/.test(upperQuery) && MAJOR_AIRPORTS[upperQuery]) {
+        const ap = MAJOR_AIRPORTS[upperQuery];
+        items.push({
+          name: `${ap.name} (${upperQuery})`,
+          admin1: ap.city,
+          country: ap.country,
+          iataCode: upperQuery,
+        });
+      }
+      
+      // Also search airport codes that start with query
+      if (query.length >= 2) {
+        for (const [code, ap] of Object.entries(MAJOR_AIRPORTS)) {
+          if (code.startsWith(upperQuery) && code !== upperQuery) {
+            items.push({
+              name: `${ap.name} (${code})`,
+              admin1: ap.city,
+              country: ap.country,
+              iataCode: code,
+            });
+          }
+        }
+      }
+      
       try {
         // Use Open-Meteo geocoding for city suggestions
-        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`;
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
         const res = await fetch(url);
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (items.length) showList(items);
+          return;
+        }
         const data = await res.json();
         
-        const items = (data.results || []).map((r) => ({
-          name: r.name,
-          admin1: r.admin1,
-          country: r.country,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          iataCode: null, // Will be populated if it's an airport code
-        }));
+        // Filter to only include reasonable cities (population > 50000 or no population data)
+        const cityResults = (data.results || [])
+          .filter((r) => {
+            // Filter out very small places
+            if (r.population && r.population < 50000) return false;
+            // Prioritize cities and towns
+            if (r.feature_code && !["PPL", "PPLA", "PPLA2", "PPLA3", "PPLC"].includes(r.feature_code)) return false;
+            return true;
+          })
+          .slice(0, 4)
+          .map((r) => ({
+            name: r.name,
+            admin1: r.admin1,
+            country: r.country,
+            latitude: r.latitude,
+            longitude: r.longitude,
+            iataCode: null,
+          }));
         
-        // Also check if the query itself might be an IATA code
-        if (/^[A-Za-z]{3}$/.test(query.trim())) {
-          items.unshift({
-            name: query.toUpperCase(),
-            admin1: null,
-            country: "Airport Code",
-            iataCode: query.toUpperCase(),
-          });
-        }
-        
-        showList(items);
+        items.push(...cityResults);
+        showList(items.slice(0, 5));
       } catch (e) {
-        // Silently fail
+        // Show airport matches if API fails
+        if (items.length) showList(items);
       }
     }
     
@@ -874,12 +959,12 @@
 
       const daysCell = document.createElement("div");
       daysCell.className = "daysCell";
-      daysCell.setAttribute("data-tooltip-inline", "Days to stay in this city (travel days handled separately)");
       const daysInput = document.createElement("input");
       daysInput.type = "number";
       daysInput.min = "1";
       daysInput.step = "1";
-      daysInput.value = d.stayDays || 5;
+      daysInput.placeholder = "Days";
+      if (d.stayDays) daysInput.value = d.stayDays;
       daysInput.dataset.role = "stayDays";
       daysCell.appendChild(daysInput);
 
@@ -970,7 +1055,7 @@
     const table = document.createElement("table");
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Date", "Day", "Type", "Details", "PTO"].forEach((h) => {
+    ["Date", "Day", "Details", "PTO"].forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       headRow.appendChild(th);
@@ -994,10 +1079,6 @@
       const dayTd = document.createElement("td");
       dayTd.textContent = dayOfWeek;
       
-      // Type column
-      const typeTd = document.createElement("td");
-      typeTd.textContent = day.kind === "travel" ? "Travel" : "City";
-      
       // Details column - include flight time for travel days
       const detailsTd = document.createElement("td");
       if (day.kind === "travel" && day.flightDurationHours) {
@@ -1016,17 +1097,15 @@
       if (day.ptoRequired) {
         ptoTd.textContent = "Yes";
       } else if (isWeekend) {
-        ptoTd.textContent = "Weekend";
+        ptoTd.textContent = "No (Weekend)";
       } else if (holidayInfo) {
-        const observed = holidayInfo.observed ? " (observed)" : "";
-        ptoTd.textContent = `${holidayInfo.name}${observed}`;
+        ptoTd.textContent = "No (Holiday)";
       } else {
         ptoTd.textContent = "No";
       }
 
       tr.appendChild(dateTd);
       tr.appendChild(dayTd);
-      tr.appendChild(typeTd);
       tr.appendChild(detailsTd);
       tr.appendChild(ptoTd);
       tbody.appendChild(tr);
@@ -1040,6 +1119,19 @@
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
+  }
+  
+  // Format city label to avoid duplicate country names
+  // e.g. "New York, United States" + "United States" => "New York, United States" (not "New York, United States (United States)")
+  function formatCityLabel(displayName, country) {
+    if (!country) return displayName;
+    // Check if the displayName already contains the country
+    const lowerDisplay = displayName.toLowerCase();
+    const lowerCountry = country.toLowerCase();
+    if (lowerDisplay.includes(lowerCountry)) {
+      return displayName;
+    }
+    return `${displayName} (${country})`;
   }
 
   function formatMinutes(minutes) {
@@ -1087,18 +1179,15 @@
     // Theme toggle
     const themeToggle = $("themeToggle");
     const themeIcon = $("themeIcon");
-    const themeLabel = $("themeLabel");
     
     function setTheme(dark) {
       if (dark) {
         document.documentElement.setAttribute("data-theme", "dark");
         themeIcon.innerHTML = "&#9788;"; // sun
-        themeLabel.textContent = "Light";
         localStorage.setItem("travel:theme", "dark");
       } else {
         document.documentElement.removeAttribute("data-theme");
         themeIcon.innerHTML = "&#9790;"; // moon
-        themeLabel.textContent = "Dark";
         localStorage.setItem("travel:theme", "light");
       }
     }
@@ -1128,7 +1217,7 @@
     setupCityAutocomplete(homeCityInput, homeCityField);
 
     // Render initial destination row (state is read from DOM on add/remove).
-    renderDestinations(destinationsContainer, [{ city: "", stayDays: 5 }]);
+    renderDestinations(destinationsContainer, [{ city: "", stayDays: null }]);
 
     renderHolidayDefaults(holidayDefaults);
     renderExtraPtoDays(extraPtoOffContainer, 0);
@@ -1437,7 +1526,7 @@
           days.push({
             dateISO: isoDate(d),
             kind: "city",
-            label: `${leg.to.displayName} (${leg.to.country || "—"})`,
+            label: formatCityLabel(leg.to.displayName, leg.to.country),
             ptoRequired,
           });
         }
