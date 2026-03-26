@@ -18,16 +18,28 @@
   const AVG_SPEED_KMH = 800;
 
   // Travel-block model thresholds (based on estimated flight duration hours).
+  // Updated to be more realistic:
+  // - Flights under 4 hours: half-day travel (no full day needed)
+  // - Flights 4-8 hours: 1 calendar travel day  
+  // - Flights 8-14 hours: 2 calendar travel days
+  // - Flights 14+ hours: 3 calendar travel days
   const TRAVEL_THRESHOLDS_H = {
-    short: 8, // <= short => 1 calendar travel day
-    medium: 14, // <= medium => 2 calendar travel days
+    halfDay: 4,   // <= halfDay => half-day travel (still 1 day in calendar but no PTO)
+    short: 8,     // <= short => 1 calendar travel day
+    medium: 14,   // <= medium => 2 calendar travel days
   };
 
   // PTO impact model for multi-day travel blocks (heuristic).
   // We use a simplified rule because we don't have exact departure/arrival times:
-  // - single-day travel => 0 PTO (assumes you can work before leaving and after arriving same day)
+  // - very short flight (<4h) => no PTO (can fly morning/evening same day)
+  // - single-day travel (4-8h) => 0 PTO (assumes you can work before leaving)
   // - multi-day travel => redeyeOK reduces PTO impact
   function travelBlockModel(durationHours, redeyeOK) {
+    // Very short flights (under 4 hours): half-day travel, no PTO needed
+    if (durationHours <= TRAVEL_THRESHOLDS_H.halfDay) {
+      return { travelDays: 1, ptoOffsets: [], isHalfDay: true };
+    }
+    
     if (durationHours <= TRAVEL_THRESHOLDS_H.short) {
       return { travelDays: 1, ptoOffsets: [] }; // first (and only) travel day consumes no PTO
     }
@@ -45,10 +57,21 @@
     return { travelDays, ptoOffsets };
   }
 
-  function getDurationHoursFromDistanceKm(distanceKm) {
+  function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
     // Add a small factor for taxiing, climb/descent, routing inefficiencies.
-    const duration = (distanceKm / AVG_SPEED_KMH) * 1.12 + 0.25;
+    // Westward flights are typically longer due to headwinds (jet stream).
+    const windFactor = isWestward ? 1.15 : 1.0; // 15% longer for westward
+    const duration = (distanceKm / AVG_SPEED_KMH) * 1.12 * windFactor + 0.25;
     return Math.max(0.5, duration);
+  }
+  
+  function isWestwardFlight(fromLon, toLon) {
+    // Determine if flight is generally westward (going against jet stream)
+    // Handle wrap-around at international date line
+    let diff = toLon - fromLon;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    return diff < 0;
   }
 
   function haversineKm(lat1, lon1, lat2, lon2) {
@@ -90,16 +113,16 @@
   // Holiday definitions are keyed by "type" so we can compute per year.
   // Fixed-date holidays apply observed-day rules (Sat->Fri, Sun->Mon).
   const DEFAULT_HOLIDAYS = [
-    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1 },
-    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3 }, // 3rd Mon Jan
-    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3 }, // 3rd Mon Feb
-    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1 }, // last Mon May
-    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19 },
-    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4 },
-    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1 }, // 1st Mon Sep
-    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11 },
-    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4 }, // 4th Thu Nov
-    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25 },
+    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1, tooltip: "Jan 1. Observed Mon if Sun, Fri if Sat." },
+    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3, tooltip: "3rd Monday in January." },
+    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3, tooltip: "3rd Monday in February." },
+    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1, tooltip: "Last Monday in May." },
+    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19, tooltip: "June 19. Observed Mon if Sun, Fri if Sat." },
+    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4, tooltip: "July 4. Observed Mon if Sun, Fri if Sat." },
+    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1, tooltip: "1st Monday in September." },
+    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11, tooltip: "Nov 11. Observed Mon if Sun, Fri if Sat." },
+    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4, tooltip: "4th Thursday in November." },
+    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25, tooltip: "Dec 25. Observed Mon if Sun, Fri if Sat." },
   ];
 
   function observedDateForFixed(day) {
@@ -166,6 +189,50 @@
     }
 
     return ptoOff;
+  }
+  
+  // Build a map of date -> holiday info for display purposes
+  function buildHolidayInfoMap({ windowStartISO, windowEndISO, enabledHolidayIds, extraPtoOffDates }) {
+    const windowStart = parseISODate(windowStartISO);
+    const windowEnd = parseISODate(windowEndISO);
+    const startYear = windowStart.getFullYear();
+    const endYear = windowEnd.getFullYear();
+    
+    const holidayMap = new Map();
+    
+    for (let y = startYear; y <= endYear; y++) {
+      for (const holiday of DEFAULT_HOLIDAYS) {
+        if (!enabledHolidayIds.has(holiday.id)) continue;
+        
+        const observedDate = computeHolidayDateForYear(holiday, y);
+        if (observedDate >= windowStart && observedDate <= windowEnd) {
+          // Check if this is an observed date (different from actual date for fixed holidays)
+          let isObserved = false;
+          if (holiday.type === "fixed_observed") {
+            const actualDate = new Date(y, holiday.month, holiday.day);
+            isObserved = isoDate(actualDate) !== isoDate(observedDate);
+          }
+          
+          holidayMap.set(isoDate(observedDate), {
+            name: holiday.name,
+            observed: isObserved,
+          });
+        }
+      }
+    }
+    
+    // Extra holidays
+    for (const iso of extraPtoOffDates) {
+      const d = parseISODate(iso);
+      if (d >= windowStart && d <= windowEnd && !holidayMap.has(iso)) {
+        holidayMap.set(iso, {
+          name: "Extra Holiday",
+          observed: false,
+        });
+      }
+    }
+    
+    return holidayMap;
   }
 
   // ---- Geocoding + nearest airport ----
@@ -376,6 +443,12 @@
   function estimateLegDistanceKm(airportA, airportB) {
     return haversineKm(airportA.latitude, airportA.longitude, airportB.latitude, airportB.longitude);
   }
+  
+  function estimateLegDurationHours(airportA, airportB) {
+    const distanceKm = estimateLegDistanceKm(airportA, airportB);
+    const westward = isWestwardFlight(airportA.longitude, airportB.longitude);
+    return getDurationHoursFromDistanceKm(distanceKm, westward);
+  }
 
   function buildLegs(home, orderedCities) {
     // Returns legs in order: home->first, city->city, last->home
@@ -399,8 +472,7 @@
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
       const leg = legs[legIdx];
 
-      const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-      const durationHours = getDurationHoursFromDistanceKm(distanceKm);
+      const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       totalFlightHoursHeuristic += durationHours;
 
       const model = travelBlockModel(durationHours, redeyeOK);
@@ -418,6 +490,10 @@
                 ? `Return travel: ${leg.from.displayName} -> ${leg.to.displayName}`
                 : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
           ptoRequired,
+          flightDurationHours: durationHours,
+          fromIata: leg.from.airport?.iataCode,
+          toIata: leg.to.airport?.iataCode,
+          isHalfDay: model.isHalfDay || false,
         });
       }
       currentDate = addDays(currentDate, model.travelDays);
@@ -451,8 +527,8 @@
       tripEndISO,
       // Store for recomputation if we fetch real flight durations later.
       heuristicTravelByLeg: legs.map((leg) => {
+        const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
         const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-        const durationHours = getDurationHoursFromDistanceKm(distanceKm);
         return { distanceKm, durationHours };
       }),
     };
@@ -509,8 +585,7 @@
     const legs = buildLegs(home, orderedCities);
     let total = 0;
     for (const leg of legs) {
-      const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-      const durationHours = getDurationHoursFromDistanceKm(distanceKm);
+      const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       const model = travelBlockModel(durationHours, redeyeOK);
       total += model.travelDays;
       if (leg.to !== home) total += leg.to.stayDays;
@@ -548,8 +623,7 @@
       const legs = buildLegs(home, routeArr);
       let sum = 0;
       for (const leg of legs) {
-        const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-        sum += getDurationHoursFromDistanceKm(distanceKm);
+        sum += estimateLegDurationHours(leg.from.airport, leg.to.airport);
       }
       return sum;
     }
@@ -623,6 +697,158 @@
     });
   }
 
+  // City/airport autocomplete using Open-Meteo geocoding API
+  let autocompleteDebounce = null;
+  
+  function setupCityAutocomplete(input, container) {
+    let listEl = null;
+    let selectedIndex = -1;
+    let results = [];
+    
+    function hideList() {
+      if (listEl) {
+        listEl.remove();
+        listEl = null;
+      }
+      selectedIndex = -1;
+      results = [];
+    }
+    
+    function showList(items) {
+      hideList();
+      if (!items.length) return;
+      
+      results = items;
+      listEl = document.createElement("div");
+      listEl.className = "autocomplete-list";
+      
+      items.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-item";
+        if (i === selectedIndex) div.classList.add("selected");
+        
+        const nameSpan = document.createElement("div");
+        nameSpan.className = "city-name";
+        nameSpan.textContent = item.name;
+        
+        const detailsSpan = document.createElement("div");
+        detailsSpan.className = "city-details";
+        const parts = [];
+        if (item.admin1) parts.push(item.admin1);
+        if (item.country) parts.push(item.country);
+        if (item.iataCode) parts.push(`(${item.iataCode})`);
+        detailsSpan.textContent = parts.join(", ");
+        
+        div.appendChild(nameSpan);
+        div.appendChild(detailsSpan);
+        
+        div.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          selectItem(item);
+        });
+        
+        listEl.appendChild(div);
+      });
+      
+      container.appendChild(listEl);
+    }
+    
+    function selectItem(item) {
+      let displayValue = item.name;
+      if (item.country && item.country !== item.name) {
+        displayValue = `${item.name}, ${item.country}`;
+      }
+      if (item.iataCode) {
+        displayValue = item.iataCode;
+      }
+      input.value = displayValue;
+      hideList();
+    }
+    
+    function updateSelection(items) {
+      if (!listEl) return;
+      const itemEls = listEl.querySelectorAll(".autocomplete-item");
+      itemEls.forEach((el, i) => {
+        el.classList.toggle("selected", i === selectedIndex);
+      });
+    }
+    
+    async function fetchSuggestions(query) {
+      if (query.length < 2) {
+        hideList();
+        return;
+      }
+      
+      try {
+        // Use Open-Meteo geocoding for city suggestions
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const items = (data.results || []).map((r) => ({
+          name: r.name,
+          admin1: r.admin1,
+          country: r.country,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          iataCode: null, // Will be populated if it's an airport code
+        }));
+        
+        // Also check if the query itself might be an IATA code
+        if (/^[A-Za-z]{3}$/.test(query.trim())) {
+          items.unshift({
+            name: query.toUpperCase(),
+            admin1: null,
+            country: "Airport Code",
+            iataCode: query.toUpperCase(),
+          });
+        }
+        
+        showList(items);
+      } catch (e) {
+        // Silently fail
+      }
+    }
+    
+    input.addEventListener("input", () => {
+      const query = input.value.trim();
+      clearTimeout(autocompleteDebounce);
+      autocompleteDebounce = setTimeout(() => fetchSuggestions(query), 250);
+    });
+    
+    input.addEventListener("keydown", (e) => {
+      if (!listEl || !results.length) return;
+      
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
+        updateSelection(results);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, 0);
+        updateSelection(results);
+      } else if (e.key === "Enter" && selectedIndex >= 0) {
+        e.preventDefault();
+        selectItem(results[selectedIndex]);
+      } else if (e.key === "Escape") {
+        hideList();
+      }
+    });
+    
+    input.addEventListener("blur", () => {
+      // Delay to allow click on list item
+      setTimeout(hideList, 150);
+    });
+    
+    input.addEventListener("focus", () => {
+      const query = input.value.trim();
+      if (query.length >= 2) {
+        fetchSuggestions(query);
+      }
+    });
+  }
+
   function renderDestinations(container, destinations) {
     container.innerHTML = "";
     destinations.forEach((d, idx) => {
@@ -639,29 +865,41 @@
       input.placeholder = "Destination airport/city (e.g., Paris, France or LHR)";
       input.required = false;
       input.dataset.role = "city";
+      input.autocomplete = "off";
+      
+      // Add autocomplete functionality
+      setupCityAutocomplete(input, cityCell);
+      
       cityCell.appendChild(input);
 
       const daysCell = document.createElement("div");
+      daysCell.className = "daysCell";
+      daysCell.setAttribute("data-tooltip-inline", "Days to stay in this city (travel days handled separately)");
       const daysInput = document.createElement("input");
       daysInput.type = "number";
       daysInput.min = "1";
       daysInput.step = "1";
       daysInput.value = d.stayDays || 5;
       daysInput.dataset.role = "stayDays";
-      daysInput.title = "How many full days to spend in this city (travel days are handled separately).";
       daysCell.appendChild(daysInput);
 
       const removeCell = document.createElement("div");
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "smallBtn";
-      removeBtn.textContent = "Remove";
-      removeBtn.addEventListener("click", () => {
-        const current = readDestinationsFromDOM(container);
-        current.splice(idx, 1);
-        renderDestinations(container, current);
-      });
-      removeCell.appendChild(removeBtn);
+      removeCell.className = "removeCell";
+      
+      // Only show remove button if not the first destination (must have at least one)
+      if (idx > 0) {
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "removeBtn";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.title = "Remove destination";
+        removeBtn.addEventListener("click", () => {
+          const current = readDestinationsFromDOM(container);
+          current.splice(idx, 1);
+          renderDestinations(container, current);
+        });
+        removeCell.appendChild(removeBtn);
+      }
 
       row.appendChild(cityCell);
       row.appendChild(daysCell);
@@ -679,6 +917,9 @@
     for (const holiday of DEFAULT_HOLIDAYS) {
       const item = document.createElement("div");
       item.className = "holidayItem";
+      if (holiday.tooltip) {
+        item.setAttribute("data-tooltip", holiday.tooltip);
+      }
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -713,8 +954,9 @@
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "smallBtn";
-    removeBtn.textContent = "Remove";
+    removeBtn.className = "removeBtn";
+    removeBtn.innerHTML = "&times;";
+    removeBtn.title = "Remove holiday";
     removeBtn.addEventListener("click", () => row.remove());
 
     row.appendChild(input);
@@ -722,13 +964,13 @@
     container.appendChild(row);
   }
 
-  function renderItinerary(best, ptoOffSet) {
+  function renderItinerary(best, ptoOffSet, holidayInfoMap) {
     const wrap = $("itineraryTableWrap");
     wrap.innerHTML = "";
     const table = document.createElement("table");
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Date", "Type", "Details", "PTO"].forEach((h) => {
+    ["Date", "Day", "Type", "Details", "PTO"].forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       headRow.appendChild(th);
@@ -736,19 +978,54 @@
     thead.appendChild(headRow);
     table.appendChild(thead);
 
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const tbody = document.createElement("tbody");
+    
     for (const day of best.days) {
       const tr = document.createElement("tr");
+      const dateObj = parseISODate(day.dateISO);
+      const dayOfWeek = dayNames[dateObj.getDay()];
+      
+      // Date column
       const dateTd = document.createElement("td");
       dateTd.textContent = day.dateISO;
+      
+      // Day of week column
+      const dayTd = document.createElement("td");
+      dayTd.textContent = dayOfWeek;
+      
+      // Type column
       const typeTd = document.createElement("td");
       typeTd.textContent = day.kind === "travel" ? "Travel" : "City";
+      
+      // Details column - include flight time for travel days
       const detailsTd = document.createElement("td");
-      detailsTd.textContent = day.label;
+      if (day.kind === "travel" && day.flightDurationHours) {
+        const flightTime = formatHours(day.flightDurationHours);
+        const halfDayNote = day.isHalfDay ? " (half-day)" : "";
+        detailsTd.textContent = `${day.label} (~${flightTime}${halfDayNote})`;
+      } else {
+        detailsTd.textContent = day.label;
+      }
+      
+      // PTO column - show reason (weekend, holiday name, or Yes/No)
       const ptoTd = document.createElement("td");
-      ptoTd.textContent = day.ptoRequired ? "Yes" : "No";
+      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+      const holidayInfo = holidayInfoMap ? holidayInfoMap.get(day.dateISO) : null;
+      
+      if (day.ptoRequired) {
+        ptoTd.textContent = "Yes";
+      } else if (isWeekend) {
+        ptoTd.textContent = "Weekend";
+      } else if (holidayInfo) {
+        const observed = holidayInfo.observed ? " (observed)" : "";
+        ptoTd.textContent = `${holidayInfo.name}${observed}`;
+      } else {
+        ptoTd.textContent = "No";
+      }
 
       tr.appendChild(dateTd);
+      tr.appendChild(dayTd);
       tr.appendChild(typeTd);
       tr.appendChild(detailsTd);
       tr.appendChild(ptoTd);
@@ -770,44 +1047,6 @@
     const h = Math.floor(minutes / 60);
     const m = Math.round(minutes % 60);
     return `${h}h ${m}m`;
-  }
-
-  function renderSegments(segments) {
-    const wrap = $("segmentsWrap");
-    wrap.innerHTML = "";
-    const table = document.createElement("table");
-    const thead = document.createElement("thead");
-    const headRow = document.createElement("tr");
-    ["Leg", "From", "To", "Estimated flight", "Duration source"].forEach((h) => {
-      const th = document.createElement("th");
-      th.textContent = h;
-      headRow.appendChild(th);
-    });
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-    const tbody = document.createElement("tbody");
-
-    for (const s of segments) {
-      const tr = document.createElement("tr");
-      const legTd = document.createElement("td");
-      legTd.textContent = s.legLabel;
-      const fromTd = document.createElement("td");
-      fromTd.textContent = s.from;
-      const toTd = document.createElement("td");
-      toTd.textContent = s.to;
-      const durTd = document.createElement("td");
-      durTd.textContent = s.durationText;
-      const srcTd = document.createElement("td");
-      srcTd.textContent = s.sourceLabel;
-      tr.appendChild(legTd);
-      tr.appendChild(fromTd);
-      tr.appendChild(toTd);
-      tr.appendChild(durTd);
-      tr.appendChild(srcTd);
-      tbody.appendChild(tr);
-    }
-    table.appendChild(tbody);
-    wrap.appendChild(table);
   }
 
   function renderSummary(best, flightTotalHours) {
@@ -844,6 +1083,49 @@
     const holidayDefaults = $("holidayDefaults");
     const extraPtoOffContainer = $("extraPtoOffDays");
     const addExtraPtoOffBtn = $("addExtraPtoOffBtn");
+    
+    // Theme toggle
+    const themeToggle = $("themeToggle");
+    const themeIcon = $("themeIcon");
+    const themeLabel = $("themeLabel");
+    
+    function setTheme(dark) {
+      if (dark) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        themeIcon.innerHTML = "&#9788;"; // sun
+        themeLabel.textContent = "Light";
+        localStorage.setItem("travel:theme", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+        themeIcon.innerHTML = "&#9790;"; // moon
+        themeLabel.textContent = "Dark";
+        localStorage.setItem("travel:theme", "light");
+      }
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem("travel:theme");
+    if (savedTheme === "dark") {
+      setTheme(true);
+    }
+    
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.documentElement.hasAttribute("data-theme");
+      setTheme(!isDark);
+    });
+    
+    // Set minimum date to today for start/end date inputs
+    const today = isoDate(new Date());
+    const startDateInput = $("startDate");
+    const endDateInput = $("endDate");
+    startDateInput.min = today;
+    endDateInput.min = today;
+    
+    // Add autocomplete to home city input
+    const homeCityInput = $("homeCity");
+    const homeCityField = homeCityInput.parentElement;
+    homeCityField.style.position = "relative";
+    setupCityAutocomplete(homeCityInput, homeCityField);
 
     // Render initial destination row (state is read from DOM on add/remove).
     renderDestinations(destinationsContainer, [{ city: "", stayDays: 5 }]);
@@ -909,6 +1191,15 @@
 
       const windowStart = parseISODate(startDateISO);
       const windowEnd = parseISODate(endDateISO);
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+      
+      if (windowStart < todayDate) {
+        errorBox.textContent = "Start date must be today or in the future.";
+        errorBox.style.display = "block";
+        return;
+      }
+      
       if (windowEnd < windowStart) {
         errorBox.textContent = "End date must be on/after start date.";
         errorBox.style.display = "block";
@@ -939,7 +1230,6 @@
 
         $("resultsSummary").innerHTML = "";
         $("itineraryTableWrap").innerHTML = "";
-        $("segmentsWrap").innerHTML = "";
 
         const normalizedKey = (s) => {
           const raw = String(s || "").trim();
@@ -1005,27 +1295,20 @@
         // Flight segments: heuristic by default.
         // We don't return the ordered city list directly from the optimizer, so infer it from the simulation day labels.
         const orderedCities = deriveOrderedCitiesFromBest(best, home, cities);
-
-        const segmentsHeuristic = [];
         const legList = buildLegs(home, orderedCities);
-        for (let i = 0; i < legList.length; i++) {
-          const leg = legList[i];
-          const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-          const durationHours = getDurationHoursFromDistanceKm(distanceKm);
-          segmentsHeuristic.push({
-            legLabel: i + 1,
-            from: leg.from.displayName,
-            to: leg.to.displayName,
-            durationText: formatHours(durationHours),
-            sourceLabel: "Heuristic (distance/speed)",
-            durationMinutes: durationHours * 60,
-          });
-        }
 
         let finalBest = best;
         let totalFlightHours = best.totalFlightHoursHeuristic;
+        
+        // Build holiday info map for display
+        const holidayInfoMap = buildHolidayInfoMap({
+          windowStartISO: startDateISO,
+          windowEndISO: endDateISO,
+          enabledHolidayIds,
+          extraPtoOffDates: extraPtoInputs,
+        });
 
-        // Optional: fetch real-ish flight durations for segment display (AeroDataBox).
+        // Optional: fetch real-ish flight durations (AeroDataBox).
         const apiKey = $("flightApiKey").value.trim();
         const flightModel = $("flightModel").value;
         if (apiKey) {
@@ -1046,37 +1329,22 @@
               });
               const hours = minutes / 60;
               flightSegments.push({
-                legLabel: i + 1,
-                from: leg.from.displayName,
-                to: leg.to.displayName,
-                durationText: formatMinutes(minutes),
-                sourceLabel: "AeroDataBox distance-time",
                 durationMinutes: minutes,
                 durationHours: hours,
               });
             } catch (err) {
-              const distanceKm = estimateLegDistanceKm(leg.from.airport, leg.to.airport);
-              const durationHours = getDurationHoursFromDistanceKm(distanceKm);
+              const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
               flightSegments.push({
-                legLabel: i + 1,
-                from: leg.from.displayName,
-                to: leg.to.displayName,
-                durationText: formatHours(durationHours),
-                sourceLabel: `Fallback (AeroDataBox error)`,
                 durationMinutes: durationHours * 60,
                 durationHours,
               });
             }
           }
 
-          renderSegments(flightSegments);
-
-          // If we managed to get at least 1 real duration, recompute travel blocks for transparency.
-          // We require all legs to have parseable minutes; otherwise keep heuristic itinerary.
+          // If we managed to get durations, recompute travel blocks for transparency.
           const allMinutesOk = flightSegments.every((s) => Number.isFinite(s.durationMinutes));
           if (allMinutesOk) {
             // Re-simulate itinerary using real duration-based travel blocks.
-            // We re-run simulation but with overridden durationHours per leg.
             const overridden = simulateItineraryWithLegDurations({
               home,
               orderedCities,
@@ -1091,12 +1359,10 @@
               totalFlightHours = flightSegments.reduce((sum, s) => sum + s.durationMinutes / 60, 0);
             }
           }
-        } else {
-          renderSegments(segmentsHeuristic);
         }
 
         renderSummary(finalBest, totalFlightHours);
-        renderItinerary(finalBest, ptoOffSet);
+        renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
       } catch (err) {
         errorBox.textContent = `Something went wrong: ${err?.message || String(err)}`;
         errorBox.style.display = "block";
@@ -1155,6 +1421,10 @@
                 ? `Return travel: ${leg.from.displayName} -> ${leg.to.displayName}`
                 : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
           ptoRequired,
+          flightDurationHours: durationHours,
+          fromIata: leg.from.airport?.iataCode,
+          toIata: leg.to.airport?.iataCode,
+          isHalfDay: model.isHalfDay || false,
         });
       }
       currentDate = addDays(currentDate, model.travelDays);

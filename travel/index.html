@@ -9,8 +9,14 @@
   <body>
     <main class="page">
       <header class="header">
-        <h1>Vibe Travel Itinerary</h1>
-        <p class="subtitle">Optimized city order + date-specific PTO impact (frontend-only).</p>
+        <div class="header-left">
+          <h1>Vibe Travel Itinerary</h1>
+          <p class="subtitle">Optimized city order + date-specific PTO impact (frontend-only).</p>
+        </div>
+        <button id="themeToggle" class="theme-toggle" type="button">
+          <span id="themeIcon">&#9790;</span>
+          <span id="themeLabel">Dark</span>
+        </button>
       </header>
 
       <section class="card">
@@ -18,7 +24,7 @@
           <div class="grid">
             <div class="field">
               <label for="homeCity">Home airport/city</label>
-              <input id="homeCity" name="homeCity" type="text" placeholder="e.g., Austin, TX or JFK" required />
+              <input id="homeCity" name="homeCity" type="text" placeholder="e.g., Austin, TX or JFK" required autocomplete="off" />
             </div>
 
             <div class="field">
@@ -102,16 +108,8 @@
       <section class="card" aria-live="polite">
         <div class="sectionTitle">Results</div>
         <div id="resultsSummary" class="summaryGrid"></div>
-        <div class="split">
-          <div>
-            <div class="subTitle">Day-by-day itinerary</div>
-            <div id="itineraryTableWrap" class="tableWrap"></div>
-          </div>
-          <div>
-            <div class="subTitle">Flight segments</div>
-            <div id="segmentsWrap" class="tableWrap"></div>
-          </div>
-        </div>
+        <div class="subTitle" style="margin-top:16px;">Day-by-day itinerary</div>
+        <div id="itineraryTableWrap" class="tableWrap"></div>
       </section>
     </main>
 
