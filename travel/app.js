@@ -1444,17 +1444,48 @@ addDestinationBtn.addEventListener("click", () => {
           airport: homeResolved.airport,
         };
 
-        const cities = [];
+        const rawCities = [];
         for (let idx = 0; idx < destinationList.length; idx++) {
           const d = destinationList[idx];
           const resolved = await getResolved(d.city);
-          cities.push({
+          rawCities.push({
             id: `city_${idx}_${String(d.city).toLowerCase().replace(/\\s+/g, "_")}`,
             displayName: resolved.displayName,
             country: resolved.country,
             stayDays: d.stayDays,
             airport: resolved.airport,
+            _inputCity: d.city,
           });
+        }
+
+        // Deduplicate by resolved airport IATA code.
+        // Remove destinations that share an airport with home, and collapse duplicates.
+        const homeIata = home.airport?.iataCode;
+        const seenIata = new Set();
+        if (homeIata) seenIata.add(homeIata);
+        const cities = [];
+        const removedCityNames = [];
+        for (const c of rawCities) {
+          const iata = c.airport?.iataCode;
+          if (iata && seenIata.has(iata)) {
+            removedCityNames.push(c._inputCity || c.displayName);
+            continue;
+          }
+          if (iata) seenIata.add(iata);
+          const { _inputCity, ...cityWithoutMeta } = c;
+          cities.push(cityWithoutMeta);
+        }
+
+        if (removedCityNames.length > 0) {
+          // Warn the user but don't block — just continue with the deduplicated list.
+          errorBox.textContent = `Duplicate location(s) removed (same airport as home or another destination): ${removedCityNames.join(", ")}.`;
+          errorBox.style.display = "block";
+        }
+
+        if (cities.length === 0) {
+          errorBox.textContent = "No unique destinations remain after removing duplicates. Please add destinations different from your home city.";
+          errorBox.style.display = "block";
+          return;
         }
 
         const ptoOffSet = buildPtoOffSet({
