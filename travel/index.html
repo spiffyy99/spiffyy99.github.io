@@ -11,7 +11,7 @@
       <header class="header">
         <div class="header-left">
           <h1>Vibe Travel Itinerary</h1>
-          <p class="subtitle">Optimized city order + date-specific PTO impact (frontend-only).</p>
+          <p class="subtitle">For people who like escapism and hate working</p>
         </div>
         <button id="themeToggle" class="theme-toggle" type="button" title="Toggle dark mode">
           <span id="themeIcon">&#9790;</span>
@@ -57,7 +57,8 @@
             <div class="field">
               <label for="travelDayThreshold">Flights requiring a travel day</label>
               <select id="travelDayThreshold" name="travelDayThreshold">
-                <option value="0">&lt;2 hours (all flights)</option>
+                <option value="0">0+ hours (all flights)</option>
+                <option value="1">1+ hours</option>
                 <option value="2">2+ hours</option>
                 <option value="3" selected>3+ hours</option>
                 <option value="4">4+ hours</option>
@@ -79,7 +80,7 @@
           <div class="sectionTitle">Statutory holidays (US defaults)</div>
           <div id="holidayDefaults" class="holidayList"></div>
 
-          <div class="sectionTitle">Extra holidays</div>
+          <div class="sectionTitle">Extra holidays/days off</div>
           <div id="extraPtoOffDays" class="extraDays"></div>
           <div class="row">
             <button type="button" id="addExtraPtoOffBtn" class="btn secondary">+ Add extra holiday</button>
@@ -87,12 +88,12 @@
 
           <div class="sectionTitle">Flight-time estimate (optional)</div>
           <div class="hint">
-            Flight durations are estimated either via a key-based provider (if you paste a key) or a labeled fallback.
-            The key is used client-side in this MVP.
+            An AeroDataBox API key can be optionally provided to improve distance calculations. If not provided, a best manual estimate will be made.
+            
           </div>
           <div class="grid">
             <div class="field">
-              <label for="flightApiKey">AeroDataBox API key (optional)</label>
+              <label for="flightApiKey">API key (optional)</label>
               <input
                 id="flightApiKey"
                 name="flightApiKey"
