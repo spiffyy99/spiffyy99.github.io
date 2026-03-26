@@ -159,7 +159,7 @@
       }
     }
 
-    // Extra PTO-off dates are treated as exact calendar dates.
+    // Extra holidays are treated as exact calendar dates.
     for (const iso of extraPtoOffDates) {
       const d = parseISODate(iso);
       if (d >= windowStart && d <= windowEnd) ptoOff.add(iso);
