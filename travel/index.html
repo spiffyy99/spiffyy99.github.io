@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Travel Itinerary</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <h1>Vibe Travel Itinerary</h1>
+        <p class="subtitle">Optimized city order + date-specific PTO impact (frontend-only).</p>
+      </header>
+
+      <section class="card">
+        <form id="itineraryForm" class="form">
+          <div class="grid">
+            <div class="field">
+              <label for="homeCity">Home airport/city</label>
+              <input id="homeCity" name="homeCity" type="text" placeholder="e.g., Austin, TX or JFK" required />
+            </div>
+
+            <div class="field">
+              <label for="startDate">Earliest start date</label>
+              <input id="startDate" name="startDate" type="date" required />
+            </div>
+
+            <div class="field">
+              <label for="endDate">Latest end date</label>
+              <input id="endDate" name="endDate" type="date" required />
+            </div>
+          </div>
+
+          <div class="sectionTitle">Destinations</div>
+          <div id="destinations"></div>
+
+          <div class="row">
+            <button type="button" id="addDestinationBtn" class="btn secondary">+ Add destination</button>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="objective">Optimize for</label>
+              <select id="objective" name="objective">
+                <option value="ptoFirst" selected>PTO days first, then travel time</option>
+                <option value="timeFirst">Travel time first, then PTO days</option>
+              </select>
+            </div>
+
+            <div class="field checkboxField">
+              <label class="checkboxLabel">
+                <input id="redeyeOk" name="redeyeOk" type="checkbox" checked />
+                Include red-eye (overnight) flights?
+              </label>
+              <div class="hint">Affects the heuristic PTO impact of longer flights.</div>
+            </div>
+          </div>
+
+          <div class="sectionTitle">Statutory holidays (US defaults)</div>
+          <div id="holidayDefaults" class="holidayList"></div>
+
+          <div class="sectionTitle">Extra PTO-off dates</div>
+          <div id="extraPtoOffDays" class="extraDays"></div>
+          <div class="row">
+            <button type="button" id="addExtraPtoOffBtn" class="btn secondary">+ Add extra PTO-off day</button>
+          </div>
+
+          <div class="sectionTitle">Flight-time estimate (optional)</div>
+          <div class="hint">
+            Flight durations are estimated either via a key-based provider (if you paste a key) or a labeled fallback.
+            The key is used client-side in this MVP.
+          </div>
+          <div class="grid">
+            <div class="field">
+              <label for="flightApiKey">AeroDataBox API key (optional)</label>
+              <input
+                id="flightApiKey"
+                name="flightApiKey"
+                type="password"
+                placeholder="Paste AeroDataBox x-magicapi-key (Basic plan/free-tier if available)"
+              />
+            </div>
+
+            <div class="field">
+              <label for="flightModel">Flight time model</label>
+              <select id="flightModel" name="flightModel">
+                <option value="STD" selected>Standard-ish (default)</option>
+                <option value="ML01">ML01 (if supported)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <button type="submit" class="btn primary">Generate itinerary</button>
+          </div>
+
+          <div id="errorBox" class="errorBox" role="alert" style="display: none;"></div>
+        </form>
+      </section>
+
+      <section class="card" aria-live="polite">
+        <div class="sectionTitle">Results</div>
+        <div id="resultsSummary" class="summaryGrid"></div>
+        <div class="split">
+          <div>
+            <div class="subTitle">Day-by-day itinerary</div>
+            <div id="itineraryTableWrap" class="tableWrap"></div>
+          </div>
+          <div>
+            <div class="subTitle">Flight segments</div>
+            <div id="segmentsWrap" class="tableWrap"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+

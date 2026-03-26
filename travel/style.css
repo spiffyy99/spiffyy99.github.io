@@ -1,0 +1,241 @@
+/* Minimal standalone styling for the `travel/` app (no build step). */
+
+:root{
+  --bg:#FDFBF7;
+  --card:#ffffff;
+  --text:#111111;
+  --muted:#666666;
+  --border:#e8e8e8;
+  --primary:#111111;
+  --secondary:#f2f2f2;
+}
+
+body{
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.page{
+  max-width: 1040px;
+  margin: 32px auto;
+  padding: 0 16px 48px;
+}
+
+.header{
+  margin-bottom: 16px;
+}
+.header h1{
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+.subtitle{
+  color: var(--muted);
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.form{
+  width: 100%;
+}
+
+.grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+
+label{
+  font-size: 14px;
+  color: var(--muted);
+}
+
+input[type="text"], input[type="date"], input[type="number"], input[type="password"], select{
+  padding: 10px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.hint{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.sectionTitle{
+  margin: 18px 0 8px;
+  font-weight: 600;
+}
+
+.row{
+  margin-top: 10px;
+}
+
+.btn{
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn.primary{
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn.secondary{
+  background: var(--secondary);
+}
+
+.checkboxField{
+  align-self: end;
+}
+
+.checkboxLabel{
+  color: var(--text);
+  font-weight: 600;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.holidayList{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.holidayItem{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.extraDays{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.extraDayRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.errorBox{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ffcccc;
+  background: #fff5f5;
+  color: #8a0000;
+}
+
+.summaryGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.summaryItem{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.summaryItem .k{
+  color: var(--muted);
+  font-size: 12px;
+}
+.summaryItem .v{
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.split{
+  display:grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.subTitle{
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+
+.tableWrap{
+  overflow:auto;
+}
+
+table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td{
+  border-bottom: 1px solid var(--border);
+  padding: 10px 8px;
+  font-size: 13px;
+  text-align:left;
+}
+
+thead th{
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 1;
+}
+
+.smallBtn{
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor:pointer;
+  background: var(--secondary);
+  font-weight: 700;
+}
+
+.destinations{
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+}
+
+.destRow{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display:grid;
+  grid-template-columns: 1fr 160px 90px;
+  gap: 12px;
+  align-items: end;
+}
+
+.destRow .cityInput{
+  width: 100%;
+}
+
