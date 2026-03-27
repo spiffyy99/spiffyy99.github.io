@@ -143,8 +143,12 @@
         <div id="resultsSummary" class="summaryGrid"></div>
         <div class="subTitle" style="margin-top:16px;">Day-by-day itinerary</div>
         <div id="itineraryTableWrap" class="tableWrap"></div>
-        <div class="row" style="margin-top: 16px;">
-          <button type="button" id="exportCsvBtn" class="btn secondary">Export as CSV</button>
+        <div class="row" style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
+          <button type="button" id="exportBtn" class="btn secondary">Export Itinerary</button>
+          <select id="exportFormat" style="padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text);">
+            <option value="csv">CSV</option>
+            <option value="xls">XLS</option>
+          </select>
         </div>
       </section>
     </main>
