@@ -29,29 +29,34 @@
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
     }
 
-    // If red-eye is allowed, split into overnight + next-day spillover.
-    // If spillover is within threshold, no dedicated travel day is needed.
+    // If red-eye is allowed, check if it actually saves a travel day.
+    // Only use redeye if spillover is within threshold (otherwise we need a travel day anyway).
     if (redeyeOK) {
       const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
+      
+      // Redeye only makes sense if spillover doesn't require a dedicated travel day
       if (spilloverHours <= travelDayThresholdH) {
+        // For redeye: overnightHours = sleep portion, spilloverHours = next morning portion
+        // departureDayPortionHours = time before sleep = durationHours - overnightHours
+        // (which equals spilloverHours since spillover = durationHours - overnight)
+        const overnightHours = Math.min(durationHours, redeyeOvernightH);
+        const departureDayPortionHours = Math.max(0, durationHours - overnightHours);
+        
         return {
           travelDays: 0,
           ptoOffsets: [],
           noTravelDay: true,
           isRedeye: true,
           spilloverHours,
+          overnightHours,
+          departureDayPortionHours,
           travelDayOnNextDay: false,
         };
       }
-      // Spillover exceeds threshold: consume one dedicated day on the following day.
-      return {
-        travelDays: 1,
-        ptoOffsets: [0],
-        noTravelDay: false,
-        isRedeye: true,
-        spilloverHours,
-        travelDayOnNextDay: true,
-      };
+      
+      // Spillover exceeds threshold: redeye doesn't help, use regular travel day instead.
+      // No point doing 8h overnight + 7h next day when we need a travel day anyway.
+      // Fall through to regular travel day logic below.
     }
 
     // Most flights, including typical long-haul, should use one travel day.
@@ -62,18 +67,21 @@
         noTravelDay: false,
         isRedeye: false,
         spilloverHours: 0,
+        overnightHours: 0,
+        departureDayPortionHours: durationHours,
         travelDayOnNextDay: false,
       };
     }
 
     // Ultra-long legs: cap at 2 travel days.
-    const ptoOffsets2 = redeyeOK ? [1] : [0, 1];
     return {
       travelDays: 2,
-      ptoOffsets: ptoOffsets2,
+      ptoOffsets: [0, 1],
       noTravelDay: false,
       isRedeye: false,
       spilloverHours: 0,
+      overnightHours: 0,
+      departureDayPortionHours: durationHours,
       travelDayOnNextDay: false,
     };
   }
@@ -624,9 +632,10 @@
 
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
       
-      // If noTravelDay, we don't add separate travel day entries
-      // The flight happens overnight or same-day alongside other activities
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      // Use model's calculated values for overnight/spillover
+      const overnightHours = model.overnightHours || 0;
+      const spilloverHours = model.spilloverHours || 0;
+      const departureDayPortionHours = model.departureDayPortionHours || 0;
       
       if (model.noTravelDay) {
         // For outbound leg from home, we need to note the departure
@@ -640,9 +649,9 @@
           
           // Build departure day label - only show what happens on THIS day
           let flightNote;
-          if (model.isRedeye && nightHours > 0) {
+          if (model.isRedeye && overnightHours > 0) {
             // Red-eye: show total flight time and overnight portion for departure day
-            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`;
+            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(overnightHours)} overnight)`;
           } else {
             flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
           }
@@ -656,31 +665,28 @@
             noTravelDay: true,
             isRedeyeTravel: !!model.isRedeye,
             flightDurationHours: durationHours,
-            // For departure day, we show overnight portion in the label, not in the generic display
-            nightHours: 0, // Don't show split in generic renderer
+            nightHours: 0,
             dayHours: 0,
             isDepartureDay: true,
-            hasNextDaySpillover: model.isRedeye && dayHours > 0,
-            spilloverHours: dayHours,
+            hasNextDaySpillover: model.isRedeye && spilloverHours > 0,
+            spilloverHours: spilloverHours,
           });
           
-          // Red-eye arrives the next calendar day - add an arrival row if there's spillover
+          // Red-eye arrives the next calendar day
           if (model.isRedeye) {
             currentDate = addDays(currentDate, 1);
-            // If there's spillover (remaining flight time), note it on arrival day
-            // But don't add a separate travel row - let the city days handle it
-            // We'll add the spillover note to the first city day below
           }
         } else if (days.length > 0) {
           const lastDay = days[days.length - 1];
           const toLabel = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
           
           // Annotate the last day with departure info
-          if (model.isRedeye && nightHours > 0) {
+          if (model.isRedeye && overnightHours > 0) {
             lastDay.label += ` (evening departure to ${toLabel})`;
             // Store flight info on the last day for proper display
             lastDay.departureFlightDurationHours = durationHours;
-            lastDay.departureNightHours = nightHours;
+            lastDay.departureNightHours = overnightHours;
+            lastDay.departureDayPortionHours = departureDayPortionHours;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
           }
@@ -1502,10 +1508,15 @@
           detailsTd.textContent = `${day.label} (arrival; ${spillover} remaining from flight)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
-        // City day with evening departure - show the overnight portion
+        // City day with evening departure - show both daytime and overnight portions
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        const dayPortion = day.departureDayPortionHours ? formatHours(day.departureDayPortionHours) : null;
+        
+        if (dayPortion && nightPortion && day.departureDayPortionHours > 0) {
+          // Show both: "1h 44m during day, 8h overnight"
+          detailsTd.textContent = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           detailsTd.textContent = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           detailsTd.textContent = `${day.label} (~${flightTime})`;
@@ -1674,7 +1685,10 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        const dayPortion = day.departureDayPortionHours ? formatHours(day.departureDayPortionHours) : null;
+        if (dayPortion && nightPortion && day.departureDayPortionHours > 0) {
+          details = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           details = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           details = `${day.label} (~${flightTime})`;
@@ -1797,7 +1811,10 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        const dayPortion = day.departureDayPortionHours ? formatHours(day.departureDayPortionHours) : null;
+        if (dayPortion && nightPortion && day.departureDayPortionHours > 0) {
+          details = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           details = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           details = `${day.label} (~${flightTime})`;
@@ -2423,7 +2440,11 @@ addDestinationBtn.addEventListener("click", () => {
       totalFlightHoursHeuristic += durationHours;
 
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      
+      // Use model's calculated values
+      const overnightHours = model.overnightHours || 0;
+      const spilloverHours = model.spilloverHours || 0;
+      const departureDayPortionHours = model.departureDayPortionHours || 0;
 
       if (model.noTravelDay) {
         if (leg.type === "outbound" && days.length === 0) {
@@ -2432,8 +2453,8 @@ addDestinationBtn.addEventListener("click", () => {
           const fromLabel = leg.from.cityName || leg.from.displayName;
           
           let flightNote;
-          if (model.isRedeye && nightHours > 0) {
-            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`;
+          if (model.isRedeye && overnightHours > 0) {
+            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(overnightHours)} overnight)`;
           } else {
             flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
           }
@@ -2450,17 +2471,18 @@ addDestinationBtn.addEventListener("click", () => {
             nightHours: 0,
             dayHours: 0,
             isDepartureDay: true,
-            hasNextDaySpillover: model.isRedeye && dayHours > 0,
-            spilloverHours: dayHours,
+            hasNextDaySpillover: model.isRedeye && spilloverHours > 0,
+            spilloverHours: spilloverHours,
           });
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
         } else if (days.length > 0) {
           const lastDay = days[days.length - 1];
           const toLabel = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
-          if (model.isRedeye && nightHours > 0) {
+          if (model.isRedeye && overnightHours > 0) {
             lastDay.label += ` (evening departure to ${toLabel})`;
             lastDay.departureFlightDurationHours = durationHours;
-            lastDay.departureNightHours = nightHours;
+            lastDay.departureNightHours = overnightHours;
+            lastDay.departureDayPortionHours = departureDayPortionHours;
           } else {
             lastDay.label += ` (evening flight to ${toLabel} ~${formatHours(durationHours)})`;
           }
