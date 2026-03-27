@@ -29,19 +29,15 @@
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
     }
 
-    // If red-eye is allowed, check if it actually saves a travel day.
-    // Only use redeye if spillover is within threshold (otherwise we need a travel day anyway).
+    // If red-eye is allowed, split into overnight + next-day spillover.
     if (redeyeOK) {
       const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
+      const overnightHours = Math.min(durationHours, redeyeOvernightH);
+      // departureDayPortionHours = the part of flight before you sleep (same as spillover mathematically)
+      const departureDayPortionHours = spilloverHours;
       
-      // Redeye only makes sense if spillover doesn't require a dedicated travel day
+      // If spillover is within threshold, no dedicated travel day is needed
       if (spilloverHours <= travelDayThresholdH) {
-        // For redeye: overnightHours = sleep portion, spilloverHours = next morning portion
-        // departureDayPortionHours = time before sleep = durationHours - overnightHours
-        // (which equals spilloverHours since spillover = durationHours - overnight)
-        const overnightHours = Math.min(durationHours, redeyeOvernightH);
-        const departureDayPortionHours = Math.max(0, durationHours - overnightHours);
-        
         return {
           travelDays: 0,
           ptoOffsets: [],
@@ -54,12 +50,21 @@
         };
       }
       
-      // Spillover exceeds threshold: redeye doesn't help, use regular travel day instead.
-      // No point doing 8h overnight + 7h next day when we need a travel day anyway.
-      // Fall through to regular travel day logic below.
+      // Spillover exceeds threshold: need a dedicated travel day on the following day
+      // But still use redeye to depart the evening before
+      return {
+        travelDays: 1,
+        ptoOffsets: [0],
+        noTravelDay: false,
+        isRedeye: true,
+        spilloverHours,
+        overnightHours,
+        departureDayPortionHours,
+        travelDayOnNextDay: true,
+      };
     }
 
-    // Most flights, including typical long-haul, should use one travel day.
+    // No redeye: most flights use one travel day
     if (durationHours <= 20) {
       return {
         travelDays: 1,
@@ -702,13 +707,14 @@
             days[days.length - 1].label += ` (evening departure to ${departTo})`;
             // Store the departure flight info
             days[days.length - 1].departureFlightDurationHours = durationHours;
-            days[days.length - 1].departureNightHours = nightHours;
+            days[days.length - 1].departureNightHours = overnightHours;
+            days[days.length - 1].departureDayPortionHours = departureDayPortionHours;
           } else {
             // No previous day, create a departure day
             days.push({
               dateISO: isoDate(currentDate),
               kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
+              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(overnightHours)} overnight)`,
               ptoRequired: false,
               workPlusFly: true,
               noTravelDay: true,
@@ -717,7 +723,8 @@
               nightHours: 0,
               dayHours: 0,
               isDepartureDay: true,
-              departureNightHours: nightHours,
+              departureNightHours: overnightHours,
+              departureDayPortionHours: departureDayPortionHours,
             });
           }
           currentDate = addDays(currentDate, 1);
@@ -736,7 +743,7 @@
           let travelLabel;
           if (model.travelDays === 1) {
             // Single travel day
-            if (model.travelDayOnNextDay && dayHours > 0) {
+            if (model.travelDayOnNextDay && spilloverHours > 0) {
               // This is a spillover day from a red-eye that departed the previous evening
               travelLabel = `${fromCity} → ${toCity}`;
             } else if (leg.type === "outbound") {
@@ -758,18 +765,13 @@
           }
           
           // Determine what portion of the flight to show for this day
-          let displayNightHours = 0;
-          let displayDayHours = 0;
           let isArrivalDay = false;
           let arrivalSpilloverHours = 0;
           
           if (model.travelDayOnNextDay && t === 0) {
             // This is the arrival day after a red-eye departure
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours; // The remaining portion after overnight
-          } else if (!model.isRedeye) {
-            // Regular daytime flight
-            displayDayHours = durationHours;
+            arrivalSpilloverHours = spilloverHours; // The remaining portion after overnight
           }
           
           days.push({
@@ -2495,12 +2497,13 @@ addDestinationBtn.addEventListener("click", () => {
           if (days.length > 0) {
             days[days.length - 1].label += ` (evening departure to ${departTo})`;
             days[days.length - 1].departureFlightDurationHours = durationHours;
-            days[days.length - 1].departureNightHours = nightHours;
+            days[days.length - 1].departureNightHours = overnightHours;
+            days[days.length - 1].departureDayPortionHours = departureDayPortionHours;
           } else {
             days.push({
               dateISO: isoDate(currentDate),
               kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
+              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(overnightHours)} overnight)`,
               ptoRequired: false,
               workPlusFly: true,
               noTravelDay: true,
@@ -2509,7 +2512,8 @@ addDestinationBtn.addEventListener("click", () => {
               nightHours: 0,
               dayHours: 0,
               isDepartureDay: true,
-              departureNightHours: nightHours,
+              departureNightHours: overnightHours,
+              departureDayPortionHours: departureDayPortionHours,
             });
           }
           currentDate = addDays(currentDate, 1);
@@ -2526,7 +2530,7 @@ addDestinationBtn.addEventListener("click", () => {
           
           let travelLabel;
           if (model.travelDays === 1) {
-            if (model.travelDayOnNextDay && dayHours > 0) {
+            if (model.travelDayOnNextDay && spilloverHours > 0) {
               travelLabel = `${fromCity} → ${toCity}`;
             } else if (leg.type === "outbound") {
               travelLabel = `Travel: ${fromCity} → ${toCity}`;
@@ -2549,7 +2553,7 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalSpilloverHours = 0;
           if (model.travelDayOnNextDay && t === 0) {
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours;
+            arrivalSpilloverHours = spilloverHours;
           }
           
           days.push({
