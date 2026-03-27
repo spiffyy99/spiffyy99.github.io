@@ -1455,6 +1455,96 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
   });
 }
 
+  // ---- CSV Export ----
+  
+  function exportItineraryToCSV(best, ptoOffSet, holidayInfoMap) {
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    
+    // CSV Headers
+    const headers = ["Date", "Day", "Details", "Days in City", "PTO"];
+    const rows = [headers];
+    
+    // Track days in each city
+    const cityDayCount = {};
+    let currentCity = null;
+    
+    for (const day of best.days) {
+      const dateObj = parseISODate(day.dateISO);
+      const dayOfWeek = dayNames[dateObj.getDay()];
+      
+      // Track city days
+      let daysInCity = "";
+      if (day.kind === "city") {
+        const cityLabel = day.label.split(" (")[0]; // Extract city name
+        if (cityLabel !== currentCity) {
+          currentCity = cityLabel;
+          cityDayCount[cityLabel] = 0;
+        }
+        cityDayCount[cityLabel]++;
+        daysInCity = String(cityDayCount[cityLabel]);
+      }
+      
+      // Details
+      let details = day.label;
+      if (day.kind === "travel" && day.flightDurationHours) {
+        const flightTime = formatHours(day.flightDurationHours);
+        details = `${day.label} (~${flightTime})`;
+      }
+      
+      // PTO
+      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+      const holidayInfo = holidayInfoMap ? holidayInfoMap.get(day.dateISO) : null;
+      
+      let pto;
+      if (day.ptoRequired) {
+        pto = "Yes";
+      } else if (day.workPlusFly) {
+        pto = "No (Work)";
+      } else if (isWeekend) {
+        pto = "No (Weekend)";
+      } else if (holidayInfo) {
+        pto = "No (Holiday)";
+      } else if (day.isRedeyeTravel) {
+        pto = "No (Work)";
+      } else if (day.kind === "travel") {
+        pto = "No (Work)";
+      } else {
+        pto = "No (Weekend)";
+      }
+      
+      rows.push([
+        day.dateISO,
+        dayOfWeek,
+        details,
+        daysInCity || "—",
+        pto
+      ]);
+    }
+    
+    // Convert to CSV
+    const csvContent = rows.map(row => 
+      row.map(cell => {
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        const str = String(cell);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(',')
+    ).join('\n');
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `travel-itinerary-${best.tripStartISO}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   // ---- Main flow ----
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -1593,6 +1683,10 @@ addDestinationBtn.addEventListener("click", () => {
       const errorBox = $("errorBox");
       errorBox.style.display = "none";
       errorBox.textContent = "";
+      
+      // Hide results section until new results are ready
+      const resultsSection = $("resultsSection");
+      resultsSection.style.display = "none";
 
   const homeCityInputEl = $("homeCity");
   const homeCity = homeCityInputEl.value.trim();
@@ -1953,6 +2047,14 @@ addDestinationBtn.addEventListener("click", () => {
 
         renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities);
         renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
+        
+        // Show results section and setup CSV export
+        const resultsSection = $("resultsSection");
+        resultsSection.style.display = "block";
+        
+        // Setup CSV export button
+        const exportCsvBtn = $("exportCsvBtn");
+        exportCsvBtn.onclick = () => exportItineraryToCSV(finalBest, ptoOffSet, holidayInfoMap);
       } catch (err) {
         errorBox.textContent = `Something went wrong: ${err?.message || String(err)}`;
         errorBox.style.display = "block";

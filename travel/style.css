@@ -478,5 +478,10 @@ thead th{
   .destRow .removeCell {
     flex: 0 0 32px;
   }
+  
+  /* Remove vertical padding on checkbox field on mobile */
+  .checkboxField {
+    padding-top: 0;
+  }
 }
 

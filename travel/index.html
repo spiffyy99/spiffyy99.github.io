@@ -138,11 +138,14 @@
         </form>
       </section>
 
-      <section class="card" aria-live="polite">
+      <section id="resultsSection" class="card" aria-live="polite" style="display: none;">
         <div class="sectionTitle">Results</div>
         <div id="resultsSummary" class="summaryGrid"></div>
         <div class="subTitle" style="margin-top:16px;">Day-by-day itinerary</div>
         <div id="itineraryTableWrap" class="tableWrap"></div>
+        <div class="row" style="margin-top: 16px;">
+          <button type="button" id="exportCsvBtn" class="btn secondary">Export as CSV</button>
+        </div>
       </section>
     </main>
 
