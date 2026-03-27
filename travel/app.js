@@ -14,10 +14,6 @@
   };
   const SELECTED_LOCATION_META = new WeakMap();
 
-  // "Average" cruising speed heuristic (km/h), for travel-day/PTO modeling only.
-  // This avoids making flight-duration API calls for every candidate permutation.
-  const AVG_SPEED_KMH = 800;
-
   // Travel block model with configurable threshold
   // - travelDayThresholdH: user-set threshold (in hours) for what requires a travel day
   // - redeyeOK: if true, flights under threshold can be overnight without using a travel day
@@ -40,34 +36,41 @@
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: true };
     }
 
-    // Most flights should consume at most one dedicated travel day.
-    if (durationHours <= 12) {
-      const ptoOffsets = redeyeOK ? [] : [0];
-      return { travelDays: 1, ptoOffsets, noTravelDay: false, isRedeye: false };
-    }
-
-    // Very long flights can still fit in one travel day when the user accepts red-eyes.
-    if (redeyeOK && durationHours <= 18) {
-      return { travelDays: 1, ptoOffsets: [], noTravelDay: false, isRedeye: true };
+    // Most flights, including typical long-haul, should use one travel day.
+    if (durationHours <= 20) {
+      return {
+        travelDays: 1,
+        ptoOffsets: redeyeOK ? [] : [0],
+        noTravelDay: false,
+        isRedeye: redeyeOK,
+      };
     }
 
     // Ultra-long legs: cap at 2 travel days.
     const ptoOffsets2 = redeyeOK ? [1] : [0, 1];
-    return { travelDays: 2, ptoOffsets: ptoOffsets2, noTravelDay: false, isRedeye: false };
+    return { travelDays: 2, ptoOffsets: ptoOffsets2, noTravelDay: false, isRedeye: redeyeOK };
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
-    // More accurate flight time calculation
-    // Add boarding/deboarding time (~45min), taxiing, climb/descent
-    // Westward flights are typically longer due to headwinds (jet stream)
-    const windFactor = isWestward ? 1.20 : 1.05; // 20% longer for westward, 5% for eastward
-    const baseFlightTime = (distanceKm / AVG_SPEED_KMH) * windFactor;
-    
-    // Add ground time: boarding, taxiing, deboarding (scales with distance)
-    const groundTimeHours = distanceKm < 500 ? 0.75 : (distanceKm < 2000 ? 1.0 : 1.25);
-    
-    const totalDuration = baseFlightTime + groundTimeHours;
-    return Math.max(0.75, totalDuration); // Minimum 45 min for shortest flights
+    // Calibrated heuristic aimed at realistic gate-to-gate estimates.
+    let cruiseSpeedKmh;
+    if (distanceKm < 1500) cruiseSpeedKmh = 700;
+    else if (distanceKm < 4000) cruiseSpeedKmh = 780;
+    else if (distanceKm < 9000) cruiseSpeedKmh = 840;
+    else cruiseSpeedKmh = 900;
+
+    const windFactor = isWestward ? 1.04 : 0.98;
+    const airborneHours = (distanceKm / cruiseSpeedKmh) * windFactor;
+    const groundTimeHours = distanceKm < 1200 ? 0.7 : distanceKm < 5000 ? 0.9 : 1.0;
+
+    return Math.max(0.75, airborneHours + groundTimeHours);
+  }
+
+  function splitFlightHours(durationHours, isRedeye) {
+    if (!Number.isFinite(durationHours)) return { nightHours: 0, dayHours: 0 };
+    if (!isRedeye) return { nightHours: 0, dayHours: durationHours };
+    const nightHours = Math.min(durationHours, 8);
+    return { nightHours, dayHours: Math.max(0, durationHours - nightHours) };
   }
   
   function isWestwardFlight(fromLon, toLon) {
@@ -572,6 +575,7 @@
             noTravelDay: true,
             isRedeyeTravel: !!model.isRedeye,
             flightDurationHours: durationHours,
+            ...splitFlightHours(durationHours, !!model.isRedeye),
           });
           // Red-eye arrives the next calendar day.
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
@@ -622,6 +626,7 @@
             label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
+            ...splitFlightHours(durationHours, !!model.isRedeye),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,
@@ -1282,8 +1287,15 @@
       const detailsTd = document.createElement("td");
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
-        const halfDayNote = day.isHalfDay ? " (half-day)" : "";
-        detailsTd.textContent = `${day.label} (~${flightTime}${halfDayNote})`;
+        const nightPart = Number.isFinite(day.nightHours) && day.nightHours > 0 ? formatHours(day.nightHours) : null;
+        const dayPart = Number.isFinite(day.dayHours) && day.dayHours > 0 ? formatHours(day.dayHours) : null;
+        const splitText =
+          nightPart && dayPart
+            ? `; night ${nightPart} + day ${dayPart}`
+            : dayPart
+            ? `; daytime ${dayPart}`
+            : "";
+        detailsTd.textContent = `${day.label} (~${flightTime}${splitText})`;
       } else {
         detailsTd.textContent = day.label;
       }
@@ -1949,6 +1961,7 @@ addDestinationBtn.addEventListener("click", () => {
             noTravelDay: true,
             isRedeyeTravel: !!model.isRedeye,
             flightDurationHours: durationHours,
+            ...splitFlightHours(durationHours, !!model.isRedeye),
           });
           // Red-eye arrives the next calendar day.
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
@@ -1998,6 +2011,7 @@ addDestinationBtn.addEventListener("click", () => {
             label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
+            ...splitFlightHours(durationHours, !!model.isRedeye),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,
