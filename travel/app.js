@@ -23,32 +23,59 @@
   // - travelDays: number of calendar days consumed by travel (0 = no dedicated travel day)
   // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
   // - noTravelDay: true if flight doesn't need a dedicated travel day
-  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3) {
+  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8) {
     // Always avoid dedicated travel days when flight time is under the user's threshold.
     if (durationHours < travelDayThresholdH) {
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
     }
 
-    // If red-eyes are allowed, assume up to ~6 hours can happen overnight after work.
-    // If next-day spillover is still under threshold, avoid a dedicated travel day.
-    const overnightHours = 6;
-    if (redeyeOK && durationHours <= overnightHours + travelDayThresholdH) {
-      return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: true };
+    // If red-eye is allowed, split into overnight + next-day spillover.
+    // If spillover is within threshold, no dedicated travel day is needed.
+    if (redeyeOK) {
+      const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
+      if (spilloverHours <= travelDayThresholdH) {
+        return {
+          travelDays: 0,
+          ptoOffsets: [],
+          noTravelDay: true,
+          isRedeye: true,
+          spilloverHours,
+          travelDayOnNextDay: false,
+        };
+      }
+      // Spillover exceeds threshold: consume one dedicated day on the following day.
+      return {
+        travelDays: 1,
+        ptoOffsets: [0],
+        noTravelDay: false,
+        isRedeye: true,
+        spilloverHours,
+        travelDayOnNextDay: true,
+      };
     }
 
     // Most flights, including typical long-haul, should use one travel day.
     if (durationHours <= 20) {
       return {
         travelDays: 1,
-        ptoOffsets: redeyeOK ? [] : [0],
+        ptoOffsets: [0],
         noTravelDay: false,
-        isRedeye: redeyeOK,
+        isRedeye: false,
+        spilloverHours: 0,
+        travelDayOnNextDay: false,
       };
     }
 
     // Ultra-long legs: cap at 2 travel days.
     const ptoOffsets2 = redeyeOK ? [1] : [0, 1];
-    return { travelDays: 2, ptoOffsets: ptoOffsets2, noTravelDay: false, isRedeye: redeyeOK };
+    return {
+      travelDays: 2,
+      ptoOffsets: ptoOffsets2,
+      noTravelDay: false,
+      isRedeye: false,
+      spilloverHours: 0,
+      travelDayOnNextDay: false,
+    };
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
@@ -66,10 +93,10 @@
     return Math.max(0.75, airborneHours + groundTimeHours);
   }
 
-  function splitFlightHours(durationHours, isRedeye) {
+  function splitFlightHours(durationHours, isRedeye, redeyeOvernightH = 8) {
     if (!Number.isFinite(durationHours)) return { nightHours: 0, dayHours: 0 };
     if (!isRedeye) return { nightHours: 0, dayHours: durationHours };
-    const nightHours = Math.min(durationHours, 8);
+    const nightHours = Math.min(durationHours, redeyeOvernightH);
     return { nightHours, dayHours: Math.max(0, durationHours - nightHours) };
   }
   
@@ -536,7 +563,7 @@
     return legs;
   }
 
-  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3 }) {
+  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
     // Produce day-by-day entries + PTO required + heuristic flight hours.
     const days = [];
     let currentDate = parseISODate(startISO);
@@ -550,7 +577,7 @@
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
       
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
@@ -575,7 +602,7 @@
             noTravelDay: true,
             isRedeyeTravel: !!model.isRedeye,
             flightDurationHours: durationHours,
-            ...splitFlightHours(durationHours, !!model.isRedeye),
+            ...splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH),
           });
           // Red-eye arrives the next calendar day.
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
@@ -589,6 +616,26 @@
           }
         }
       } else {
+        if (model.travelDayOnNextDay) {
+          // Red-eye departs previous evening; dedicated travel day is the next calendar day.
+          const departTo = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
+          if (days.length > 0) {
+            days[days.length - 1].label += ` (evening departure to ${departTo})`;
+          } else {
+            days.push({
+              dateISO: isoDate(currentDate),
+              kind: "travel",
+              label: `Evening departure: ${leg.from.cityName || leg.from.displayName} → ${departTo}`,
+              ptoRequired: false,
+              workPlusFly: true,
+              noTravelDay: true,
+              isRedeyeTravel: true,
+              flightDurationHours: durationHours,
+              ...splitFlightHours(durationHours, true, redeyeOvernightH),
+            });
+          }
+          currentDate = addDays(currentDate, 1);
+        }
         // Add travel day entries with clearer descriptions
         for (let t = 0; t < model.travelDays; t++) {
           const d = addDays(currentDate, t);
@@ -626,7 +673,7 @@
             label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
-            ...splitFlightHours(durationHours, !!model.isRedeye),
+            ...splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,
@@ -724,13 +771,13 @@
     return capped;
   }
 
-  function computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH = 3 }) {
+  function computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
     // We need a fixed template length for feasibility pruning.
     const legs = buildLegs(home, orderedCities);
     let total = 0;
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
       total += model.travelDays;
       if (leg.to !== home) total += leg.to.stayDays;
     }
@@ -796,7 +843,7 @@
     return bestRoute;
   }
 
-  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3 }) {
+  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
     const n = cities.length;
     if (n === 0) return null;
 
@@ -808,22 +855,22 @@
     if (n <= capForExact) {
       const orders = permute(cities);
       for (const orderedCities of orders) {
-        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH });
+        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH, redeyeOvernightH });
         const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
         const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
         for (const startISO of candidatesCapped) {
-          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH });
+          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH });
           best = compareItineraries(best, sim, objective);
         }
       }
     } else {
       // For > 8 cities: heuristic route only. Start date still optimized by PTO.
       const route = heuristicOrder({ home, cities });
-      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, redeyeOK, travelDayThresholdH });
+      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, redeyeOK, travelDayThresholdH, redeyeOvernightH });
       const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
       const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
       for (const startISO of candidatesCapped) {
-        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH });
+        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH });
         best = compareItineraries(best, sim, objective);
       }
     }
@@ -1291,9 +1338,9 @@
         const dayPart = Number.isFinite(day.dayHours) && day.dayHours > 0 ? formatHours(day.dayHours) : null;
         const splitText =
           nightPart && dayPart
-            ? `; night ${nightPart} + day ${dayPart}`
+            ? `; night ${nightPart} + next-day ${dayPart}`
             : dayPart
-            ? `; daytime ${dayPart}`
+            ? `; next-day ${dayPart}`
             : "";
         detailsTd.textContent = `${day.label} (~${flightTime}${splitText})`;
       } else {
@@ -1416,6 +1463,8 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     const holidayDefaults = $("holidayDefaults");
     const extraPtoOffContainer = $("extraPtoOffDays");
     const addExtraPtoOffBtn = $("addExtraPtoOffBtn");
+    const redeyeCheckbox = $("redeyeOk");
+    const redeyeOvernightField = $("redeyeOvernightField");
     
     // Theme toggle
     const themeToggle = $("themeToggle");
@@ -1463,6 +1512,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     const homeCityField = homeCityInput.parentElement;
     homeCityField.style.position = "relative";
     setupCityAutocomplete(homeCityInput, homeCityField);
+
+    function syncRedeyeOvernightVisibility() {
+      if (!redeyeOvernightField || !redeyeCheckbox) return;
+      redeyeOvernightField.style.display = redeyeCheckbox.checked ? "flex" : "none";
+    }
+    syncRedeyeOvernightVisibility();
+    if (redeyeCheckbox) {
+      redeyeCheckbox.addEventListener("change", syncRedeyeOvernightVisibility);
+    }
 
     // Permission-free fallback based on browser timezone, e.g.
     // "America/Los_Angeles" -> "Los Angeles".
@@ -1545,6 +1603,7 @@ addDestinationBtn.addEventListener("click", () => {
   const endDateISO = $("endDate").value;
   const redeyeOK = $("redeyeOk").checked;
   const travelDayThresholdH = (() => { const v = Number($("travelDayThreshold").value); return isNaN(v) ? 3 : v; })();
+  const redeyeOvernightH = (() => { const v = Number($("redeyeOvernightHours").value); return isNaN(v) ? 8 : v; })();
   const objective = $("objective").value;
       const extraPtoInputs = Array.from(extraPtoOffContainer.querySelectorAll("input[data-role='extraPtoOff']"))
         .map((el) => el.value)
@@ -1812,6 +1871,7 @@ addDestinationBtn.addEventListener("click", () => {
           ptoOffSet,
           objective,
           travelDayThresholdH,
+          redeyeOvernightH,
         });
 
         if (!best) {
@@ -1881,6 +1941,7 @@ addDestinationBtn.addEventListener("click", () => {
               ptoOffSet,
               legDurationsHours: flightSegments.map((s) => s.durationMinutes / 60),
               travelDayThresholdH,
+              redeyeOvernightH,
             });
             // Only accept the overridden itinerary if it still fits within the user's end date.
             if (overridden && overridden.days.length && overridden.tripEndISO <= endDateISO) {
@@ -1923,7 +1984,7 @@ addDestinationBtn.addEventListener("click", () => {
     return orderedCities;
   }
 
-  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours, travelDayThresholdH = 3 }) {
+  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
     const days = [];
     let currentDate = parseISODate(startISO);
     const legs = buildLegs(home, orderedCities);
@@ -1938,7 +1999,7 @@ addDestinationBtn.addEventListener("click", () => {
       if (!Number.isFinite(durationHours)) return null;
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
 
       if (model.noTravelDay) {
         // For outbound leg from home, we need to note the departure
@@ -1961,7 +2022,7 @@ addDestinationBtn.addEventListener("click", () => {
             noTravelDay: true,
             isRedeyeTravel: !!model.isRedeye,
             flightDurationHours: durationHours,
-            ...splitFlightHours(durationHours, !!model.isRedeye),
+            ...splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH),
           });
           // Red-eye arrives the next calendar day.
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
@@ -1975,6 +2036,26 @@ addDestinationBtn.addEventListener("click", () => {
           }
         }
       } else {
+        if (model.travelDayOnNextDay) {
+          // Red-eye departs previous evening; dedicated travel day is the next calendar day.
+          const departTo = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
+          if (days.length > 0) {
+            days[days.length - 1].label += ` (evening departure to ${departTo})`;
+          } else {
+            days.push({
+              dateISO: isoDate(currentDate),
+              kind: "travel",
+              label: `Evening departure: ${leg.from.cityName || leg.from.displayName} → ${departTo}`,
+              ptoRequired: false,
+              workPlusFly: true,
+              noTravelDay: true,
+              isRedeyeTravel: true,
+              flightDurationHours: durationHours,
+              ...splitFlightHours(durationHours, true, redeyeOvernightH),
+            });
+          }
+          currentDate = addDays(currentDate, 1);
+        }
         for (let t = 0; t < model.travelDays; t++) {
           const d = addDays(currentDate, t);
           const off = ptoOffSet.has(isoDate(d));
@@ -2011,7 +2092,7 @@ addDestinationBtn.addEventListener("click", () => {
             label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
-            ...splitFlightHours(durationHours, !!model.isRedeye),
+            ...splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             noTravelDay: false,

@@ -77,6 +77,20 @@
               </label>
               <div class="hint">If checked, flights under the threshold above can depart overnight without using a travel day or PTO.</div>
             </div>
+
+            <div id="redeyeOvernightField" class="field" style="display: none;">
+              <label for="redeyeOvernightHours">Red-eye overnight hours</label>
+              <select id="redeyeOvernightHours" name="redeyeOvernightHours">
+                <option value="4">4h overnight</option>
+                <option value="5">5h overnight</option>
+                <option value="6">6h overnight</option>
+                <option value="7">7h overnight</option>
+                <option value="8" selected>8h overnight (default)</option>
+                <option value="9">9h overnight</option>
+                <option value="10">10h overnight</option>
+              </select>
+              <div class="hint">How much of a red-eye can happen overnight before daytime spillover starts.</div>
+            </div>
           </div>
 
           <div class="sectionTitle">Statutory holidays (US defaults)</div>
@@ -132,7 +146,7 @@
       </section>
     </main>
 
-    <script src="./app.js?v=20260326d"></script>
+    <script src="./app.js?v=20260326f"></script>
   </body>
 </html>
 
