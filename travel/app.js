@@ -1751,7 +1751,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     
     // Headers
     html += '<thead><tr>';
-    html += '<th>Date</th><th>Day</th><th>Details</th><th>Days in City</th><th>PTO</th>';
+    html += '<th>Date</th><th>Day</th><th>Details</th><th>Day # in City</th><th>PTO</th>';
     html += '</tr></thead><tbody>';
     
     // Track days in each city
