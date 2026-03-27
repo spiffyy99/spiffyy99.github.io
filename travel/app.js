@@ -12,6 +12,7 @@
     airport: "travel:airportCache:v1",
     flight: "travel:flightCache:v1",
   };
+  const SELECTED_LOCATION_META = new WeakMap();
 
   // "Average" cruising speed heuristic (km/h), for travel-day/PTO modeling only.
   // This avoids making flight-duration API calls for every candidate permutation.
@@ -348,6 +349,13 @@
     return left;
   }
 
+  function looksAirportLikeInput(rawInput = "") {
+    const raw = String(rawInput || "").trim();
+    if (!raw) return false;
+    if (isIataToken(raw)) return true;
+    return /\b(airport|international|intl|terminal|airfield)\b/i.test(raw);
+  }
+
   function locationCityLabel(resolved, fallbackInput = "") {
     const city = String(
       resolved?.cityName || resolved?.airport?.city || resolved?.airport?.municipality || ""
@@ -361,7 +369,7 @@
     return raw;
   }
 
-  async function resolveInputToLocation({ input, geoCache, airportCache }) {
+  async function resolveInputToLocation({ input, geoCache, airportCache, preferredCity = "", preferredCountry = "" }) {
     const raw = String(input || "").trim();
     if (!raw) throw new Error("Empty location input");
 
@@ -385,8 +393,8 @@
         };
         return {
           displayName: data.name || data.iataCode,
-          cityName: data.city || data.municipality || inferCityFromAirportName(data.name || ""),
-          country: data.country || "",
+          cityName: preferredCity || data.city || data.municipality || inferCityFromAirportName(data.name || ""),
+          country: preferredCountry || data.country || "",
           airport,
         };
       });
@@ -402,10 +410,15 @@
     });
 
     const typedCityGuess = normalizeTypedCity(raw);
+    const airportLike = looksAirportLikeInput(raw);
     return {
       displayName: geo.name || typedCityGuess || raw,
-      cityName: typedCityGuess || geo.name || raw,
-      country: geo.country || "",
+      cityName: preferredCity
+        ? preferredCity
+        : airportLike
+        ? (airport?.city || airport?.municipality || geo.name || typedCityGuess || raw)
+        : (geo.name || typedCityGuess || airport?.city || airport?.municipality || raw),
+      country: preferredCountry || geo.country || "",
       airport,
     };
   }
@@ -890,6 +903,18 @@
         displayValue = item.iataCode;
       }
       input.value = displayValue;
+      // Persist selected suggestion metadata so submit can reuse exact city mapping.
+      const selectedCity = item.city || item.admin1 || item.name || "";
+      const selectedCountry = item.country || "";
+      const selectedIata = item.iataCode || "";
+      input.dataset.selectedCity = selectedCity;
+      input.dataset.selectedCountry = selectedCountry;
+      input.dataset.selectedIata = selectedIata;
+      SELECTED_LOCATION_META.set(input, {
+        city: selectedCity,
+        country: selectedCountry,
+        iata: selectedIata,
+      });
       hideList();
     }
     
@@ -976,6 +1001,7 @@
           items.push({
             name: `${ap.name} (${code})`,
             admin1: ap.city,
+            city: ap.city,
             country: ap.country,
             iataCode: code,
             // Prioritize exact code matches, then name matches
@@ -1050,6 +1076,11 @@
     
     input.addEventListener("input", () => {
       const query = input.value.trim();
+      // Any manual typing invalidates previously selected metadata.
+      delete input.dataset.selectedCity;
+      delete input.dataset.selectedCountry;
+      delete input.dataset.selectedIata;
+      SELECTED_LOCATION_META.delete(input);
       clearTimeout(autocompleteDebounce);
       autocompleteDebounce = setTimeout(() => fetchSuggestions(query), 250);
     });
@@ -1493,7 +1524,11 @@ addDestinationBtn.addEventListener("click", () => {
       errorBox.style.display = "none";
       errorBox.textContent = "";
 
-  const homeCity = $("homeCity").value.trim();
+  const homeCityInputEl = $("homeCity");
+  const homeCity = homeCityInputEl.value.trim();
+  const homeMeta = SELECTED_LOCATION_META.get(homeCityInputEl);
+  const homePreferredCity = String(homeMeta?.city || homeCityInputEl.dataset.selectedCity || "").trim();
+  const homePreferredCountry = String(homeMeta?.country || homeCityInputEl.dataset.selectedCountry || "").trim();
   const startDateISO = $("startDate").value;
   const endDateISO = $("endDate").value;
   const redeyeOK = $("redeyeOk").checked;
@@ -1506,9 +1541,16 @@ addDestinationBtn.addEventListener("click", () => {
       // Collect destination rows from DOM to keep the UI source of truth.
       const destRows = Array.from(destinationsContainer.querySelectorAll(".destRow"));
       const rawDestinations = destRows.map((row) => {
-        const city = row.querySelector("input[data-role='city']").value.trim();
+        const cityInput = row.querySelector("input[data-role='city']");
+        const city = cityInput.value.trim();
+        const cityMeta = SELECTED_LOCATION_META.get(cityInput);
         const stayDays = Number(row.querySelector("input[data-role='stayDays']").value);
-        return { city, stayDays };
+        return {
+          city,
+          stayDays,
+          preferredCity: String(cityMeta?.city || cityInput.dataset.selectedCity || "").trim(),
+          preferredCountry: String(cityMeta?.country || cityInput.dataset.selectedCountry || "").trim(),
+        };
       });
       const destinationList = rawDestinations.filter((d) => d.city.length > 0);
 
@@ -1599,17 +1641,17 @@ addDestinationBtn.addEventListener("click", () => {
         };
 
         const resolvedByKey = new Map();
-        async function getResolved(input) {
-          const key = normalizedKey(input);
+        async function getResolved(input, preferredCity = "", preferredCountry = "") {
+          const key = `${normalizedKey(input)}|pc:${preferredCity.toLowerCase()}|co:${preferredCountry.toLowerCase()}`;
           if (resolvedByKey.has(key)) return resolvedByKey.get(key);
-          const resolved = await resolveInputToLocation({ input, geoCache, airportCache });
+          const resolved = await resolveInputToLocation({ input, geoCache, airportCache, preferredCity, preferredCountry });
           resolvedByKey.set(key, resolved);
           return resolved;
         }
 
         // Resolve home (airport anchor via IATA token, or city -> nearest airport).
-        const homeResolved = await getResolved(homeCity);
-        const homeCityName = locationCityLabel(homeResolved, homeCity);
+        const homeResolved = await getResolved(homeCity, homePreferredCity, homePreferredCountry);
+        const homeCityName = homePreferredCity || locationCityLabel(homeResolved, homeCity);
         
         const home = {
           id: "home",
@@ -1622,10 +1664,11 @@ addDestinationBtn.addEventListener("click", () => {
         const rawCities = [];
         for (let idx = 0; idx < destinationList.length; idx++) {
           const d = destinationList[idx];
-          const resolved = await getResolved(d.city);
+          const resolved = await getResolved(d.city, d.preferredCity, d.preferredCountry);
           
-          // Always prefer city-level labels in itinerary/details output.
-          const cityName = locationCityLabel(resolved, d.city);
+          // Final authority for rendered city labels:
+          // if user selected an autocomplete suggestion, use that selected city directly.
+          const cityName = d.preferredCity || locationCityLabel(resolved, d.city);
           
           rawCities.push({
             id: `city_${idx}_${String(d.city).toLowerCase().replace(/\\s+/g, "_")}`,
