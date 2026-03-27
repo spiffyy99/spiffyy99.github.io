@@ -1820,6 +1820,15 @@ addDestinationBtn.addEventListener("click", () => {
       if (!homeCity) return;
       if (!startDateISO || !endDateISO) return;
 
+      for (const row of destRows) {
+        const stayDays = Number(row.querySelector("input[data-role='stayDays']").value);
+        if (stayDays < 1) {
+          errorBox.textContent = "Each destination city must have at least 1 day of stay.";
+          errorBox.style.display = "block";
+          return;
+        }
+      }
+
       if (destinationList.length === 0) {
         errorBox.textContent = "Please add at least one destination city.";
         errorBox.style.display = "block";
