@@ -44,9 +44,14 @@ body{
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap;
   gap: 12px;
+}
+
+.header-left{
+  flex: 1;
+  min-width: 0;
 }
 
 .header-left h1{
@@ -73,6 +78,14 @@ body{
   justify-content: center;
   transition: background 0.15s;
   flex-shrink: 0;
+}
+
+.theme-toggle #themeIcon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .theme-toggle:hover{
@@ -482,6 +495,15 @@ thead th{
   /* Remove vertical padding on checkbox field on mobile */
   .checkboxField {
     padding-top: 0;
+  }
+  
+  /* Shrink header text on mobile to keep toggle on same row */
+  .header-left h1 {
+    font-size: 22px;
+  }
+  
+  .subtitle {
+    font-size: 14px;
   }
 }
 
