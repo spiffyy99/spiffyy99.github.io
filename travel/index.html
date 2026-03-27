@@ -51,9 +51,10 @@
             <div class="field">
               <label for="objective">Optimize for</label>
               <select id="objective" name="objective">
-                <option value="ptoFirst" selected>PTO days first, then travel time</option>
-                <option value="timeFirst">Travel time first, then PTO days</option>
+                <option value="ptoFirst" selected>Minimize PTO days</option>
+                <option value="timeFirst">Minimize travel time</option>
               </select>
+              <div class="hint">When optimizing city order and start date, which should take priority? (Usually converges to same result)</div>
             </div>
 
             <div class="field">

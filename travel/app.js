@@ -350,7 +350,41 @@
       .replace(/\s{2,}/g, " ")
       .trim();
     if (!cleaned) return "";
-    return cleaned.split(/[-,/]/)[0].trim();
+    
+    // Split on common separators
+    const firstPart = cleaned.split(/[-,/]/)[0].trim();
+    if (!firstPart) return "";
+    
+    // Common airport naming patterns where the actual airport name follows the city:
+    // "Bangkok Suvarnabhumi" -> "Bangkok"
+    // "Tokyo Narita" -> "Tokyo"  
+    // "London Heathrow" -> "London"
+    // But NOT: "New York" -> "New York" (keep multi-word city names)
+    const words = firstPart.split(/\s+/);
+    if (words.length >= 2) {
+      // Check if first word(s) look like a city and last word looks like airport name
+      const twoWordCities = ["new york", "los angeles", "san francisco", "san diego", "las vegas", 
+        "ho chi minh", "hong kong", "rio de janeiro", "abu dhabi", "kuala lumpur", "buenos aires",
+        "cape town", "mexico city", "sao paulo", "st louis", "st petersburg", "fort lauderdale",
+        "salt lake", "kansas city"];
+      const lowered = firstPart.toLowerCase();
+      for (const city of twoWordCities) {
+        if (lowered.startsWith(city)) return firstPart.slice(0, city.length);
+      }
+      
+      // Known airport suffix words (not city names)
+      const airportSuffixes = ["suvarnabhumi", "narita", "haneda", "heathrow", "gatwick", "schiphol",
+        "changi", "fiumicino", "malpensa", "orly", "pearson", "trudeau", "dulles", "ohare", "midway",
+        "guarulhos", "ezeiza", "barajas", "kastrup", "arlanda", "gardermoen", "vantaa", "incheon",
+        "pudong", "hongqiao", "capital", "daxing", "sheremetyevo", "domodedovo", "vnukovo",
+        "ben gurion", "ataturk", "sabiha", "keflavik", "leonardo", "marco polo"];
+      const lastWord = words[words.length - 1].toLowerCase();
+      if (airportSuffixes.includes(lastWord)) {
+        return words.slice(0, -1).join(" ");
+      }
+    }
+    
+    return firstPart;
   }
 
   function normalizeTypedCity(rawInput = "") {
@@ -406,29 +440,40 @@
     if (isIataToken(raw)) {
       const code = raw.toUpperCase();
       const key = `iata:${code}`;
-      const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, async () => {
+      // Fetch airport data from cache (or API)
+      const airportData = await cachedJson(STORAGE_KEYS.airport, airportCache, key, async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`IATAGeo IATA lookup failed (${res.status})`);
         const payload = await res.json();
         const data = payload?.data;
         if (!data?.iataCode || !data?.coordinates) throw new Error("No airport found for IATA code");
-        const airport = {
+        return {
           iataCode: data.iataCode,
           icaoCode: data.icaoCode,
           name: data.name,
           city: data.city || data.municipality || "",
           latitude: data.coordinates.latitude,
           longitude: data.coordinates.longitude,
-        };
-        return {
-          displayName: data.name || data.iataCode,
-          cityName: preferredCity || data.city || data.municipality || inferCityFromAirportName(data.name || ""),
-          country: preferredCountry || data.country || "",
-          airport,
+          country: data.country || "",
         };
       });
-      return cachedAirport;
+      
+      // Build the resolved result using preferredCity if provided (not cached with airport)
+      const inferredCity = inferCityFromAirportName(airportData.name || "");
+      return {
+        displayName: airportData.name || airportData.iataCode,
+        cityName: preferredCity || airportData.city || inferredCity || code,
+        country: preferredCountry || airportData.country || "",
+        airport: {
+          iataCode: airportData.iataCode,
+          icaoCode: airportData.icaoCode,
+          name: airportData.name,
+          city: airportData.city,
+          latitude: airportData.latitude,
+          longitude: airportData.longitude,
+        },
+      };
     }
 
     const geo = await geocodeCity(raw, geoCache);
@@ -1107,6 +1152,43 @@
       "IST": { name: "Istanbul", city: "Istanbul", country: "Turkey" },
       "CPT": { name: "Cape Town", city: "Cape Town", country: "South Africa" },
       "JNB": { name: "Johannesburg", city: "Johannesburg", country: "South Africa" },
+      "DPS": { name: "Bali Ngurah Rai", city: "Bali", country: "Indonesia", aliases: ["bali", "denpasar"] },
+      "CGK": { name: "Jakarta Soekarno-Hatta", city: "Jakarta", country: "Indonesia" },
+      "MLE": { name: "Maldives Velana", city: "Malé", country: "Maldives", aliases: ["maldives"] },
+      "HNL": { name: "Honolulu", city: "Honolulu", country: "United States", aliases: ["hawaii", "oahu"] },
+      "OGG": { name: "Maui Kahului", city: "Maui", country: "United States", aliases: ["maui"] },
+      "PPT": { name: "Tahiti Faa'a", city: "Papeete", country: "French Polynesia", aliases: ["tahiti", "bora bora"] },
+      "NAN": { name: "Fiji Nadi", city: "Nadi", country: "Fiji", aliases: ["fiji"] },
+      "AKL": { name: "Auckland", city: "Auckland", country: "New Zealand" },
+      "ZQN": { name: "Queenstown", city: "Queenstown", country: "New Zealand" },
+      "CMB": { name: "Colombo Bandaranaike", city: "Colombo", country: "Sri Lanka", aliases: ["sri lanka"] },
+      "PNH": { name: "Phnom Penh", city: "Phnom Penh", country: "Cambodia" },
+      "REP": { name: "Siem Reap", city: "Siem Reap", country: "Cambodia", aliases: ["angkor wat"] },
+      "HAN": { name: "Hanoi Noi Bai", city: "Hanoi", country: "Vietnam" },
+      "SGN": { name: "Ho Chi Minh Tan Son Nhat", city: "Ho Chi Minh City", country: "Vietnam", aliases: ["saigon"] },
+      "KUL": { name: "Kuala Lumpur", city: "Kuala Lumpur", country: "Malaysia" },
+      "MNL": { name: "Manila Ninoy Aquino", city: "Manila", country: "Philippines" },
+      "CEB": { name: "Cebu Mactan", city: "Cebu", country: "Philippines" },
+      "DEL": { name: "Delhi Indira Gandhi", city: "Delhi", country: "India" },
+      "BOM": { name: "Mumbai Chhatrapati Shivaji", city: "Mumbai", country: "India" },
+      "CAI": { name: "Cairo", city: "Cairo", country: "Egypt" },
+      "CMN": { name: "Casablanca Mohammed V", city: "Casablanca", country: "Morocco" },
+      "RAK": { name: "Marrakech Menara", city: "Marrakech", country: "Morocco" },
+      "LIS": { name: "Lisbon Humberto Delgado", city: "Lisbon", country: "Portugal" },
+      "ATH": { name: "Athens Eleftherios Venizelos", city: "Athens", country: "Greece" },
+      "SAW": { name: "Istanbul Sabiha Gokcen", city: "Istanbul", country: "Turkey" },
+      "PRG": { name: "Prague Vaclav Havel", city: "Prague", country: "Czech Republic" },
+      "BUD": { name: "Budapest Ferenc Liszt", city: "Budapest", country: "Hungary" },
+      "WAW": { name: "Warsaw Chopin", city: "Warsaw", country: "Poland" },
+      "ARN": { name: "Stockholm Arlanda", city: "Stockholm", country: "Sweden" },
+      "CPH": { name: "Copenhagen Kastrup", city: "Copenhagen", country: "Denmark" },
+      "OSL": { name: "Oslo Gardermoen", city: "Oslo", country: "Norway" },
+      "HEL": { name: "Helsinki Vantaa", city: "Helsinki", country: "Finland" },
+      "SJU": { name: "San Juan Luis Munoz Marin", city: "San Juan", country: "Puerto Rico" },
+      "NAS": { name: "Nassau Lynden Pindling", city: "Nassau", country: "Bahamas" },
+      "MBJ": { name: "Montego Bay Sangster", city: "Montego Bay", country: "Jamaica" },
+      "AUA": { name: "Aruba Queen Beatrix", city: "Oranjestad", country: "Aruba", aliases: ["aruba"] },
+      "SXM": { name: "St Maarten Princess Juliana", city: "Philipsburg", country: "Sint Maarten", aliases: ["st maarten", "saint martin"] },
     };
     
     async function fetchSuggestions(query) {
@@ -1119,21 +1201,22 @@
       const lowerQuery = query.toLowerCase().trim();
       const items = [];
       
-      // Search airports by code OR by name/city
+      // Search airports by code, name, city, OR aliases
       for (const [code, ap] of Object.entries(MAJOR_AIRPORTS)) {
         const matchesCode = code.startsWith(upperQuery);
         const matchesName = ap.name.toLowerCase().includes(lowerQuery);
         const matchesCity = ap.city.toLowerCase().includes(lowerQuery);
+        const matchesAlias = ap.aliases && ap.aliases.some(a => a.toLowerCase().includes(lowerQuery));
         
-        if (matchesCode || matchesName || matchesCity) {
+        if (matchesCode || matchesName || matchesCity || matchesAlias) {
           items.push({
             name: `${ap.name} (${code})`,
             admin1: ap.city,
             city: ap.city,
             country: ap.country,
             iataCode: code,
-            // Prioritize exact code matches, then name matches
-            priority: code === upperQuery ? 0 : (matchesCode ? 1 : 2),
+            // Prioritize exact code matches, then alias matches, then name matches
+            priority: code === upperQuery ? 0 : (matchesCode ? 1 : (matchesAlias ? 1.5 : 2)),
           });
         }
       }
@@ -1154,21 +1237,26 @@
         }
         const data = await res.json();
         
-        // Filter to only include significant cities.
-        // Administrative centers (PPLA/PPLC) are always included regardless of population.
-        // Generic populated places (PPL or no code) must have a known population >= 100k
-        // to avoid villages whose names share a prefix with a major city (e.g. "Chongqingcun").
+        // Filter to include significant places.
+        // Allow administrative centers, populated places, and named regions/islands.
+        // For generic places, require meaningful population to avoid tiny villages.
         const rawCityResults = (data.results || [])
           .filter((r) => {
             const code = r.feature_code;
             const pop = r.population;
-            if (["PPLC", "PPLA", "PPLA2", "PPLA3"].includes(code)) {
-              return true; // always include administrative/political centers
+            // Administrative and political centers - always include
+            if (["PPLC", "PPLA", "PPLA2", "PPLA3", "PPLA4"].includes(code)) {
+              return true;
             }
+            // Administrative divisions (islands, regions) - include if reasonably sized
+            if (["ADM1", "ADM2", "ADMD", "ISL", "ISLS"].includes(code)) {
+              return pop == null || pop >= 10000;
+            }
+            // Generic populated places - require meaningful population
             if (code === "PPL" || !code) {
-              return pop != null && pop >= 100000; // require meaningful population
+              return pop != null && pop >= 50000;
             }
-            return false; // exclude any other feature type (hamlets, sections, etc.)
+            return false;
           })
           .slice(0, 6)
           .map((r) => ({
