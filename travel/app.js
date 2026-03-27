@@ -657,7 +657,7 @@
             days.push({
               dateISO: isoDate(currentDate),
               kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure, ${formatHours(nightHours)} overnight)`,
+              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
               ptoRequired: false,
               workPlusFly: true,
               noTravelDay: true,
@@ -1366,7 +1366,7 @@
     const table = document.createElement("table");
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Date", "Day", "Details", "Days in City", "PTO"].forEach((h) => {
+    ["Date", "Day", "Details", "Day # in City", "PTO"].forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       headRow.appendChild(th);
@@ -1561,7 +1561,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     
     // CSV Headers
-    const headers = ["Date", "Day", "Details", "Days in City", "PTO"];
+    const headers = ["Date", "Day", "Details", "Day # in City", "PTO"];
     const rows = [headers];
     
     // Track days in each city
@@ -2411,7 +2411,7 @@ addDestinationBtn.addEventListener("click", () => {
             days.push({
               dateISO: isoDate(currentDate),
               kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure, ${formatHours(nightHours)} overnight)`,
+              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
               ptoRequired: false,
               workPlusFly: true,
               noTravelDay: true,
