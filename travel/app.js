@@ -69,11 +69,17 @@
   }
 
   function getDurationHoursFromDistanceKm(distanceKm, isWestward = false) {
-    // Add a small factor for taxiing, climb/descent, routing inefficiencies.
-    // Westward flights are typically longer due to headwinds (jet stream).
-    const windFactor = isWestward ? 1.15 : 1.0; // 15% longer for westward
-    const duration = (distanceKm / AVG_SPEED_KMH) * 1.12 * windFactor + 0.25;
-    return Math.max(0.5, duration);
+    // More accurate flight time calculation
+    // Add boarding/deboarding time (~45min), taxiing, climb/descent
+    // Westward flights are typically longer due to headwinds (jet stream)
+    const windFactor = isWestward ? 1.20 : 1.05; // 20% longer for westward, 5% for eastward
+    const baseFlightTime = (distanceKm / AVG_SPEED_KMH) * windFactor;
+    
+    // Add ground time: boarding, taxiing, deboarding (scales with distance)
+    const groundTimeHours = distanceKm < 500 ? 0.75 : (distanceKm < 2000 ? 1.0 : 1.25);
+    
+    const totalDuration = baseFlightTime + groundTimeHours;
+    return Math.max(0.75, totalDuration); // Minimum 45 min for shortest flights
   }
   
   function isWestwardFlight(fromLon, toLon) {
@@ -307,6 +313,7 @@
         iataCode: airport.iataCode,
         icaoCode: airport.icaoCode,
         name: airport.name,
+        city: airport.city || airport.municipality || "",
         latitude: airport.coordinates?.latitude ?? latitude,
         longitude: airport.coordinates?.longitude ?? longitude,
       };
@@ -336,12 +343,13 @@
           iataCode: data.iataCode,
           icaoCode: data.icaoCode,
           name: data.name,
+          city: data.city || data.municipality || "",
           latitude: data.coordinates.latitude,
           longitude: data.coordinates.longitude,
         };
         return {
           displayName: data.name || data.iataCode,
-          country: "",
+          country: data.country || "",
           airport,
         };
       });
@@ -492,12 +500,27 @@
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
       if (model.noTravelDay) {
-        // Annotate the last city day already in the schedule with a departure note.
-        // This is purely cosmetic — the person is already on vacation at that city,
-        // so ptoRequired is unchanged (still Yes for weekdays).
-        if (days.length > 0) {
+        // For outbound leg from home, we need to note the departure
+        // For other legs, annotate the last city day
+        if (leg.type === "outbound" && days.length === 0) {
+          // First leg from home - create a work day entry with flight note
+          const d = currentDate;
+          const off = ptoOffSet.has(isoDate(d));
+          const toLabel = leg.to.cityName || leg.to.displayName;
+          const flightNote = model.isRedeye 
+            ? ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)})`
+            : ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+          
+          days.push({
+            dateISO: isoDate(d),
+            kind: "city",
+            label: `${leg.from.cityName || leg.from.displayName}${flightNote}`,
+            ptoRequired: false,
+            workPlusFly: true,
+          });
+        } else if (days.length > 0) {
           const lastDay = days[days.length - 1];
-          const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
+          const toLabel = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
@@ -505,23 +528,41 @@
           }
         }
       } else {
-        // Add travel day entries
+        // Add travel day entries with clearer descriptions
         for (let t = 0; t < model.travelDays; t++) {
           const d = addDays(currentDate, t);
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
-          // If it's a weekday, not a holiday, not requiring PTO, and it's a travel day with redeye,
-          // mark it as redeye travel
           const isRedeyeTravel = isWeekday(d) && !off && !model.ptoOffsets.includes(t) && redeyeOK;
+          
+          // Make multi-day travel clearer
+          let travelLabel;
+          const fromCity = leg.from.cityName || leg.from.displayName;
+          const toCity = leg.to.cityName || leg.to.displayName;
+          
+          if (model.travelDays === 1) {
+            if (leg.type === "outbound") {
+              travelLabel = `Travel: ${fromCity} → ${toCity}`;
+            } else if (leg.type === "return") {
+              travelLabel = `Return: ${toCity} → ${fromCity}`;
+            } else {
+              travelLabel = `Travel: ${fromCity} → ${toCity}`;
+            }
+          } else {
+            // Multi-day travel - clarify which day
+            if (t === 0) {
+              travelLabel = `Travel Day 1: Depart ${fromCity}`;
+            } else if (t === model.travelDays - 1) {
+              travelLabel = `Travel Day ${t + 1}: Arrive ${toCity}`;
+            } else {
+              travelLabel = `Travel Day ${t + 1}: ${fromCity} → ${toCity}`;
+            }
+          }
+          
           days.push({
             dateISO: isoDate(d),
             kind: "travel",
-            label:
-              leg.type === "outbound"
-                ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-                : leg.type === "return"
-                  ? `Return: ${leg.from.displayName} -> ${leg.to.displayName}`
-                  : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
+            label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
             fromIata: leg.from.airport?.iataCode,
@@ -1131,7 +1172,7 @@
     const table = document.createElement("table");
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Date", "Day", "Details", "PTO"].forEach((h) => {
+    ["Date", "Day", "Details", "Days in City", "PTO"].forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       headRow.appendChild(th);
@@ -1142,10 +1183,26 @@
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const tbody = document.createElement("tbody");
     
+    // Track days in each city
+    const cityDayCount = {};
+    let currentCity = null;
+    
     for (const day of best.days) {
       const tr = document.createElement("tr");
       const dateObj = parseISODate(day.dateISO);
       const dayOfWeek = dayNames[dateObj.getDay()];
+      
+      // Track city days
+      let daysInCity = "";
+      if (day.kind === "city") {
+        const cityLabel = day.label.split(" (")[0]; // Extract city name
+        if (cityLabel !== currentCity) {
+          currentCity = cityLabel;
+          cityDayCount[cityLabel] = 0;
+        }
+        cityDayCount[cityLabel]++;
+        daysInCity = String(cityDayCount[cityLabel]);
+      }
       
       // Date column
       const dateTd = document.createElement("td");
@@ -1164,6 +1221,10 @@
       } else {
         detailsTd.textContent = day.label;
       }
+      
+      // Days in City column
+      const cityDaysTd = document.createElement("td");
+      cityDaysTd.textContent = daysInCity || "—";
       
       // PTO column - show reason (weekend, holiday name, or Yes/No)
       const ptoTd = document.createElement("td");
@@ -1191,6 +1252,7 @@
       tr.appendChild(dateTd);
       tr.appendChild(dayTd);
       tr.appendChild(detailsTd);
+      tr.appendChild(cityDaysTd);
       tr.appendChild(ptoTd);
       tbody.appendChild(tr);
     }
@@ -1304,18 +1366,51 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
       setTheme(!isDark);
     });
     
-    // Set minimum date to today for start/end date inputs
-    const today = isoDate(new Date());
+    // Set default dates
+    const today = new Date();
+    const todayISO = isoDate(today);
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const oneMonthISO = isoDate(oneMonthLater);
+    
     const startDateInput = $("startDate");
     const endDateInput = $("endDate");
-    startDateInput.min = today;
-    endDateInput.min = today;
+    startDateInput.min = todayISO;
+    endDateInput.min = todayISO;
+    startDateInput.value = todayISO;
+    endDateInput.value = oneMonthISO;
     
-    // Add autocomplete to home city input
+    // Try to detect user location
     const homeCityInput = $("homeCity");
     const homeCityField = homeCityInput.parentElement;
     homeCityField.style.position = "relative";
     setupCityAutocomplete(homeCityInput, homeCityField);
+    
+    // Attempt geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            // Reverse geocode to get city name
+            const url = `https://geocoding-api.open-meteo.com/v1/search?latitude=${lat}&longitude=${lon}&count=1&language=en&format=json`;
+            const res = await fetch(url);
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.results?.[0]?.name) {
+                homeCityInput.value = data.results[0].name;
+              }
+            }
+          } catch (e) {
+            // Silent fail - user can enter manually
+          }
+        },
+        () => {
+          // Silent fail - user denied or error
+        }
+      );
+    }
 
     // Render initial destination row (state is read from DOM on add/remove).
     renderDestinations(destinationsContainer, [{ city: "", stayDays: null }]);
@@ -1456,9 +1551,12 @@ addDestinationBtn.addEventListener("click", () => {
 
         // Resolve home (airport anchor via IATA token, or city -> nearest airport).
         const homeResolved = await getResolved(homeCity);
+        const homeCityName = homeResolved.airport?.city || homeResolved.displayName;
+        
         const home = {
           id: "home",
           displayName: homeResolved.displayName,
+          cityName: homeCityName,
           country: homeResolved.country,
           airport: homeResolved.airport,
         };
@@ -1467,9 +1565,14 @@ addDestinationBtn.addEventListener("click", () => {
         for (let idx = 0; idx < destinationList.length; idx++) {
           const d = destinationList[idx];
           const resolved = await getResolved(d.city);
+          
+          // Get city name from airport data or use display name
+          const cityName = resolved.airport?.city || resolved.displayName;
+          
           rawCities.push({
             id: `city_${idx}_${String(d.city).toLowerCase().replace(/\\s+/g, "_")}`,
             displayName: resolved.displayName,
+            cityName: cityName,
             country: resolved.country,
             stayDays: d.stayDays,
             airport: resolved.airport,
@@ -1477,20 +1580,93 @@ addDestinationBtn.addEventListener("click", () => {
           });
         }
 
-        // Deduplicate by resolved airport IATA code.
-        // Remove destinations that share an airport with home, and collapse duplicates.
+        // Deduplicate by:
+        // 1. Airport IATA code (same airport)
+        // 2. City name (from API data)
+        // 3. Distance (airports within 50km are same city)
         const homeIata = home.airport?.iataCode;
+        
         const seenIata = new Set();
+        const seenCities = new Set();
         if (homeIata) seenIata.add(homeIata);
-        const cities = [];
-        const removedCityNames = [];
+        
+        // Normalize city name for comparison
+        const normalizeCity = (city) => String(city || "").toLowerCase().trim().replace(/\s+/g, "");
+        seenCities.add(normalizeCity(home.cityName));
+        
+        // Check for duplicates among destinations (not including home)
+        const destCitySeen = new Set();
+        const destDuplicates = [];
+        for (const c of rawCities) {
+          const cityKey = normalizeCity(c.cityName);
+          if (destCitySeen.has(cityKey)) {
+            destDuplicates.push(c._inputCity || c.displayName);
+          } else {
+            destCitySeen.add(cityKey);
+          }
+          
+          // Also check distance between destinations
+          for (const other of rawCities) {
+            if (other === c || !c.airport || !other.airport) continue;
+            const dist = haversineKm(
+              c.airport.latitude, c.airport.longitude,
+              other.airport.latitude, other.airport.longitude
+            );
+            if (dist < 50 && !destDuplicates.includes(c._inputCity || c.displayName)) {
+              destDuplicates.push(c._inputCity || c.displayName);
+              break;
+            }
+          }
+        }
+        
+        if (destDuplicates.length > 0) {
+          errorBox.textContent = `Cannot submit: Duplicate destinations detected (same city or airports within 50km): ${destDuplicates.join(", ")}. Please remove duplicates before continuing.`;
+          errorBox.style.display = "block";
+          return;
+        }
+
+        // Now check home vs destinations
+        const homeRemoved = [];
         for (const c of rawCities) {
           const iata = c.airport?.iataCode;
-          if (iata && seenIata.has(iata)) {
+          const cityKey = normalizeCity(c.cityName);
+          const homeCityKey = normalizeCity(home.cityName);
+          
+          // Check if same as home by IATA, city name, or distance
+          if (iata && iata === homeIata) {
+            homeRemoved.push(c._inputCity || c.displayName);
+            continue;
+          }
+          
+          if (cityKey === homeCityKey) {
+            homeRemoved.push(c._inputCity || c.displayName);
+            continue;
+          }
+          
+          if (c.airport && home.airport) {
+            const dist = haversineKm(
+              home.airport.latitude, home.airport.longitude,
+              c.airport.latitude, c.airport.longitude
+            );
+            if (dist < 50) {
+              homeRemoved.push(c._inputCity || c.displayName);
+            }
+          }
+        }
+        
+        const cities = [];
+        const removedCityNames = [];
+        
+        for (const c of rawCities) {
+          const iata = c.airport?.iataCode;
+          const cityKey = normalizeCity(c.cityName);
+          
+          // Skip if it's same as home
+          if (homeRemoved.includes(c._inputCity || c.displayName)) {
             removedCityNames.push(c._inputCity || c.displayName);
             continue;
           }
-          if (iata) seenIata.add(iata);
+          
           const { _inputCity, ...cityWithoutMeta } = c;
           cities.push(cityWithoutMeta);
         }
@@ -1652,11 +1828,27 @@ addDestinationBtn.addEventListener("click", () => {
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH);
 
       if (model.noTravelDay) {
-        // Annotate the last city day already in the schedule with a departure note.
-        // Purely cosmetic — ptoRequired is unchanged (vacation day at prior city).
-        if (days.length > 0) {
+        // For outbound leg from home, we need to note the departure
+        // For other legs, annotate the last city day
+        if (leg.type === "outbound" && days.length === 0) {
+          // First leg from home - create a work day entry with flight note
+          const d = currentDate;
+          const off = ptoOffSet.has(isoDate(d));
+          const toLabel = leg.to.cityName || leg.to.displayName;
+          const flightNote = model.isRedeye 
+            ? ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)})`
+            : ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+          
+          days.push({
+            dateISO: isoDate(d),
+            kind: "city",
+            label: `${leg.from.cityName || leg.from.displayName}${flightNote}`,
+            ptoRequired: false,
+            workPlusFly: true,
+          });
+        } else if (days.length > 0) {
           const lastDay = days[days.length - 1];
-          const toLabel = leg.type === "return" ? "home" : leg.to.displayName;
+          const toLabel = leg.type === "return" ? (leg.to.cityName || "home") : (leg.to.cityName || leg.to.displayName);
           if (model.isRedeye) {
             lastDay.label += ` (red-eye to ${toLabel} ~${formatHours(durationHours)})`;
           } else {
@@ -1669,15 +1861,35 @@ addDestinationBtn.addEventListener("click", () => {
           const off = ptoOffSet.has(isoDate(d));
           const ptoRequired = isWeekday(d) && !off && model.ptoOffsets.includes(t);
           const isRedeyeTravel = isWeekday(d) && !off && !model.ptoOffsets.includes(t) && redeyeOK;
+          
+          // Make multi-day travel clearer
+          let travelLabel;
+          const fromCity = leg.from.cityName || leg.from.displayName;
+          const toCity = leg.to.cityName || leg.to.displayName;
+          
+          if (model.travelDays === 1) {
+            if (leg.type === "outbound") {
+              travelLabel = `Travel: ${fromCity} → ${toCity}`;
+            } else if (leg.type === "return") {
+              travelLabel = `Return: ${toCity} → ${fromCity}`;
+            } else {
+              travelLabel = `Travel: ${fromCity} → ${toCity}`;
+            }
+          } else {
+            // Multi-day travel - clarify which day
+            if (t === 0) {
+              travelLabel = `Travel Day 1: Depart ${fromCity}`;
+            } else if (t === model.travelDays - 1) {
+              travelLabel = `Travel Day ${t + 1}: Arrive ${toCity}`;
+            } else {
+              travelLabel = `Travel Day ${t + 1}: ${fromCity} → ${toCity}`;
+            }
+          }
+          
           days.push({
             dateISO: isoDate(d),
             kind: "travel",
-            label:
-              leg.type === "outbound"
-                ? `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`
-                : leg.type === "return"
-                  ? `Return: ${leg.from.displayName} -> ${leg.to.displayName}`
-                  : `Travel: ${leg.from.displayName} -> ${leg.to.displayName}`,
+            label: travelLabel,
             ptoRequired,
             flightDurationHours: durationHours,
             fromIata: leg.from.airport?.iataCode,
