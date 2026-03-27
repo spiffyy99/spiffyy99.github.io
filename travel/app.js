@@ -1011,8 +1011,101 @@
     });
   }
 
-  // City/airport autocomplete using Open-Meteo geocoding API
+  // City/airport autocomplete using airports.json database + Open-Meteo geocoding
   let autocompleteDebounce = null;
+  let airportsDB = null; // Will be loaded on first use
+  
+  async function loadAirportsDB() {
+    if (airportsDB) return airportsDB;
+    try {
+      const res = await fetch('./airports.json');
+      if (!res.ok) throw new Error('Failed to load airports database');
+      airportsDB = await res.json();
+      console.log(`Loaded ${airportsDB.length} airports`);
+      return airportsDB;
+    } catch (e) {
+      console.error('Could not load airports.json:', e);
+      return [];
+    }
+  }
+  
+  function searchAirports(query, airports, limit = 6) {
+    if (!airports || !airports.length) return [];
+    const q = query.toLowerCase().trim();
+    if (q.length < 2) return [];
+    
+    const results = [];
+    const qUpper = q.toUpperCase();
+    
+    for (const ap of airports) {
+      // Priority scoring: exact IATA = 0, IATA prefix = 1, exact keyword = 2, city starts with = 3, city contains = 4, name = 5
+      let priority = 999;
+      let matched = false;
+      
+      // IATA exact match
+      if (ap.i === qUpper) {
+        priority = 0;
+        matched = true;
+      }
+      // IATA starts with
+      else if (ap.i.startsWith(qUpper)) {
+        priority = 1;
+        matched = true;
+      }
+      // Exact keyword match (for bali, hawaii, maldives etc)
+      else if (ap.k && ap.k.some(kw => kw === q || kw.startsWith(q))) {
+        priority = 2;
+        matched = true;
+      }
+      // City name starts with query or matches word boundary
+      else if (ap.c) {
+        const cityLower = ap.c.toLowerCase();
+        if (cityLower.startsWith(q) || cityLower.includes(' ' + q) || cityLower.includes(',' + q)) {
+          priority = 3;
+          matched = true;
+        } else if (cityLower.includes(q)) {
+          // Partial match in middle of word - lower priority
+          priority = 5;
+          matched = true;
+        }
+      }
+      
+      // Airport name match (only if not already matched)
+      if (!matched && ap.n && ap.n.toLowerCase().includes(q)) {
+        priority = 6;
+        matched = true;
+      }
+      // Country match (lower priority)
+      if (!matched && ap.o && ap.o.toLowerCase().includes(q)) {
+        priority = 7;
+        matched = true;
+      }
+      
+      if (matched) {
+        results.push({ ...ap, priority });
+      }
+    }
+    
+    // Sort by priority, then by size (L before M), then alphabetically
+    results.sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      if (a.s !== b.s) return a.s === 'L' ? -1 : 1;
+      return (a.c || a.n).localeCompare(b.c || b.n);
+    });
+    
+    return results.slice(0, limit);
+  }
+  
+  // Extract clean city name from airport city field or name
+  function extractCityName(ap) {
+    // The city field often has format "City, Region" - take first part
+    if (ap.c) {
+      const parts = ap.c.split(',');
+      return parts[0].trim();
+    }
+    // Fallback: try to extract from airport name
+    return inferCityFromAirportName(ap.n);
+  }
   
   function setupCityAutocomplete(input, container) {
     let listEl = null;
@@ -1043,14 +1136,22 @@
         
         const nameSpan = document.createElement("div");
         nameSpan.className = "city-name";
-        nameSpan.textContent = item.name;
+        // Show city name prominently, with airport name if different
+        const cityName = item.city || extractCityName(item) || item.name;
+        if (item.iataCode) {
+          nameSpan.textContent = `${cityName} (${item.iataCode})`;
+        } else {
+          nameSpan.textContent = cityName;
+        }
         
         const detailsSpan = document.createElement("div");
         detailsSpan.className = "city-details";
         const parts = [];
-        if (item.admin1) parts.push(item.admin1);
+        // Show airport name if it's different from city
+        if (item.airportName && item.airportName !== cityName) {
+          parts.push(item.airportName);
+        }
         if (item.country) parts.push(item.country);
-        if (item.iataCode) parts.push(`(${item.iataCode})`);
         detailsSpan.textContent = parts.join(", ");
         
         div.appendChild(nameSpan);
@@ -1068,16 +1169,18 @@
     }
     
     function selectItem(item) {
-      let displayValue = item.name;
-      if (item.country && item.country !== item.name) {
-        displayValue = `${item.name}, ${item.country}`;
-      }
+      // Use IATA code as the input value for airports
       if (item.iataCode) {
-        displayValue = item.iataCode;
+        input.value = item.iataCode;
+      } else {
+        input.value = item.city || item.name;
+        if (item.country) {
+          input.value += `, ${item.country}`;
+        }
       }
-      input.value = displayValue;
-      // Persist selected suggestion metadata so submit can reuse exact city mapping.
-      const selectedCity = item.city || item.admin1 || item.name || "";
+      
+      // Store the resolved city name for later use
+      const selectedCity = item.city || extractCityName(item) || item.name || "";
       const selectedCountry = item.country || "";
       const selectedIata = item.iataCode || "";
       input.dataset.selectedCity = selectedCity;
@@ -1091,7 +1194,7 @@
       hideList();
     }
     
-    function updateSelection(items) {
+    function updateSelection() {
       if (!listEl) return;
       const itemEls = listEl.querySelectorAll(".autocomplete-item");
       itemEls.forEach((el, i) => {
@@ -1099,206 +1202,83 @@
       });
     }
     
-    // Known major airports for IATA code lookups
-    const MAJOR_AIRPORTS = {
-      "JFK": { name: "New York JFK", city: "New York", country: "United States" },
-      "LGA": { name: "New York LaGuardia", city: "New York", country: "United States" },
-      "EWR": { name: "Newark", city: "Newark", country: "United States" },
-      "LAX": { name: "Los Angeles", city: "Los Angeles", country: "United States" },
-      "ORD": { name: "Chicago O'Hare", city: "Chicago", country: "United States" },
-      "DFW": { name: "Dallas Fort Worth", city: "Dallas", country: "United States" },
-      "DEN": { name: "Denver", city: "Denver", country: "United States" },
-      "SFO": { name: "San Francisco", city: "San Francisco", country: "United States" },
-      "SEA": { name: "Seattle-Tacoma", city: "Seattle", country: "United States" },
-      "ATL": { name: "Atlanta", city: "Atlanta", country: "United States" },
-      "BOS": { name: "Boston Logan", city: "Boston", country: "United States" },
-      "MIA": { name: "Miami", city: "Miami", country: "United States" },
-      "PHX": { name: "Phoenix", city: "Phoenix", country: "United States" },
-      "IAH": { name: "Houston George Bush", city: "Houston", country: "United States" },
-      "AUS": { name: "Austin-Bergstrom", city: "Austin", country: "United States" },
-      "LHR": { name: "London Heathrow", city: "London", country: "United Kingdom" },
-      "LGW": { name: "London Gatwick", city: "London", country: "United Kingdom" },
-      "CDG": { name: "Paris Charles de Gaulle", city: "Paris", country: "France" },
-      "ORY": { name: "Paris Orly", city: "Paris", country: "France" },
-      "FRA": { name: "Frankfurt", city: "Frankfurt", country: "Germany" },
-      "AMS": { name: "Amsterdam Schiphol", city: "Amsterdam", country: "Netherlands" },
-      "MAD": { name: "Madrid Barajas", city: "Madrid", country: "Spain" },
-      "BCN": { name: "Barcelona El Prat", city: "Barcelona", country: "Spain" },
-      "FCO": { name: "Rome Fiumicino", city: "Rome", country: "Italy" },
-      "MXP": { name: "Milan Malpensa", city: "Milan", country: "Italy" },
-      "DUB": { name: "Dublin", city: "Dublin", country: "Ireland" },
-      "ZRH": { name: "Zurich", city: "Zurich", country: "Switzerland" },
-      "VIE": { name: "Vienna", city: "Vienna", country: "Austria" },
-      "NRT": { name: "Tokyo Narita", city: "Tokyo", country: "Japan" },
-      "HND": { name: "Tokyo Haneda", city: "Tokyo", country: "Japan" },
-      "ICN": { name: "Seoul Incheon", city: "Seoul", country: "South Korea" },
-      "PEK": { name: "Beijing Capital", city: "Beijing", country: "China" },
-      "PVG": { name: "Shanghai Pudong", city: "Shanghai", country: "China" },
-      "HKG": { name: "Hong Kong", city: "Hong Kong", country: "Hong Kong" },
-      "SIN": { name: "Singapore Changi", city: "Singapore", country: "Singapore" },
-      "BKK": { name: "Bangkok Suvarnabhumi", city: "Bangkok", country: "Thailand" },
-      "SYD": { name: "Sydney", city: "Sydney", country: "Australia" },
-      "MEL": { name: "Melbourne", city: "Melbourne", country: "Australia" },
-      "YYZ": { name: "Toronto Pearson", city: "Toronto", country: "Canada" },
-      "YTZ": { name: "Toronto Billy Bishop", city: "Toronto", country: "Canada" },
-      "YVR": { name: "Vancouver", city: "Vancouver", country: "Canada" },
-      "YUL": { name: "Montreal Trudeau", city: "Montreal", country: "Canada" },
-      "YYC": { name: "Calgary", city: "Calgary", country: "Canada" },
-      "MEX": { name: "Mexico City", city: "Mexico City", country: "Mexico" },
-      "CUN": { name: "Cancun", city: "Cancun", country: "Mexico" },
-      "GRU": { name: "Sao Paulo Guarulhos", city: "Sao Paulo", country: "Brazil" },
-      "EZE": { name: "Buenos Aires Ezeiza", city: "Buenos Aires", country: "Argentina" },
-      "DXB": { name: "Dubai", city: "Dubai", country: "United Arab Emirates" },
-      "IST": { name: "Istanbul", city: "Istanbul", country: "Turkey" },
-      "CPT": { name: "Cape Town", city: "Cape Town", country: "South Africa" },
-      "JNB": { name: "Johannesburg", city: "Johannesburg", country: "South Africa" },
-      "DPS": { name: "Bali Ngurah Rai", city: "Bali", country: "Indonesia", aliases: ["bali", "denpasar"] },
-      "CGK": { name: "Jakarta Soekarno-Hatta", city: "Jakarta", country: "Indonesia" },
-      "MLE": { name: "Maldives Velana", city: "Malé", country: "Maldives", aliases: ["maldives"] },
-      "HNL": { name: "Honolulu", city: "Honolulu", country: "United States", aliases: ["hawaii", "oahu"] },
-      "OGG": { name: "Maui Kahului", city: "Maui", country: "United States", aliases: ["maui"] },
-      "PPT": { name: "Tahiti Faa'a", city: "Papeete", country: "French Polynesia", aliases: ["tahiti", "bora bora"] },
-      "NAN": { name: "Fiji Nadi", city: "Nadi", country: "Fiji", aliases: ["fiji"] },
-      "AKL": { name: "Auckland", city: "Auckland", country: "New Zealand" },
-      "ZQN": { name: "Queenstown", city: "Queenstown", country: "New Zealand" },
-      "CMB": { name: "Colombo Bandaranaike", city: "Colombo", country: "Sri Lanka", aliases: ["sri lanka"] },
-      "PNH": { name: "Phnom Penh", city: "Phnom Penh", country: "Cambodia" },
-      "REP": { name: "Siem Reap", city: "Siem Reap", country: "Cambodia", aliases: ["angkor wat"] },
-      "HAN": { name: "Hanoi Noi Bai", city: "Hanoi", country: "Vietnam" },
-      "SGN": { name: "Ho Chi Minh Tan Son Nhat", city: "Ho Chi Minh City", country: "Vietnam", aliases: ["saigon"] },
-      "KUL": { name: "Kuala Lumpur", city: "Kuala Lumpur", country: "Malaysia" },
-      "MNL": { name: "Manila Ninoy Aquino", city: "Manila", country: "Philippines" },
-      "CEB": { name: "Cebu Mactan", city: "Cebu", country: "Philippines" },
-      "DEL": { name: "Delhi Indira Gandhi", city: "Delhi", country: "India" },
-      "BOM": { name: "Mumbai Chhatrapati Shivaji", city: "Mumbai", country: "India" },
-      "CAI": { name: "Cairo", city: "Cairo", country: "Egypt" },
-      "CMN": { name: "Casablanca Mohammed V", city: "Casablanca", country: "Morocco" },
-      "RAK": { name: "Marrakech Menara", city: "Marrakech", country: "Morocco" },
-      "LIS": { name: "Lisbon Humberto Delgado", city: "Lisbon", country: "Portugal" },
-      "ATH": { name: "Athens Eleftherios Venizelos", city: "Athens", country: "Greece" },
-      "SAW": { name: "Istanbul Sabiha Gokcen", city: "Istanbul", country: "Turkey" },
-      "PRG": { name: "Prague Vaclav Havel", city: "Prague", country: "Czech Republic" },
-      "BUD": { name: "Budapest Ferenc Liszt", city: "Budapest", country: "Hungary" },
-      "WAW": { name: "Warsaw Chopin", city: "Warsaw", country: "Poland" },
-      "ARN": { name: "Stockholm Arlanda", city: "Stockholm", country: "Sweden" },
-      "CPH": { name: "Copenhagen Kastrup", city: "Copenhagen", country: "Denmark" },
-      "OSL": { name: "Oslo Gardermoen", city: "Oslo", country: "Norway" },
-      "HEL": { name: "Helsinki Vantaa", city: "Helsinki", country: "Finland" },
-      "SJU": { name: "San Juan Luis Munoz Marin", city: "San Juan", country: "Puerto Rico" },
-      "NAS": { name: "Nassau Lynden Pindling", city: "Nassau", country: "Bahamas" },
-      "MBJ": { name: "Montego Bay Sangster", city: "Montego Bay", country: "Jamaica" },
-      "AUA": { name: "Aruba Queen Beatrix", city: "Oranjestad", country: "Aruba", aliases: ["aruba"] },
-      "SXM": { name: "St Maarten Princess Juliana", city: "Philipsburg", country: "Sint Maarten", aliases: ["st maarten", "saint martin"] },
-    };
-    
     async function fetchSuggestions(query) {
       if (query.length < 2) {
         hideList();
         return;
       }
       
-      const upperQuery = query.toUpperCase().trim();
-      const lowerQuery = query.toLowerCase().trim();
-      const items = [];
+      // Load airports database
+      const airports = await loadAirportsDB();
       
-      // Search airports by code, name, city, OR aliases
-      for (const [code, ap] of Object.entries(MAJOR_AIRPORTS)) {
-        const matchesCode = code.startsWith(upperQuery);
-        const matchesName = ap.name.toLowerCase().includes(lowerQuery);
-        const matchesCity = ap.city.toLowerCase().includes(lowerQuery);
-        const matchesAlias = ap.aliases && ap.aliases.some(a => a.toLowerCase().includes(lowerQuery));
-        
-        if (matchesCode || matchesName || matchesCity || matchesAlias) {
-          items.push({
-            name: `${ap.name} (${code})`,
-            admin1: ap.city,
-            city: ap.city,
-            country: ap.country,
-            iataCode: code,
-            // Prioritize exact code matches, then alias matches, then name matches
-            priority: code === upperQuery ? 0 : (matchesCode ? 1 : (matchesAlias ? 1.5 : 2)),
-          });
-        }
-      }
+      // Search airports
+      const airportResults = searchAirports(query, airports, 5);
       
-      // Sort by priority (exact matches first)
-      items.sort((a, b) => a.priority - b.priority);
+      // Transform to common format
+      const airportItems = airportResults.map(ap => ({
+        name: ap.n,
+        airportName: ap.n,
+        city: extractCityName(ap),
+        country: ap.o,
+        iataCode: ap.i,
+        latitude: parseFloat(ap.t),
+        longitude: parseFloat(ap.g),
+      }));
       
-      // Limit airport results
-      const airportResults = items.slice(0, 4);
-      
+      // Also search Open-Meteo for cities not in airport database
+      let cityItems = [];
       try {
-        // Use Open-Meteo geocoding for city suggestions
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
         const res = await fetch(url);
-        if (!res.ok) {
-          if (airportResults.length) showList(airportResults);
-          return;
+        if (res.ok) {
+          const data = await res.json();
+          const cityResults = (data.results || [])
+            .filter(r => {
+              // Prefer actual cities over regions
+              const code = r.feature_code;
+              // PPLC = capital, PPLA = admin center, PPL = populated place
+              if (["PPLC", "PPLA", "PPLA2", "PPLA3", "PPL"].includes(code)) {
+                return true;
+              }
+              // Include places with significant population
+              if (r.population && r.population >= 50000) {
+                return true;
+              }
+              return false;
+            })
+            .slice(0, 3)
+            .map(r => ({
+              name: r.name,
+              city: r.name,
+              admin1: r.admin1,
+              country: r.country,
+              latitude: r.latitude,
+              longitude: r.longitude,
+              iataCode: null,
+            }));
+          
+          // Deduplicate - don't show city if we already have an airport for it
+          const seenCities = new Set(airportItems.map(a => (a.city || '').toLowerCase()));
+          cityItems = cityResults.filter(c => !seenCities.has((c.city || '').toLowerCase()));
         }
-        const data = await res.json();
-        
-        // Filter to include significant places.
-        // Allow administrative centers, populated places, and named regions/islands.
-        // For generic places, require meaningful population to avoid tiny villages.
-        const rawCityResults = (data.results || [])
-          .filter((r) => {
-            const code = r.feature_code;
-            const pop = r.population;
-            // Administrative and political centers - always include
-            if (["PPLC", "PPLA", "PPLA2", "PPLA3", "PPLA4"].includes(code)) {
-              return true;
-            }
-            // Administrative divisions (islands, regions) - include if reasonably sized
-            if (["ADM1", "ADM2", "ADMD", "ISL", "ISLS"].includes(code)) {
-              return pop == null || pop >= 10000;
-            }
-            // Generic populated places - require meaningful population
-            if (code === "PPL" || !code) {
-              return pop != null && pop >= 50000;
-            }
-            return false;
-          })
-          .slice(0, 6)
-          .map((r) => ({
-            name: r.name,
-            admin1: r.admin1,
-            country: r.country,
-            latitude: r.latitude,
-            longitude: r.longitude,
-            iataCode: null,
-          }));
-
-        // Deduplicate geocoding results by name+country (API sometimes returns same city twice)
-        const seenCityKeys = new Set();
-        const cityResults = [];
-        for (const r of rawCityResults) {
-          const key = `${(r.name || "").toLowerCase()},${(r.country || "").toLowerCase()}`;
-          if (!seenCityKeys.has(key)) {
-            seenCityKeys.add(key);
-            cityResults.push(r);
-          }
-        }
-
-        // Airports first, then cities. Always show cities — they are distinct entries
-        // (user may want to type a city name rather than pick an airport code).
-        const combined = [...airportResults, ...cityResults.slice(0, 3)];
-        
-        showList(combined.slice(0, 6));
       } catch (e) {
-        // Show airport matches if API fails
-        if (airportResults.length) showList(airportResults);
+        // Ignore geocoding errors
       }
+      
+      // Combine: airports first, then cities
+      const combined = [...airportItems, ...cityItems.slice(0, 2)];
+      showList(combined.slice(0, 6));
     }
     
     input.addEventListener("input", () => {
       const query = input.value.trim();
-      // Any manual typing invalidates previously selected metadata.
+      // Clear previously selected metadata when user types
       delete input.dataset.selectedCity;
       delete input.dataset.selectedCountry;
       delete input.dataset.selectedIata;
       SELECTED_LOCATION_META.delete(input);
       clearTimeout(autocompleteDebounce);
-      autocompleteDebounce = setTimeout(() => fetchSuggestions(query), 250);
+      autocompleteDebounce = setTimeout(() => fetchSuggestions(query), 150);
     });
     
     input.addEventListener("keydown", (e) => {
@@ -1307,11 +1287,11 @@
       if (e.key === "ArrowDown") {
         e.preventDefault();
         selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
-        updateSelection(results);
+        updateSelection();
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         selectedIndex = Math.max(selectedIndex - 1, 0);
-        updateSelection(results);
+        updateSelection();
       } else if (e.key === "Enter" && selectedIndex >= 0) {
         e.preventDefault();
         selectItem(results[selectedIndex]);
@@ -1321,7 +1301,6 @@
     });
     
     input.addEventListener("blur", () => {
-      // Delay to allow click on list item
       setTimeout(hideList, 150);
     });
     
