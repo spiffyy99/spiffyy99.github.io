@@ -24,6 +24,11 @@
   // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
   // - noTravelDay: true if flight doesn't need a dedicated travel day
   function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8) {
+    // Sanitize input
+    if (!Number.isFinite(durationHours) || durationHours <= 0) {
+      durationHours = 10; // Fallback to reasonable default
+    }
+    
     // Always avoid dedicated travel days when flight time is under the user's threshold.
     if (durationHours < travelDayThresholdH) {
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
@@ -600,13 +605,25 @@
   }
 
   function estimateLegDistanceKm(airportA, airportB) {
-    return haversineKm(airportA.latitude, airportA.longitude, airportB.latitude, airportB.longitude);
+    if (!airportA || !airportB) return 5000; // Default fallback ~5000km
+    const latA = airportA.latitude ?? airportA.lat;
+    const lonA = airportA.longitude ?? airportA.lon;
+    const latB = airportB.latitude ?? airportB.lat;
+    const lonB = airportB.longitude ?? airportB.lon;
+    if (!Number.isFinite(latA) || !Number.isFinite(lonA) || !Number.isFinite(latB) || !Number.isFinite(lonB)) {
+      return 5000; // Default fallback
+    }
+    return haversineKm(latA, lonA, latB, lonB);
   }
   
   function estimateLegDurationHours(airportA, airportB) {
+    if (!airportA || !airportB) return 10; // Default fallback ~10h flight
     const distanceKm = estimateLegDistanceKm(airportA, airportB);
-    const westward = isWestwardFlight(airportA.longitude, airportB.longitude);
-    return getDurationHoursFromDistanceKm(distanceKm, westward);
+    const lonA = airportA.longitude ?? airportA.lon ?? 0;
+    const lonB = airportB.longitude ?? airportB.lon ?? 0;
+    const westward = isWestwardFlight(lonA, lonB);
+    const hours = getDurationHoursFromDistanceKm(distanceKm, westward);
+    return Number.isFinite(hours) ? hours : 10; // Fallback if calculation fails
   }
 
   function buildLegs(home, orderedCities) {
