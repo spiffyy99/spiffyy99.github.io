@@ -24,11 +24,6 @@
   // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
   // - noTravelDay: true if flight doesn't need a dedicated travel day
   function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8) {
-    // Sanitize input
-    if (!Number.isFinite(durationHours) || durationHours <= 0) {
-      durationHours = 10; // Fallback to reasonable default
-    }
-    
     // Always avoid dedicated travel days when flight time is under the user's threshold.
     if (durationHours < travelDayThresholdH) {
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
@@ -331,29 +326,38 @@
   }
 
   async function nearestAirport({ latitude, longitude, rangeMeters, airportCache }) {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      console.warn("nearestAirport: invalid coordinates", { latitude, longitude });
+      return null;
+    }
     const key = `near:${latitude.toFixed(4)},${longitude.toFixed(4)}:${rangeMeters || 500000}`;
     const cacheObj = airportCache;
-    return cachedJson(STORAGE_KEYS.airport, cacheObj, key, async () => {
-      const types = "large_airport,medium_airport";
-      const url = `https://www.iatageo.com/v2/airports/nearest?lat=${encodeURIComponent(
-        latitude
-      )}&lng=${encodeURIComponent(longitude)}&types=${encodeURIComponent(types)}&range=${encodeURIComponent(
-        rangeMeters || 500000
-      )}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Nearest airport lookup failed (${res.status})`);
-      const data = await res.json();
-      const airport = data?.data;
-      if (!airport?.iataCode) throw new Error("No airport found");
-      return {
-        iataCode: airport.iataCode,
-        icaoCode: airport.icaoCode,
-        name: airport.name,
-        city: airport.city || airport.municipality || "",
-        latitude: airport.coordinates?.latitude ?? latitude,
-        longitude: airport.coordinates?.longitude ?? longitude,
-      };
-    });
+    try {
+      return await cachedJson(STORAGE_KEYS.airport, cacheObj, key, async () => {
+        const types = "large_airport,medium_airport";
+        const url = `https://www.iatageo.com/v2/airports/nearest?lat=${encodeURIComponent(
+          latitude
+        )}&lng=${encodeURIComponent(longitude)}&types=${encodeURIComponent(types)}&range=${encodeURIComponent(
+          rangeMeters || 500000
+        )}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Nearest airport lookup failed (${res.status})`);
+        const data = await res.json();
+        const airport = data?.data;
+        if (!airport?.iataCode) throw new Error("No airport found");
+        return {
+          iataCode: airport.iataCode,
+          icaoCode: airport.icaoCode,
+          name: airport.name,
+          city: airport.city || airport.municipality || "",
+          latitude: airport.coordinates?.latitude ?? latitude,
+          longitude: airport.coordinates?.longitude ?? longitude,
+        };
+      });
+    } catch (e) {
+      console.warn("nearestAirport failed:", e.message);
+      return null;
+    }
   }
 
   function isIataToken(token) {
@@ -502,6 +506,10 @@
       airportCache,
     });
 
+    if (!airport) {
+      throw new Error(`Could not find airport near "${raw}". Try using an airport code (e.g., JFK, SIN).`);
+    }
+
     const typedCityGuess = normalizeTypedCity(raw);
     const airportLike = looksAirportLikeInput(raw);
     return {
@@ -509,8 +517,8 @@
       cityName: preferredCity
         ? preferredCity
         : airportLike
-        ? (airport?.city || airport?.municipality || geo.name || typedCityGuess || raw)
-        : (geo.name || typedCityGuess || airport?.city || airport?.municipality || raw),
+        ? (airport.city || airport.municipality || geo.name || typedCityGuess || raw)
+        : (geo.name || typedCityGuess || airport.city || airport.municipality || raw),
       country: preferredCountry || geo.country || "",
       airport,
     };
@@ -605,25 +613,19 @@
   }
 
   function estimateLegDistanceKm(airportA, airportB) {
-    if (!airportA || !airportB) return 5000; // Default fallback ~5000km
-    const latA = airportA.latitude ?? airportA.lat;
-    const lonA = airportA.longitude ?? airportA.lon;
-    const latB = airportB.latitude ?? airportB.lat;
-    const lonB = airportB.longitude ?? airportB.lon;
-    if (!Number.isFinite(latA) || !Number.isFinite(lonA) || !Number.isFinite(latB) || !Number.isFinite(lonB)) {
-      return 5000; // Default fallback
-    }
+    const latA = airportA?.latitude ?? airportA?.lat;
+    const lonA = airportA?.longitude ?? airportA?.lon;
+    const latB = airportB?.latitude ?? airportB?.lat;
+    const lonB = airportB?.longitude ?? airportB?.lon;
     return haversineKm(latA, lonA, latB, lonB);
   }
   
   function estimateLegDurationHours(airportA, airportB) {
-    if (!airportA || !airportB) return 10; // Default fallback ~10h flight
     const distanceKm = estimateLegDistanceKm(airportA, airportB);
-    const lonA = airportA.longitude ?? airportA.lon ?? 0;
-    const lonB = airportB.longitude ?? airportB.lon ?? 0;
+    const lonA = airportA?.longitude ?? airportA?.lon ?? 0;
+    const lonB = airportB?.longitude ?? airportB?.lon ?? 0;
     const westward = isWestwardFlight(lonA, lonB);
-    const hours = getDurationHoursFromDistanceKm(distanceKm, westward);
-    return Number.isFinite(hours) ? hours : 10; // Fallback if calculation fails
+    return getDurationHoursFromDistanceKm(distanceKm, westward);
   }
 
   function buildLegs(home, orderedCities) {
