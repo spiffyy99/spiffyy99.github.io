@@ -344,41 +344,7 @@
       .replace(/\s{2,}/g, " ")
       .trim();
     if (!cleaned) return "";
-    
-    // Split on common separators
-    const firstPart = cleaned.split(/[-,/]/)[0].trim();
-    if (!firstPart) return "";
-    
-    // Common airport naming patterns where the actual airport name follows the city:
-    // "Bangkok Suvarnabhumi" -> "Bangkok"
-    // "Tokyo Narita" -> "Tokyo"  
-    // "London Heathrow" -> "London"
-    // But NOT: "New York" -> "New York" (keep multi-word city names)
-    const words = firstPart.split(/\s+/);
-    if (words.length >= 2) {
-      // Check if first word(s) look like a city and last word looks like airport name
-      const twoWordCities = ["new york", "los angeles", "san francisco", "san diego", "las vegas", 
-        "ho chi minh", "hong kong", "rio de janeiro", "abu dhabi", "kuala lumpur", "buenos aires",
-        "cape town", "mexico city", "sao paulo", "st louis", "st petersburg", "fort lauderdale",
-        "salt lake", "kansas city"];
-      const lowered = firstPart.toLowerCase();
-      for (const city of twoWordCities) {
-        if (lowered.startsWith(city)) return firstPart.slice(0, city.length);
-      }
-      
-      // Known airport suffix words (not city names)
-      const airportSuffixes = ["suvarnabhumi", "narita", "haneda", "heathrow", "gatwick", "schiphol",
-        "changi", "fiumicino", "malpensa", "orly", "pearson", "trudeau", "dulles", "ohare", "midway",
-        "guarulhos", "ezeiza", "barajas", "kastrup", "arlanda", "gardermoen", "vantaa", "incheon",
-        "pudong", "hongqiao", "capital", "daxing", "sheremetyevo", "domodedovo", "vnukovo",
-        "ben gurion", "ataturk", "sabiha", "keflavik", "leonardo", "marco polo"];
-      const lastWord = words[words.length - 1].toLowerCase();
-      if (airportSuffixes.includes(lastWord)) {
-        return words.slice(0, -1).join(" ");
-      }
-    }
-    
-    return firstPart;
+    return cleaned.split(/[-,/]/)[0].trim();
   }
 
   function normalizeTypedCity(rawInput = "") {
@@ -434,40 +400,29 @@
     if (isIataToken(raw)) {
       const code = raw.toUpperCase();
       const key = `iata:${code}`;
-      // Fetch airport data from cache (or API)
-      const airportData = await cachedJson(STORAGE_KEYS.airport, airportCache, key, async () => {
+      const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`IATAGeo IATA lookup failed (${res.status})`);
         const payload = await res.json();
         const data = payload?.data;
         if (!data?.iataCode || !data?.coordinates) throw new Error("No airport found for IATA code");
-        return {
+        const airport = {
           iataCode: data.iataCode,
           icaoCode: data.icaoCode,
           name: data.name,
           city: data.city || data.municipality || "",
           latitude: data.coordinates.latitude,
           longitude: data.coordinates.longitude,
-          country: data.country || "",
+        };
+        return {
+          displayName: data.name || data.iataCode,
+          cityName: preferredCity || data.city || data.municipality || inferCityFromAirportName(data.name || ""),
+          country: preferredCountry || data.country || "",
+          airport,
         };
       });
-      
-      // Build the resolved result using preferredCity if provided (not cached with airport)
-      const inferredCity = inferCityFromAirportName(airportData.name || "");
-      return {
-        displayName: airportData.name || airportData.iataCode,
-        cityName: preferredCity || airportData.city || inferredCity || code,
-        country: preferredCountry || airportData.country || "",
-        airport: {
-          iataCode: airportData.iataCode,
-          icaoCode: airportData.icaoCode,
-          name: airportData.name,
-          city: airportData.city,
-          latitude: airportData.latitude,
-          longitude: airportData.longitude,
-        },
-      };
+      return cachedAirport;
     }
 
     const geo = await geocodeCity(raw, geoCache);
