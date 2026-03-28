@@ -1502,10 +1502,13 @@
           detailsTd.textContent = `${day.label} (arrival; ${spillover} remaining from flight)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
-        // City day with evening departure - show the overnight portion
+        // City day with evening departure - show both daytime and overnight portions
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        if (nightPortion && day.departureNightHours < day.departureFlightDurationHours) {
+          const dayPortion = formatHours(day.departureFlightDurationHours - day.departureNightHours);
+          detailsTd.textContent = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           detailsTd.textContent = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           detailsTd.textContent = `${day.label} (~${flightTime})`;
@@ -1674,7 +1677,10 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        if (nightPortion && day.departureNightHours < day.departureFlightDurationHours) {
+          const dayPortion = formatHours(day.departureFlightDurationHours - day.departureNightHours);
+          details = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           details = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           details = `${day.label} (~${flightTime})`;
@@ -1797,7 +1803,10 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
         const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion) {
+        if (nightPortion && day.departureNightHours < day.departureFlightDurationHours) {
+          const dayPortion = formatHours(day.departureFlightDurationHours - day.departureNightHours);
+          details = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
+        } else if (nightPortion) {
           details = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
         } else {
           details = `${day.label} (~${flightTime})`;
