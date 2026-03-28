@@ -266,8 +266,20 @@
 
   // ---- Geocoding + nearest airport ----
 
-  async function cachedJson(cacheKey, cacheObj, key, fetchFn) {
-    if (cacheObj[key]) return cacheObj[key];
+  async function cachedJson(cacheKey, cacheObj, key, mustHaveKeys, fetchFn) {
+    if (cacheObj[key]) {
+      let hasAllKeys = true;
+      if (mustHaveKeys) {
+        for (const key of mustHaveKeys) {
+          if (!cacheObj[key] || isNullOrEmpty(cacheObj[key])) {
+            hasAllKeys = false;
+          }
+        }
+      } 
+      if (hasAllKeys) {
+        return cacheObj[key];
+      }
+    }
     const value = await fetchFn();
     cacheObj[key] = value;
     try {
@@ -288,7 +300,7 @@
 
   async function geocodeCity(cityName, geoCache) {
     const key = `geo:${cityName.toLowerCase().trim()}`;
-    return cachedJson(STORAGE_KEYS.geo, geoCache, key, async () => {
+    return cachedJson(STORAGE_KEYS.geo, geoCache, key, ["country", "name"], async () => {
       const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
         cityName
       )}&count=1&language=en&format=json`;
@@ -309,7 +321,7 @@
   async function nearestAirport({ latitude, longitude, rangeMeters, airportCache }) {
     const key = `near:${latitude.toFixed(4)},${longitude.toFixed(4)}:${rangeMeters || 500000}`;
     const cacheObj = airportCache;
-    return cachedJson(STORAGE_KEYS.airport, cacheObj, key, async () => {
+    return cachedJson(STORAGE_KEYS.airport, cacheObj, key, ["iataCode", "icaoCode", "name", "city"], async () => {
       const types = "large_airport,medium_airport";
       const url = `https://www.iatageo.com/v2/airports/nearest?lat=${encodeURIComponent(
         latitude
@@ -400,7 +412,7 @@
     if (isIataToken(raw)) {
       const code = raw.toUpperCase();
       const key = `iata:${code}`;
-      const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, async () => {
+      const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, ["displayName", "cityName", "country"], async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`IATAGeo IATA lookup failed (${res.status})`);
@@ -1010,6 +1022,7 @@
         matchedKeyword = ap.k.find(kw => kw === q || kw.startsWith(q));
         if (matchedKeyword) {
           matchedKeyword = matchedKeyword.charAt(0).toUpperCase() + matchedKeyword.slice(1);
+          ap.c = matchedKeyword;
         }
       }
       // City name starts with query or matches word boundary
