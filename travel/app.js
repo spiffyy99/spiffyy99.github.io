@@ -1551,8 +1551,9 @@
 
   function formatHours(hours) {
     if (!Number.isFinite(hours)) return "—";
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
     return `${h}h ${m}m`;
   }
   
