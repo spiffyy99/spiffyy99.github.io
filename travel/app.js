@@ -350,6 +350,9 @@
   }
 
   function inferCityFromAirportName(airportName = "") {
+    for (const airport of airportsDB) {
+      if (airport.n === airportName) return airport.c;
+    }
     const cleaned = String(airportName || "")
       .replace(/\s*\([^)]*\)\s*/g, " ")
       .replace(/\b(international|intl|airport|airfield|terminal)\b/gi, "")
