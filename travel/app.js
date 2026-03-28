@@ -2085,7 +2085,7 @@ addDestinationBtn.addEventListener("click", () => {
 
       // Cache objects
       const geoCache = loadCache(STORAGE_KEYS.geo);
-      const airportCache = loadCache(STORAGE_KEYS.airport);
+      const airportCache = {}; //loadCache(STORAGE_KEYS.airport); disable as this can be incorrect
       const flightCache = loadCache(STORAGE_KEYS.flight);
 
       const loadingEl = $("loadingIndicator");
