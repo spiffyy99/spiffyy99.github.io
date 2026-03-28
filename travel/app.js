@@ -990,6 +990,7 @@
       // Priority scoring: exact IATA = 0, IATA prefix = 1, exact keyword = 2, city starts with = 3, city contains = 4, name = 5
       let priority = 999;
       let matched = false;
+      let matchedKeyword = null; // Track which keyword matched (for bali, hawaii, etc)
       
       // IATA exact match
       if (ap.i === qUpper) {
@@ -1005,6 +1006,11 @@
       else if (ap.k && ap.k.some(kw => kw === q || kw.startsWith(q))) {
         priority = 2;
         matched = true;
+        // Find the matching keyword and capitalize it
+        matchedKeyword = ap.k.find(kw => kw === q || kw.startsWith(q));
+        if (matchedKeyword) {
+          matchedKeyword = matchedKeyword.charAt(0).toUpperCase() + matchedKeyword.slice(1);
+        }
       }
       // City name starts with query or matches word boundary
       else if (ap.c) {
