@@ -30,10 +30,13 @@
     }
 
     // If red-eye is allowed, split into overnight + next-day spillover.
-    // If spillover is within threshold, no dedicated travel day is needed.
+    // ONLY use red-eye if it actually saves a travel day (spillover within threshold).
+    // If spillover exceeds threshold, we'd need a travel day anyway, so skip the red-eye
+    // and just do a regular daytime flight on a dedicated travel day.
     if (redeyeOK) {
       const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
       if (spilloverHours <= travelDayThresholdH) {
+        // Red-eye saves a travel day - use it
         return {
           travelDays: 0,
           ptoOffsets: [],
@@ -43,15 +46,7 @@
           travelDayOnNextDay: false,
         };
       }
-      // Spillover exceeds threshold: consume one dedicated day on the following day.
-      return {
-        travelDays: 1,
-        ptoOffsets: [0],
-        noTravelDay: false,
-        isRedeye: true,
-        spilloverHours,
-        travelDayOnNextDay: true,
-      };
+      // Spillover exceeds threshold: red-eye doesn't help, fall through to regular travel day logic
     }
 
     // Most flights, including typical long-haul, should use one travel day.
@@ -67,10 +62,9 @@
     }
 
     // Ultra-long legs: cap at 2 travel days.
-    const ptoOffsets2 = redeyeOK ? [1] : [0, 1];
     return {
       travelDays: 2,
-      ptoOffsets: ptoOffsets2,
+      ptoOffsets: [0, 1],
       noTravelDay: false,
       isRedeye: false,
       spilloverHours: 0,
