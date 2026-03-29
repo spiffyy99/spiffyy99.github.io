@@ -1360,6 +1360,7 @@
         removeBtn.innerHTML = "&times;";
         removeBtn.title = "Remove destination";
         removeBtn.addEventListener("click", () => {
+          addDestinationBtn.hidden = false;
           const current = readDestinationsFromDOM(container);
           current.splice(idx, 1);
           renderDestinations(container, current);
@@ -2061,6 +2062,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
 addDestinationBtn.addEventListener("click", () => {
   const current = readDestinationsFromDOM(destinationsContainer);
   if (current.length < 10) current.push({ city: "", stayDays: null });
+  if (current.length >= 10) addDestinationBtn.hidden = true;
   renderDestinations(destinationsContainer, current);
   });
 

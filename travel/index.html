@@ -22,27 +22,32 @@
         <form id="itineraryForm" class="form">
           <div class="grid">
             <div>
-            <div class="field">
-              <label for="homeCity">Home airport/city</label>
-              <input id="homeCity" name="homeCity" type="text" placeholder="e.g. Austin, TX or JFK" required autocomplete="off" />
-            </div>
+              <div class="field">
+                <label for="homeCity">Home airport/city</label>
+                <input id="homeCity" name="homeCity" type="text" placeholder="e.g. Austin, TX or JFK" required autocomplete="off" />
+              </div>
 
-            <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
-              <button type="button" id="returnCityToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline;">+ Return to a different location</button>
+              <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
+                <button type="button" id="returnCityToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline;">+ Return to a different location</button>
+              </div>
             </div>
-          </div>
 
             <div class="field" id="returnCityField" style="display: none;">
               <label for="returnCity">Return city/airport</label>
               <input id="returnCity" name="returnCity" type="text" placeholder="e.g. Los Angeles or LAX" autocomplete="off" />
             </div>
 
-            <div class="field">
-              <label for="dateMode">Date mode</label>
-              <select id="dateMode" name="dateMode">
-                <option value="range">Date range</option>
-                <option value="specific">Specific departure/arrival date</option>
-              </select>
+            <div>
+              <div class="field">
+                <label for="dateMode">Date mode</label>
+                <select id="dateMode" name="dateMode">
+                  <option value="range">Date range</option>
+                  <option value="specific">Specific departure/arrival date</option>
+                </select>
+              </div>
+              <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
+                <button type="button" id="dowToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline; display: none;">+ Depart/arrive on specific day of week</button>
+              </div>
             </div>
 
             <div class="field" id="startDateField">
@@ -53,10 +58,6 @@
             <div class="field" id="endDateField">
               <label for="endDate">Latest end date</label>
               <input id="endDate" name="endDate" type="date" />
-            </div>
-
-            <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
-              <button type="button" id="dowToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline; display: none;">+ Depart/arrive on specific day of week</button>
             </div>
 
             <div class="field" id="dowDirectionField" style="display: none;">
