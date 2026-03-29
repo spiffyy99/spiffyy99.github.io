@@ -1949,10 +1949,11 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       });
     }
 
-    // Date mode toggle
+    // Date mode + DOW toggle
     const dateModeSelect = $("dateMode");
     const startDateField = $("startDateField");
     const endDateField = $("endDateField");
+    const dowToggle = $("dowToggle");
     const dowDirectionField = $("dowDirectionField");
     const dowDayField = $("dowDayField");
     const specificDirectionField = $("specificDirectionField");
@@ -1961,15 +1962,29 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     function syncDateModeFields() {
       const mode = dateModeSelect ? dateModeSelect.value : "range";
       const isRange = mode === "range";
-      const isDow = mode === "range+dow";
       const isSpecific = mode === "specific";
-      if (startDateField) startDateField.style.display = (isRange || isDow) ? "" : "none";
-      if (endDateField) endDateField.style.display = (isRange || isDow) ? "" : "none";
-      if (dowDirectionField) dowDirectionField.style.display = isDow ? "" : "none";
-      if (dowDayField) dowDayField.style.display = isDow ? "" : "none";
+      const dowActive = dowDirectionField && dowDirectionField.style.display !== "none";
+      
+      if (startDateField) startDateField.style.display = isRange ? "" : "none";
+      if (endDateField) endDateField.style.display = isRange ? "" : "none";
+      if (dowToggle) dowToggle.style.display = isRange ? "" : "none";
+      if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
+      if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
       if (specificDateField) specificDateField.style.display = isSpecific ? "" : "none";
     }
+    
+    if (dowToggle) {
+      dowToggle.addEventListener("click", () => {
+        const visible = dowDirectionField && dowDirectionField.style.display !== "none";
+        if (dowDirectionField) dowDirectionField.style.display = visible ? "none" : "";
+        if (dowDayField) dowDayField.style.display = visible ? "none" : "";
+        dowToggle.textContent = visible
+          ? "+ Depart/arrive on specific day of week"
+          : "− Depart/arrive on specific day of week";
+      });
+    }
+    
     syncDateModeFields();
     if (dateModeSelect) dateModeSelect.addEventListener("change", syncDateModeFields);
 
@@ -2124,9 +2139,12 @@ addDestinationBtn.addEventListener("click", () => {
       } else {
         startDateISO = $("startDate").value;
         endDateISO = $("endDate").value;
-        if (dateMode === "range+dow") {
-          const dowDirection = ($("dowDirection") && $("dowDirection").value) || "depart";
-          const dowDay = parseInt(($("dowDay") && $("dowDay").value) ?? "1", 10);
+        const dowDirectionEl = $("dowDirection");
+        const dowDayEl = $("dowDay");
+        const dowFieldsVisible = dowDirectionEl && dowDirectionEl.style.display !== "none";
+        if (dowFieldsVisible) {
+          const dowDirection = (dowDirectionEl && dowDirectionEl.value) || "depart";
+          const dowDay = parseInt((dowDayEl && dowDayEl.value) ?? "1", 10);
           dateConstraint = { mode: "range+dow", direction: dowDirection, dayOfWeek: dowDay };
         } else {
           dateConstraint = { mode: "range" };
@@ -2205,7 +2223,7 @@ addDestinationBtn.addEventListener("click", () => {
       }
 
       // Validate DOW constraint against the actual feasible start-date range.
-      if (dateMode === "range+dow" && dateConstraint?.mode === "range+dow") {
+      if (dateConstraint?.mode === "range+dow") {
         const { direction, dayOfWeek } = dateConstraint;
         const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
         // Estimate minimum trip calendar days (travel + stay) heuristically: stayDays + 2 travel legs.

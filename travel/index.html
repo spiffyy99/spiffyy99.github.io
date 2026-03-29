@@ -35,7 +35,6 @@
               <label for="dateMode">Date mode</label>
               <select id="dateMode" name="dateMode">
                 <option value="range">Date range</option>
-                <option value="range+dow">Date range + day of week</option>
                 <option value="specific">Specific departure/arrival date</option>
               </select>
             </div>
@@ -50,8 +49,12 @@
               <input id="endDate" name="endDate" type="date" />
             </div>
 
+            <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
+              <button type="button" id="dowToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline; display: none;">+ Depart/arrive on specific day of week</button>
+            </div>
+
             <div class="field" id="dowDirectionField" style="display: none;">
-              <label for="dowDirection">Must depart or arrive on</label>
+              <label for="dowDirection">Day of week constraint</label>
               <select id="dowDirection" name="dowDirection">
                 <option value="depart">Depart (start trip) on that day</option>
                 <option value="arrive">Arrive home on that day</option>
@@ -206,7 +209,7 @@
       </section>
     </main>
 
-    <script src="./app.js?v=20260329a"></script>
+    <script src="./app.js?v=20260329b"></script>
   </body>
 </html>
 
