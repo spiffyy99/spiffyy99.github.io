@@ -21,10 +21,16 @@
       <section class="card">
         <form id="itineraryForm" class="form">
           <div class="grid">
+            <div>
             <div class="field">
               <label for="homeCity">Home airport/city</label>
               <input id="homeCity" name="homeCity" type="text" placeholder="e.g. Austin, TX or JFK" required autocomplete="off" />
             </div>
+
+            <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
+              <button type="button" id="returnCityToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline;">+ Return to a different location</button>
+            </div>
+          </div>
 
             <div class="field" id="returnCityField" style="display: none;">
               <label for="returnCity">Return city/airport</label>
@@ -86,10 +92,6 @@
               <label for="specificDate">Date</label>
               <input id="specificDate" name="specificDate" type="date" />
             </div>
-          </div>
-
-          <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
-            <button type="button" id="returnCityToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline;">+ Return to a different location</button>
           </div>
 
           <div class="sectionTitle">Destinations (e.g. Paris, France or LHR)</div>
