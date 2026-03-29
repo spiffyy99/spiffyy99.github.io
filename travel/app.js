@@ -1968,7 +1968,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       
       if (startDateField) startDateField.style.display = isRange ? "" : "none";
       if (endDateField) endDateField.style.display = isRange ? "" : "none";
-      if (dowToggle) dowToggle.style.display = isRange ? "" : "none";
+      if (dowToggle) dowToggle.style.visibility = isRange ? "visible" : "hidden";
       if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
       if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
