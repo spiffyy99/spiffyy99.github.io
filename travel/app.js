@@ -560,26 +560,27 @@
     return getDurationHoursFromDistanceKm(distanceKm, westward);
   }
 
-  function buildLegs(home, orderedCities) {
-    // Returns legs in order: home->first, city->city, last->home
+  function buildLegs(home, orderedCities, returnDest) {
+    // Returns legs in order: home->first, city->city, last->(returnDest||home)
+    const dest = returnDest || home;
     const legs = [];
     if (!orderedCities.length) return legs;
     legs.push({ from: home, to: orderedCities[0], type: "outbound" });
     for (let i = 0; i < orderedCities.length - 1; i++) {
       legs.push({ from: orderedCities[i], to: orderedCities[i + 1], type: "between" });
     }
-    legs.push({ from: orderedCities[orderedCities.length - 1], to: home, type: "return" });
+    legs.push({ from: orderedCities[orderedCities.length - 1], to: dest, type: "return" });
     return legs;
   }
 
-  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
+  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
     // Produce day-by-day entries + PTO required + heuristic flight hours.
     const days = [];
     let currentDate = parseISODate(startISO);
     let totalFlightHoursHeuristic = 0;
     let tripDays = 0; // Days actually in destination (excluding travel-only days)
 
-    const legs = buildLegs(home, orderedCities);
+    const legs = buildLegs(home, orderedCities, returnDest);
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
       const leg = legs[legIdx];
 
@@ -749,8 +750,8 @@
         currentDate = addDays(currentDate, model.travelDays);
       }
 
-      // After travel, if the arrival is a city (not home), add stay days.
-      if (leg.to !== home) {
+      // After travel, if the arrival is a destination city (not the final return), add stay days.
+      if (leg.type !== "return") {
         // Check if there's spillover from the previous travel leg (red-eye with no dedicated travel day)
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
@@ -829,7 +830,7 @@
     return a.tripStartISO <= b.tripStartISO ? a : b;
   }
 
-  function generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded }) {
+  function generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded, dateConstraint }) {
     const start = parseISODate(windowStartISO);
     const end = parseISODate(windowEndISO);
 
@@ -840,6 +841,34 @@
       candidates.push(isoDate(cursor));
       cursor = addDays(cursor, 1);
     }
+
+    if (!dateConstraint || dateConstraint.mode === "range") return candidates;
+
+    if (dateConstraint.mode === "range+dow") {
+      const { direction, dayOfWeek } = dateConstraint;
+      return candidates.filter((iso) => {
+        if (direction === "depart") {
+          return parseISODate(iso).getDay() === dayOfWeek;
+        } else {
+          const endDate = addDays(parseISODate(iso), totalCalendarDaysNeeded - 1);
+          return endDate.getDay() === dayOfWeek;
+        }
+      });
+    }
+
+    if (dateConstraint.mode === "specific") {
+      const { direction, date } = dateConstraint;
+      if (direction === "depart") {
+        const d = parseISODate(date);
+        return d >= start && d <= latestStart ? [date] : [];
+      } else {
+        const arriveDate = parseISODate(date);
+        const startDate = addDays(arriveDate, -(totalCalendarDaysNeeded - 1));
+        const startISO = isoDate(startDate);
+        return startDate >= start && startDate <= latestStart ? [startISO] : [];
+      }
+    }
+
     return candidates;
   }
 
@@ -856,20 +885,20 @@
     return capped;
   }
 
-  function computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
+  function computeTotalCalendarDaysHeuristic({ home, orderedCities, returnDest, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
     // We need a fixed template length for feasibility pruning.
-    const legs = buildLegs(home, orderedCities);
+    const legs = buildLegs(home, orderedCities, returnDest);
     let total = 0;
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
       total += model.travelDays;
-      if (leg.to !== home) total += leg.to.stayDays;
+      if (leg.type !== "return") total += leg.to.stayDays;
     }
     return total;
   }
 
-  function heuristicOrder({ home, cities }) {
+  function heuristicOrder({ home, cities, returnDest }) {
     // nearest neighbor starting from home, then 2-opt improvement based on heuristic flight hours.
     const remaining = new Set(cities.map((c) => c.id));
     const byId = new Map(cities.map((c) => [c.id, c]));
@@ -896,7 +925,7 @@
     // 2-opt swap improvement:
     function routeFlightHours(routeArr, redeyeOK) {
       // flight time heuristic ignores redeye; just sum durations (distance-based) for scoring.
-      const legs = buildLegs(home, routeArr);
+      const legs = buildLegs(home, routeArr, returnDest);
       let sum = 0;
       for (const leg of legs) {
         sum += estimateLegDurationHours(leg.from.airport, leg.to.airport);
@@ -928,7 +957,7 @@
     return bestRoute;
   }
 
-  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
+  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest, dateConstraint }) {
     const n = cities.length;
     if (n === 0) return null;
 
@@ -940,22 +969,22 @@
     if (n <= capForExact) {
       const orders = permute(cities);
       for (const orderedCities of orders) {
-        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, redeyeOK, travelDayThresholdH, redeyeOvernightH });
-        const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
+        const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities, returnDest, redeyeOK, travelDayThresholdH, redeyeOvernightH });
+        const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
         const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
         for (const startISO of candidatesCapped) {
-          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH });
+          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
           best = compareItineraries(best, sim, objective);
         }
       }
     } else {
       // For > 8 cities: heuristic route only. Start date still optimized by PTO.
-      const route = heuristicOrder({ home, cities });
-      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, redeyeOK, travelDayThresholdH, redeyeOvernightH });
-      const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded });
+      const route = heuristicOrder({ home, cities, returnDest });
+      const totalDaysNeeded = computeTotalCalendarDaysHeuristic({ home, orderedCities: route, returnDest, redeyeOK, travelDayThresholdH, redeyeOvernightH });
+      const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
       const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
       for (const startISO of candidatesCapped) {
-        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH });
+        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
         best = compareItineraries(best, sim, objective);
       }
     }
@@ -1554,7 +1583,7 @@
     return `${h}h ${m}m`;
   }
 
-function renderSummary(best, flightTotalHours, home, orderedCities) {
+function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) {
   const wrap = $("resultsSummary");
   wrap.innerHTML = "";
 
@@ -1565,7 +1594,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     const routeLabel = document.createElement("span");
     routeLabel.className = "routeLabel";
     routeLabel.textContent = "Optimized route:";
-    const routeStops = [home, ...orderedCities, home];
+    const routeStops = [home, ...orderedCities, returnDest || home];
     const routeText = document.createElement("span");
     routeText.className = "routeText";
     routeText.textContent = routeStops.map((c) => c.cityName || c.displayName).join(" → ");
@@ -1888,7 +1917,59 @@ function renderSummary(best, flightTotalHours, home, orderedCities) {
     endDateInput.min = todayISO;
     startDateInput.value = todayISO;
     endDateInput.value = oneMonthISO;
-    
+
+    const specificDateInput = $("specificDate");
+    if (specificDateInput) {
+      specificDateInput.min = todayISO;
+      specificDateInput.value = oneMonthISO;
+    }
+
+    // Return city toggle
+    const returnCityToggle = $("returnCityToggle");
+    const returnCityField = $("returnCityField");
+    const returnCityInput = $("returnCity");
+    if (returnCityToggle && returnCityField && returnCityInput) {
+      returnCityField.style.position = "relative";
+      setupCityAutocomplete(returnCityInput, returnCityField);
+      returnCityToggle.addEventListener("click", () => {
+        const visible = returnCityField.style.display !== "none";
+        returnCityField.style.display = visible ? "none" : "";
+        returnCityToggle.textContent = visible
+          ? "+ Return to a different location"
+          : "− Return to home city";
+        if (visible) {
+          returnCityInput.value = "";
+          SELECTED_LOCATION_META.delete(returnCityInput);
+          delete returnCityInput.dataset.selectedCity;
+          delete returnCityInput.dataset.selectedCountry;
+        }
+      });
+    }
+
+    // Date mode toggle
+    const dateModeSelect = $("dateMode");
+    const startDateField = $("startDateField");
+    const endDateField = $("endDateField");
+    const dowDirectionField = $("dowDirectionField");
+    const dowDayField = $("dowDayField");
+    const specificDirectionField = $("specificDirectionField");
+    const specificDateField = $("specificDateField");
+
+    function syncDateModeFields() {
+      const mode = dateModeSelect ? dateModeSelect.value : "range";
+      const isRange = mode === "range";
+      const isDow = mode === "range+dow";
+      const isSpecific = mode === "specific";
+      if (startDateField) startDateField.style.display = (isRange || isDow) ? "" : "none";
+      if (endDateField) endDateField.style.display = (isRange || isDow) ? "" : "none";
+      if (dowDirectionField) dowDirectionField.style.display = isDow ? "" : "none";
+      if (dowDayField) dowDayField.style.display = isDow ? "" : "none";
+      if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
+      if (specificDateField) specificDateField.style.display = isSpecific ? "" : "none";
+    }
+    syncDateModeFields();
+    if (dateModeSelect) dateModeSelect.addEventListener("change", syncDateModeFields);
+
     // Try to detect user location
     const homeCityInput = $("homeCity");
     const homeCityField = homeCityInput.parentElement;
@@ -1985,8 +2066,8 @@ addDestinationBtn.addEventListener("click", () => {
   const homeMeta = SELECTED_LOCATION_META.get(homeCityInputEl);
   const homePreferredCity = String(homeMeta?.city || homeCityInputEl.dataset.selectedCity || "").trim();
   const homePreferredCountry = String(homeMeta?.country || homeCityInputEl.dataset.selectedCountry || "").trim();
-  const startDateISO = $("startDate").value;
-  const endDateISO = $("endDate").value;
+
+  const dateMode = ($("dateMode") && $("dateMode").value) || "range";
   const redeyeOK = $("redeyeOk").checked;
   const travelDayThresholdH = (() => { const v = Number($("travelDayThreshold").value); return isNaN(v) ? 3 : v; })();
   const redeyeOvernightH = (() => { const v = Number($("redeyeOvernightHours").value); return isNaN(v) ? 8 : v; })();
@@ -2010,6 +2091,44 @@ addDestinationBtn.addEventListener("click", () => {
         };
       });
       const destinationList = rawDestinations.filter((d) => d.city.length > 0);
+
+      // Build effective date window and date constraint from selected date mode.
+      let startDateISO, endDateISO, dateConstraint;
+      if (dateMode === "specific") {
+        const specificDateISO = $("specificDate").value;
+        const specificDirection = ($("specificDirection") && $("specificDirection").value) || "depart";
+        if (!specificDateISO) {
+          errorBox.textContent = "Please enter a specific date.";
+          errorBox.style.display = "block";
+          return;
+        }
+        const specificDateObj = parseISODate(specificDateISO);
+        const todayCheck = new Date(); todayCheck.setHours(0, 0, 0, 0);
+        if (specificDateObj < todayCheck) {
+          errorBox.textContent = "The specific date must be today or in the future.";
+          errorBox.style.display = "block";
+          return;
+        }
+        const bufferDays = 90;
+        if (specificDirection === "depart") {
+          startDateISO = specificDateISO;
+          endDateISO = isoDate(addDays(specificDateObj, bufferDays));
+        } else {
+          startDateISO = isoDate(addDays(specificDateObj, -bufferDays));
+          endDateISO = specificDateISO;
+        }
+        dateConstraint = { mode: "specific", direction: specificDirection, date: specificDateISO };
+      } else {
+        startDateISO = $("startDate").value;
+        endDateISO = $("endDate").value;
+        if (dateMode === "range+dow") {
+          const dowDirection = ($("dowDirection") && $("dowDirection").value) || "depart";
+          const dowDay = parseInt(($("dowDay") && $("dowDay").value) ?? "1", 10);
+          dateConstraint = { mode: "range+dow", direction: dowDirection, dayOfWeek: dowDay };
+        } else {
+          dateConstraint = { mode: "range" };
+        }
+      }
 
       if (!homeCity) return;
       if (!startDateISO || !endDateISO) return;
@@ -2061,7 +2180,7 @@ addDestinationBtn.addEventListener("click", () => {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       
-      if (windowStart < todayDate) {
+      if (dateMode !== "specific" && windowStart < todayDate) {
         errorBox.textContent = "Start date must be today or in the future.";
         errorBox.style.display = "block";
         return;
@@ -2076,10 +2195,28 @@ addDestinationBtn.addEventListener("click", () => {
       const windowDays = Math.round((windowEnd - windowStart) / (24 * 60 * 60 * 1000)) + 1;
       const totalStayDays = destinationList.reduce((sum, d) => sum + d.stayDays, 0);
 
-      if (totalStayDays > windowDays) {
+      if (dateMode !== "specific" && totalStayDays > windowDays) {
         errorBox.textContent = `Input error: you want ${totalStayDays} city days, but your date window is only ${windowDays} days.`;
         errorBox.style.display = "block";
         return;
+      }
+
+      // Validate DOW constraint: target day of week must appear somewhere in the range.
+      if (dateMode === "range+dow" && dateConstraint?.mode === "range+dow") {
+        const { dayOfWeek } = dateConstraint;
+        const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        let found = false;
+        let cur = new Date(windowStart);
+        const cap = new Date(windowEnd);
+        while (cur <= cap) {
+          if (cur.getDay() === dayOfWeek) { found = true; break; }
+          cur = addDays(cur, 1);
+        }
+        if (!found) {
+          errorBox.textContent = `${dayNames[dayOfWeek]} does not fall within your selected date range. Widen the range or choose a different day of week.`;
+          errorBox.style.display = "block";
+          return;
+        }
       }
 
       const enabledHolidayIds = new Set(
@@ -2250,6 +2387,27 @@ addDestinationBtn.addEventListener("click", () => {
           return;
         }
 
+        // Resolve optional return city.
+        let returnDest = null;
+        const returnCityEl = $("returnCity");
+        const returnCityFieldEl = $("returnCityField");
+        const returnCityVisible = returnCityFieldEl && returnCityFieldEl.style.display !== "none";
+        if (returnCityVisible && returnCityEl && returnCityEl.value.trim()) {
+          const rcInput = returnCityEl.value.trim();
+          const rcMeta = SELECTED_LOCATION_META.get(returnCityEl);
+          const rcPreferredCity = String(rcMeta?.city || returnCityEl.dataset.selectedCity || "").trim();
+          const rcPreferredCountry = String(rcMeta?.country || returnCityEl.dataset.selectedCountry || "").trim();
+          const rcResolved = await getResolved(rcInput, rcPreferredCity, rcPreferredCountry);
+          const rcCityName = rcPreferredCity || locationCityLabel(rcResolved, rcInput);
+          returnDest = {
+            id: "returnDest",
+            displayName: rcResolved.displayName,
+            cityName: rcCityName,
+            country: rcResolved.country,
+            airport: rcResolved.airport,
+          };
+        }
+
         const ptoOffSet = buildPtoOffSet({
           windowStartISO: startDateISO,
           windowEndISO: endDateISO,
@@ -2267,6 +2425,8 @@ addDestinationBtn.addEventListener("click", () => {
           objective,
           travelDayThresholdH,
           redeyeOvernightH,
+          returnDest,
+          dateConstraint,
         });
 
         if (!best) {
@@ -2278,7 +2438,7 @@ addDestinationBtn.addEventListener("click", () => {
 
         // Use the city order stored in the best simulation result directly — no label parsing needed.
         const orderedCities = best.orderedCities;
-        const legList = buildLegs(home, orderedCities);
+        const legList = buildLegs(home, orderedCities, returnDest);
 
         let finalBest = best;
         let totalFlightHours = best.totalFlightHoursHeuristic;
@@ -2337,6 +2497,7 @@ addDestinationBtn.addEventListener("click", () => {
               legDurationsHours: flightSegments.map((s) => s.durationMinutes / 60),
               travelDayThresholdH,
               redeyeOvernightH,
+              returnDest,
             });
             // Only accept the overridden itinerary if it still fits within the user's end date.
             if (overridden && overridden.days.length && overridden.tripEndISO <= endDateISO) {
@@ -2346,7 +2507,7 @@ addDestinationBtn.addEventListener("click", () => {
           }
         }
 
-        renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities);
+        renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities, returnDest);
         renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
         
         // Show results section and setup export
@@ -2388,10 +2549,10 @@ addDestinationBtn.addEventListener("click", () => {
     return orderedCities;
   }
 
-  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours, travelDayThresholdH = 3, redeyeOvernightH = 8 }) {
+  function simulateItineraryWithLegDurations({ home, orderedCities, startISO, redeyeOK, ptoOffSet, legDurationsHours, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
     const days = [];
     let currentDate = parseISODate(startISO);
-    const legs = buildLegs(home, orderedCities);
+    const legs = buildLegs(home, orderedCities, returnDest);
     if (legDurationsHours.length !== legs.length) return null;
 
     let totalFlightHoursHeuristic = 0;
@@ -2530,7 +2691,7 @@ addDestinationBtn.addEventListener("click", () => {
         currentDate = addDays(currentDate, model.travelDays);
       }
 
-      if (leg.to !== home) {
+      if (leg.type !== "return") {
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
         const fromLabel = leg.from.cityName || leg.from.displayName;

@@ -26,15 +26,67 @@
               <input id="homeCity" name="homeCity" type="text" placeholder="e.g. Austin, TX or JFK" required autocomplete="off" />
             </div>
 
-            <div class="field">
-              <label for="startDate">Earliest start date</label>
-              <input id="startDate" name="startDate" type="date" required />
+            <div class="field" id="returnCityField" style="display: none;">
+              <label for="returnCity">Return city/airport</label>
+              <input id="returnCity" name="returnCity" type="text" placeholder="e.g. Los Angeles or LAX" autocomplete="off" />
             </div>
 
             <div class="field">
-              <label for="endDate">Latest end date</label>
-              <input id="endDate" name="endDate" type="date" required />
+              <label for="dateMode">Date mode</label>
+              <select id="dateMode" name="dateMode">
+                <option value="range">Date range</option>
+                <option value="range+dow">Date range + day of week</option>
+                <option value="specific">Specific departure/arrival date</option>
+              </select>
             </div>
+
+            <div class="field" id="startDateField">
+              <label for="startDate">Earliest start date</label>
+              <input id="startDate" name="startDate" type="date" />
+            </div>
+
+            <div class="field" id="endDateField">
+              <label for="endDate">Latest end date</label>
+              <input id="endDate" name="endDate" type="date" />
+            </div>
+
+            <div class="field" id="dowDirectionField" style="display: none;">
+              <label for="dowDirection">Must depart or arrive on</label>
+              <select id="dowDirection" name="dowDirection">
+                <option value="depart">Depart (start trip) on that day</option>
+                <option value="arrive">Arrive home on that day</option>
+              </select>
+            </div>
+
+            <div class="field" id="dowDayField" style="display: none;">
+              <label for="dowDay">Day of week</label>
+              <select id="dowDay" name="dowDay">
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+                <option value="0">Sunday</option>
+              </select>
+            </div>
+
+            <div class="field" id="specificDirectionField" style="display: none;">
+              <label for="specificDirection">Depart or arrive on exact date</label>
+              <select id="specificDirection" name="specificDirection">
+                <option value="depart">Depart (start trip) on date</option>
+                <option value="arrive">Arrive home on date</option>
+              </select>
+            </div>
+
+            <div class="field" id="specificDateField" style="display: none;">
+              <label for="specificDate">Date</label>
+              <input id="specificDate" name="specificDate" type="date" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 2px; margin-bottom: 4px;">
+            <button type="button" id="returnCityToggle" style="background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline;">+ Return to a different location</button>
           </div>
 
           <div class="sectionTitle">Destinations (e.g. Paris, France or LHR)</div>
@@ -154,7 +206,7 @@
       </section>
     </main>
 
-    <script src="./app.js?v=20260326f"></script>
+    <script src="./app.js?v=20260329a"></script>
   </body>
 </html>
 
