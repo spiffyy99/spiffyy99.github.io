@@ -1630,149 +1630,20 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
   });
 }
 
+
+
   // ---- CSV/XLS Export ----
-  
-  function exportItineraryToCSV(best, ptoOffSet, holidayInfoMap) {
+  function buildItineraryRows(best, holidayInfoMap) {
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    
-    // CSV Headers
-    const headers = ["Date", "Day", "Details", "Day # in City", "PTO"];
-    const rows = [headers];
-    
-    // Track days in each city
+    const rows = [];
+  
     const cityDayCount = {};
     let currentCity = null;
-    
+  
     for (const day of best.days) {
       const dateObj = parseISODate(day.dateISO);
       const dayOfWeek = dayNames[dateObj.getDay()];
-      
-      // Track city days
-      let daysInCity = "";
-      if (day.kind === "city") {
-        const cityLabel = day.label.split(" (")[0]; // Extract city name
-        if (cityLabel !== currentCity) {
-          currentCity = cityLabel;
-          cityDayCount[cityLabel] = 0;
-        }
-        cityDayCount[cityLabel]++;
-        daysInCity = String(cityDayCount[cityLabel]);
-      }
-      
-      // Details - match renderItinerary logic
-      let details = day.label;
-      if (day.kind === "travel" && day.flightDurationHours) {
-        const flightTime = formatHours(day.flightDurationHours);
-        if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          details = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
-        } else if (day.isDepartureDay) {
-          details = day.label;
-        } else if (!day.noTravelDay && !day.isArrivalDay) {
-          details = `${day.label} (~${flightTime})`;
-        }
-      } else if (day.kind === "city" && day.arrivalSpilloverHours > 0) {
-        const flightTime = formatHours(day.arrivalFlightDurationHours);
-        const spillover = formatHours(day.arrivalSpilloverHours);
-        const fromCity = day.arrivalFromCity || "";
-        if (fromCity) {
-          details = `${fromCity} → ${day.label} (~${flightTime}; ${spillover} remaining). Day 1 in ${day.label.split(" (")[0]}`;
-        } else {
-          details = `${day.label} (arrival; ${spillover} remaining from flight)`;
-        }
-      } else if (day.kind === "city" && day.departureFlightDurationHours) {
-        const flightTime = formatHours(day.departureFlightDurationHours);
-        const nightPortion = day.departureNightHours ? formatHours(day.departureNightHours) : null;
-        if (nightPortion && day.departureNightHours < day.departureFlightDurationHours) {
-          const dayPortion = formatHours(day.departureFlightDurationHours - day.departureNightHours);
-          details = `${day.label} (~${flightTime}; ${dayPortion} during day, ${nightPortion} overnight)`;
-        } else if (nightPortion) {
-          details = `${day.label} (~${flightTime}; ${nightPortion} overnight)`;
-        } else {
-          details = `${day.label} (~${flightTime})`;
-        }
-      }
-      
-      // PTO
-      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-      const holidayInfo = holidayInfoMap ? holidayInfoMap.get(day.dateISO) : null;
-      
-      let pto;
-      if (day.ptoRequired) {
-        pto = "Yes";
-      } else if (day.workPlusFly) {
-        pto = "No (Work)";
-      } else if (isWeekend) {
-        pto = "No (Weekend)";
-      } else if (holidayInfo) {
-        pto = "No (Holiday)";
-      } else if (day.isRedeyeTravel) {
-        pto = "No (Work)";
-      } else if (day.kind === "travel") {
-        pto = "No (Work)";
-      } else {
-        pto = "No (Weekend)";
-      }
-      
-      rows.push([
-        day.dateISO,
-        dayOfWeek,
-        details,
-        daysInCity || "—",
-        pto
-      ]);
-    }
-    
-    // Convert to CSV
-    const csvContent = rows.map(row => 
-      row.map(cell => {
-        // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        const str = String(cell);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return '"' + str.replace(/"/g, '""') + '"';
-        }
-        return str;
-      }).join(',')
-    ).join('\n');
-    
-    // Download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `travel-itinerary-${best.tripStartISO}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
   
-  function exportItineraryToXLS(best, ptoOffSet, holidayInfoMap) {
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    
-    // Build HTML table for XLS
-    let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
-    html += '<head>';
-    html += '<meta charset="UTF-8">';
-    html += '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>';
-    html += '<x:Name>Itinerary</x:Name>';
-    html += '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
-    html += '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
-    html += '</head><body>';
-    html += '<table border="1">';
-    
-    // Headers
-    html += '<thead><tr>';
-    html += '<th>Date</th><th>Day</th><th>Details</th><th>Day # in City</th><th>PTO</th>';
-    html += '</tr></thead><tbody>';
-    
-    // Track days in each city
-    const cityDayCount = {};
-    let currentCity = null;
-    
-    for (const day of best.days) {
-      const dateObj = parseISODate(day.dateISO);
-      const dayOfWeek = dayNames[dateObj.getDay()];
-      
       // Track city days
       let daysInCity = "";
       if (day.kind === "city") {
@@ -1784,16 +1655,14 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         cityDayCount[cityLabel]++;
         daysInCity = String(cityDayCount[cityLabel]);
       }
-      
-      // Details - match renderItinerary logic
+  
+      // Details (same logic)
       let details = day.label;
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
           details = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
-        } else if (day.isDepartureDay) {
-          details = day.label;
-        } else if (!day.noTravelDay && !day.isArrivalDay) {
+        } else if (!day.isDepartureDay && !day.noTravelDay && !day.isArrivalDay) {
           details = `${day.label} (~${flightTime})`;
         }
       } else if (day.kind === "city" && day.arrivalSpilloverHours > 0) {
@@ -1817,46 +1686,87 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
           details = `${day.label} (~${flightTime})`;
         }
       }
-      
+  
       // PTO
       const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
       const holidayInfo = holidayInfoMap ? holidayInfoMap.get(day.dateISO) : null;
-      
+  
       let pto;
-      if (day.ptoRequired) {
-        pto = "Yes";
-      } else if (day.workPlusFly) {
-        pto = "No (Work)";
-      } else if (isWeekend) {
-        pto = "No (Weekend)";
-      } else if (holidayInfo) {
-        pto = "No (Holiday)";
-      } else if (day.isRedeyeTravel) {
-        pto = "No (Work)";
-      } else if (day.kind === "travel") {
-        pto = "No (Work)";
-      } else {
-        pto = "No (Weekend)";
-      }
-      
+      if (day.ptoRequired) pto = "Yes";
+      else if (day.workPlusFly) pto = "No (Work)";
+      else if (isWeekend) pto = "No (Weekend)";
+      else if (holidayInfo) pto = "No (Holiday)";
+      else if (day.isRedeyeTravel) pto = "No (Work)";
+      else if (day.kind === "travel") pto = "No (Work)";
+      else pto = "No (Weekend)";
+  
+      rows.push({
+        date: day.dateISO,
+        day: dayOfWeek,
+        details,
+        daysInCity: daysInCity || "—",
+        pto
+      });
+    }
+  
+    return rows;
+  }
+  
+  function exportItineraryToCSV(best, ptoOffSet, holidayInfoMap) {
+    const headers = ["Date", "Day", "Details", "Day # in City", "PTO"];
+    const data = buildItineraryRows(best, holidayInfoMap);
+  
+    const rows = [headers, ...data.map(r => [
+      r.date, r.day, r.details, r.daysInCity, r.pto
+    ])];
+  
+    const csvContent = rows.map(row =>
+      row.map(cell => {
+        const str = String(cell);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(',')
+    ).join('\n');
+  
+    downloadFile(csvContent, 'text/csv;charset=utf-8;', `travel-itinerary-${best.tripStartISO}.csv`);
+  }
+  
+  function exportItineraryToXLS(best, ptoOffSet, holidayInfoMap) {
+    const data = buildItineraryRows(best, holidayInfoMap);
+  
+    let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+    html += '<head><meta charset="UTF-8"></head><body>';
+    html += '<table border="1">';
+    html += '<thead><tr>';
+    html += '<th>Date</th><th>Day</th><th>Details</th><th>Day # in City</th><th>PTO</th>';
+    html += '</tr></thead><tbody>';
+  
+    for (const r of data) {
       html += '<tr>';
-      html += `<td>${day.dateISO}</td>`;
-      html += `<td>${dayOfWeek}</td>`;
-      html += `<td>${details.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`;
-      html += `<td>${daysInCity || "—"}</td>`;
-      html += `<td>${pto}</td>`;
+      html += `<td>${r.date}</td>`;
+      html += `<td>${r.day}</td>`;
+      html += `<td>${r.details.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`;
+      html += `<td>${r.daysInCity}</td>`;
+      html += `<td>${r.pto}</td>`;
       html += '</tr>';
     }
-    
+  
     html += '</tbody></table></body></html>';
-    
-    // Download as XLS
-    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+  
+    downloadFile(html, 'application/vnd.ms-excel', `travel-itinerary-${best.tripStartISO}.xls`);
+  }
+
+  function downloadFile(content, mimeType, filename) {
+    const blob = new Blob([content], { type: mimeType });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `travel-itinerary-${best.tripStartISO}.xls`);
+  
+    link.href = url;
+    link.download = filename;
     link.style.visibility = 'hidden';
+  
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1968,7 +1878,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       
       if (startDateField) startDateField.style.display = isRange ? "" : "none";
       if (endDateField) endDateField.style.display = isRange ? "" : "none";
-      if (dowToggle) dowToggle.style.visibility = isRange ? "visible" : "hidden";
+      if (dowToggle) dowToggle.style.display = isRange ? "" : "none";
       if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
       if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
