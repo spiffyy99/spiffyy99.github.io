@@ -857,6 +857,7 @@
     }
 
     if (dateConstraint.mode === "specific") {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
       const { direction, date } = dateConstraint;
       if (direction === "depart") {
         const d = parseISODate(date);
@@ -865,6 +866,8 @@
         const arriveDate = parseISODate(date);
         const startDate = addDays(arriveDate, -(totalCalendarDaysNeeded - 1));
         const startISO = isoDate(startDate);
+        // Only accept if the computed start is feasible (not in the past) and within the window.
+        if (startDate < today) return [];
         return startDate >= start && startDate <= latestStart ? [startISO] : [];
       }
     }
@@ -2201,19 +2204,34 @@ addDestinationBtn.addEventListener("click", () => {
         return;
       }
 
-      // Validate DOW constraint: target day of week must appear somewhere in the range.
+      // Validate DOW constraint against the actual feasible start-date range.
       if (dateMode === "range+dow" && dateConstraint?.mode === "range+dow") {
-        const { dayOfWeek } = dateConstraint;
+        const { direction, dayOfWeek } = dateConstraint;
         const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        // Estimate minimum trip calendar days (travel + stay) heuristically: stayDays + 2 travel legs.
+        const minTripDays = totalStayDays + 2;
+        const latestFeasibleStart = addDays(windowEnd, -(minTripDays - 1));
         let found = false;
-        let cur = new Date(windowStart);
-        const cap = new Date(windowEnd);
-        while (cur <= cap) {
-          if (cur.getDay() === dayOfWeek) { found = true; break; }
-          cur = addDays(cur, 1);
+        if (latestFeasibleStart >= windowStart) {
+          if (direction === "depart") {
+            // Trip starts on a candidate in [windowStart, latestFeasibleStart].
+            let cur = new Date(windowStart);
+            while (cur <= latestFeasibleStart) {
+              if (cur.getDay() === dayOfWeek) { found = true; break; }
+              cur = addDays(cur, 1);
+            }
+          } else {
+            // Trip ends on the target DOW; end dates in [windowStart + minTripDays - 1, windowEnd].
+            let cur = addDays(windowStart, minTripDays - 1);
+            while (cur <= windowEnd) {
+              if (cur.getDay() === dayOfWeek) { found = true; break; }
+              cur = addDays(cur, 1);
+            }
+          }
         }
         if (!found) {
-          errorBox.textContent = `${dayNames[dayOfWeek]} does not fall within your selected date range. Widen the range or choose a different day of week.`;
+          const dayName = dayNames[dayOfWeek];
+          errorBox.textContent = `No feasible ${direction === "depart" ? "departure on" : "return on"} ${dayName} is possible within the selected date range (considering your stay days). Widen the range or choose a different day.`;
           errorBox.style.display = "block";
           return;
         }
@@ -2430,8 +2448,16 @@ addDestinationBtn.addEventListener("click", () => {
         });
 
         if (!best) {
-          errorBox.textContent =
-            "No feasible itinerary found within the selected date window given your holiday/PTO-off selection. Try widening the date window or adjusting stay days.";
+          let noItineraryMsg = "No feasible itinerary found within the selected date window given your holiday/PTO-off selection. Try widening the date window or adjusting stay days.";
+          if (dateConstraint?.mode === "specific" && dateConstraint.direction === "arrive") {
+            noItineraryMsg = `No feasible itinerary found: the required trip start date (${dateConstraint.date} minus stay + travel days) falls in the past or outside the allowed window. Please choose a later arrival date.`;
+          } else if (dateConstraint?.mode === "specific" && dateConstraint.direction === "depart") {
+            noItineraryMsg = `No feasible itinerary found starting on ${dateConstraint.date}. Verify your destinations and stay days fit within a reasonable trip length.`;
+          } else if (dateConstraint?.mode === "range+dow") {
+            const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+            noItineraryMsg = `No feasible itinerary found: no ${dayNames[dateConstraint.dayOfWeek]} ${dateConstraint.direction === "depart" ? "departure" : "return"} date lines up with your destinations and stay days in the given window.`;
+          }
+          errorBox.textContent = noItineraryMsg;
           errorBox.style.display = "block";
           return;
         }
