@@ -12,6 +12,7 @@
     airport: "travel:airportCache:v1",
     flight: "travel:flightCache:v1",
     routes: "travel:routesCache:v1",
+    weather: "travel:weatherCache:v1",
   };
   const SELECTED_LOCATION_META = new WeakMap();
 
@@ -855,13 +856,17 @@
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityName: leg.to.cityName || leg.to.displayName,
+            latitude: leg.to.airport?.latitude,
+            longitude: leg.to.airport?.longitude,
+            isFirstDayInCity: s === 0,
           });
           tripDays++;
         }
         currentDate = addDays(currentDate, leg.to.stayDays);
       }
     }
-
+    
     const ptoRequiredTotal = days.reduce((sum, x) => sum + (x.ptoRequired ? 1 : 0), 0);
     const tripStartISO = days[0]?.dateISO;
     const tripEndISO = days[days.length - 1]?.dateISO;
@@ -1298,6 +1303,121 @@
     return { isDirect: false, note: "connection likely" };
   }
   
+  // ---- Weather data from Open-Meteo Archive API ----
+  
+  let weatherCache = {}; // Cache for weather data by "lat,lon"
+  let lastRenderedWeatherData = null; // Store for export functions
+  
+  // Fetch 10-year historical weather averages for a location
+  async function fetchWeatherAverages(latitude, longitude) {
+    const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+    
+    // Check in-memory cache first
+    if (weatherCache[cacheKey]) {
+      return weatherCache[cacheKey];
+    }
+    
+    // Check localStorage cache
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.weather);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[cacheKey]) {
+          weatherCache = parsed;
+          return parsed[cacheKey];
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    
+    // Fetch from Open-Meteo Archive API (past 10 years)
+    const endYear = new Date().getFullYear() - 1; // Use complete years only
+    const startYear = endYear - 9; // 10 years of data
+    const startDate = `${startYear}-01-01`;
+    const endDate = `${endYear}-12-31`;
+    
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&start_date=${startDate}&end_date=${endDate}&monthly=temperature_2m_mean,precipitation_sum`;
+    
+    try {
+      console.log(`Fetching weather data for ${cacheKey}...`);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+      
+      const data = await res.json();
+      
+      // Process monthly data to get averages by month (1-12)
+      const monthlyAverages = {};
+      for (let m = 1; m <= 12; m++) {
+        monthlyAverages[m] = { temps: [], precips: [] };
+      }
+      
+      if (data.monthly && data.monthly.time) {
+        for (let i = 0; i < data.monthly.time.length; i++) {
+          const dateStr = data.monthly.time[i];
+          const month = parseInt(dateStr.split('-')[1], 10);
+          const temp = data.monthly.temperature_2m_mean?.[i];
+          const precip = data.monthly.precipitation_sum?.[i];
+          
+          if (temp !== null && temp !== undefined) {
+            monthlyAverages[month].temps.push(temp);
+          }
+          if (precip !== null && precip !== undefined) {
+            monthlyAverages[month].precips.push(precip);
+          }
+        }
+      }
+      
+      // Calculate averages for each month
+      const result = {};
+      for (let m = 1; m <= 12; m++) {
+        const temps = monthlyAverages[m].temps;
+        const precips = monthlyAverages[m].precips;
+        result[m] = {
+          avgTempC: temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : null,
+          avgPrecipMm: precips.length > 0 ? precips.reduce((a, b) => a + b, 0) / precips.length : null,
+        };
+      }
+      
+      // Cache the result
+      weatherCache[cacheKey] = result;
+      try {
+        localStorage.setItem(STORAGE_KEYS.weather, JSON.stringify(weatherCache));
+      } catch (e) {
+        // Ignore quota errors
+      }
+      
+      return result;
+    } catch (e) {
+      console.error(`Failed to fetch weather for ${cacheKey}:`, e);
+      return null;
+    }
+  }
+  
+  // Get weather for a specific month at a location
+  async function getMonthlyWeather(latitude, longitude, month) {
+    const averages = await fetchWeatherAverages(latitude, longitude);
+    if (!averages || !averages[month]) return null;
+    return averages[month];
+  }
+  
+  // Format weather for display
+  function formatWeather(weather) {
+    if (!weather) return "—";
+    
+    const parts = [];
+    if (weather.avgTempC !== null) {
+      const tempF = (weather.avgTempC * 9/5) + 32;
+      parts.push(`${Math.round(weather.avgTempC)}°C / ${Math.round(tempF)}°F`);
+    }
+    if (weather.avgPrecipMm !== null) {
+      const precipIn = weather.avgPrecipMm / 25.4;
+      parts.push(`${Math.round(weather.avgPrecipMm)}mm / ${precipIn.toFixed(1)}in rain`);
+    }
+    
+    return parts.length > 0 ? parts.join(", ") : "—";
+  }
+  
   function searchAirports(query, airports, limit = 6) {
     if (!airports || !airports.length) return [];
     const q = query.toLowerCase().trim();
@@ -1705,19 +1825,41 @@
     container.appendChild(row);
   }
 
-  function renderItinerary(best, ptoOffSet, holidayInfoMap) {
+  async function renderItinerary(best, ptoOffSet, holidayInfoMap) {
     const wrap = $("itineraryTableWrap");
     wrap.innerHTML = "";
     const table = document.createElement("table");
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Date", "Day", "Details", "Day # in City", "PTO"].forEach((h) => {
+    ["Date", "Day", "Details", "Day # in City", "Weather", "PTO"].forEach((h) => {
       const th = document.createElement("th");
       th.textContent = h;
       headRow.appendChild(th);
     });
     thead.appendChild(headRow);
     table.appendChild(thead);
+    
+    // Pre-fetch weather data for all cities (first day only)
+    const weatherDataMap = new Map();
+    const weatherFetchPromises = [];
+    for (const day of best.days) {
+      if (day.kind === "city" && day.isFirstDayInCity && day.latitude && day.longitude) {
+        const month = parseInt(day.dateISO.split('-')[1], 10);
+        const key = `${day.cityName}-${month}`;
+        if (!weatherDataMap.has(key)) {
+          weatherDataMap.set(key, null); // Placeholder
+          weatherFetchPromises.push(
+            getMonthlyWeather(day.latitude, day.longitude, month).then(weather => {
+              weatherDataMap.set(key, weather);
+            })
+          );
+        }
+      }
+    }
+    await Promise.all(weatherFetchPromises);
+    
+    // Store for export functions
+    lastRenderedWeatherData = weatherDataMap;
 
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const tbody = document.createElement("tbody");
@@ -1825,10 +1967,22 @@
         ptoTd.textContent = "No (Weekend)";
       }
 
+      // Weather column - show only on first day in each city
+      const weatherTd = document.createElement("td");
+      if (day.kind === "city" && day.isFirstDayInCity && day.latitude && day.longitude) {
+        const month = parseInt(day.dateISO.split('-')[1], 10);
+        const key = `${day.cityName}-${month}`;
+        const weather = weatherDataMap.get(key);
+        weatherTd.textContent = formatWeather(weather);
+      } else {
+        weatherTd.textContent = "—";
+      }
+
       tr.appendChild(dateTd);
       tr.appendChild(dayTd);
       tr.appendChild(detailsTd);
       tr.appendChild(cityDaysTd);
+      tr.appendChild(weatherTd);
       tr.appendChild(ptoTd);
       tbody.appendChild(tr);
     }
@@ -1910,7 +2064,8 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
 
 
   // ---- CSV/XLS Export ----
-  function buildItineraryRows(best, holidayInfoMap) {
+
+  function buildItineraryRows(best, holidayInfoMap, weatherDataMap = null) {
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const rows = [];
   
@@ -1968,6 +2123,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         }
       }
   
+      // Weather (for first day in city)
+      let weather = "—";
+      if (weatherDataMap && day.kind === "city" && day.isFirstDayInCity && day.cityName) {
+        const month = parseInt(day.dateISO.split('-')[1], 10);
+        const key = `${day.cityName}-${month}`;
+        const weatherInfo = weatherDataMap.get(key);
+        weather = formatWeather(weatherInfo);
+      }
+
       // PTO
       const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
       const holidayInfo = holidayInfoMap ? holidayInfoMap.get(day.dateISO) : null;
@@ -1986,6 +2150,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         day: dayOfWeek,
         details,
         daysInCity: daysInCity || "—",
+        weather,
         pto
       });
     }
@@ -1994,11 +2159,11 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
   }
   
   function exportItineraryToCSV(best, ptoOffSet, holidayInfoMap) {
-    const headers = ["Date", "Day", "Details", "Day # in City", "PTO"];
-    const data = buildItineraryRows(best, holidayInfoMap);
+    const headers = ["Date", "Day", "Details", "Day # in City", "Weather", "PTO"];
+    const data = buildItineraryRows(best, holidayInfoMap, lastRenderedWeatherData);
   
     const rows = [headers, ...data.map(r => [
-      r.date, r.day, r.details, r.daysInCity, r.pto
+      r.date, r.day, r.details, r.daysInCity, r.weather, r.pto
     ])];
   
     const csvContent = rows.map(row =>
@@ -2015,13 +2180,13 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
   }
   
   function exportItineraryToXLS(best, ptoOffSet, holidayInfoMap) {
-    const data = buildItineraryRows(best, holidayInfoMap);
+    const data = buildItineraryRows(best, holidayInfoMap, lastRenderedWeatherData);
   
     let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
     html += '<head><meta charset="UTF-8"></head><body>';
     html += '<table border="1">';
     html += '<thead><tr>';
-    html += '<th>Date</th><th>Day</th><th>Details</th><th>Day # in City</th><th>PTO</th>';
+    html += '<th>Date</th><th>Day</th><th>Details</th><th>Day # in City</th><th>Weather</th><th>PTO</th>';
     html += '</tr></thead><tbody>';
   
     for (const r of data) {
@@ -2030,6 +2195,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       html += `<td>${r.day}</td>`;
       html += `<td>${r.details.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`;
       html += `<td>${r.daysInCity}</td>`;
+      html += `<td>${r.weather.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`;
       html += `<td>${r.pto}</td>`;
       html += '</tr>';
     }
@@ -2834,10 +3000,10 @@ addDestinationBtn.addEventListener("click", () => {
           }
         }
 
-        renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities, returnDest);
-        renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
-        
-        // Show results section and setup export
+      renderSummary(finalBest, totalFlightHours, home, finalBest.orderedCities || orderedCities, returnDest);
+      await renderItinerary(finalBest, ptoOffSet, holidayInfoMap);
+      
+      // Show results section and setup export
         const resultsSection = $("resultsSection");
         resultsSection.style.display = "block";
         
@@ -3057,13 +3223,17 @@ addDestinationBtn.addEventListener("click", () => {
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityName: leg.to.cityName || leg.to.displayName,
+            latitude: leg.to.airport?.latitude,
+            longitude: leg.to.airport?.longitude,
+            isFirstDayInCity: s === 0,
           });
           tripDays++;
         }
         currentDate = addDays(currentDate, leg.to.stayDays);
       }
     }
-
+    
     const ptoRequiredTotal = days.reduce((sum, x) => sum + (x.ptoRequired ? 1 : 0), 0);
     return {
       days,
