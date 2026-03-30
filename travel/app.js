@@ -11,6 +11,7 @@
     geo: "travel:geoCache:v1",
     airport: "travel:airportCache:v1",
     flight: "travel:flightCache:v1",
+    routes: "travel:routesCache:v1",
   };
   const SELECTED_LOCATION_META = new WeakMap();
 
@@ -673,22 +674,26 @@
             flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
           }
           
-          days.push({
-            dateISO: isoDate(d),
-            kind: "travel",
-            label: `${fromLabel} → ${toLabel}${flightNote}`,
-            ptoRequired: false,
-            workPlusFly: true,
-            noTravelDay: true,
-            isRedeyeTravel: !!model.isRedeye,
-            flightDurationHours: durationHours,
-            // For departure day, we show overnight portion in the label, not in the generic display
-            nightHours: 0, // Don't show split in generic renderer
-            dayHours: 0,
-            isDepartureDay: true,
-            hasNextDaySpillover: model.isRedeye && dayHours > 0,
-            spilloverHours: dayHours,
-          });
+        days.push({
+          dateISO: isoDate(d),
+          kind: "travel",
+          label: `${fromLabel} → ${toLabel}${flightNote}`,
+          ptoRequired: false,
+          workPlusFly: true,
+          noTravelDay: true,
+          isRedeyeTravel: !!model.isRedeye,
+          flightDurationHours: durationHours,
+          // For departure day, we show overnight portion in the label, not in the generic display
+          nightHours: 0, // Don't show split in generic renderer
+          dayHours: 0,
+          isDepartureDay: true,
+          hasNextDaySpillover: model.isRedeye && dayHours > 0,
+          spilloverHours: dayHours,
+          fromIata: leg.from.airport?.iataCode,
+          toIata: leg.to.airport?.iataCode,
+          fromCityName: fromLabel,
+          toCityName: toLabel,
+        });
           
           // Red-eye arrives the next calendar day - add an arrival row if there's spillover
           if (model.isRedeye) {
@@ -724,24 +729,28 @@
             days[days.length - 1].departureFlightDurationHours = durationHours;
             days[days.length - 1].departureNightHours = nightHours;
           } else {
-            // No previous day, create a departure day
-            days.push({
-              dateISO: isoDate(currentDate),
-              kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
-              ptoRequired: false,
-              workPlusFly: true,
-              noTravelDay: true,
-              isRedeyeTravel: true,
-              flightDurationHours: durationHours,
-              nightHours: 0,
-              dayHours: 0,
-              isDepartureDay: true,
-              departureNightHours: nightHours,
-            });
-          }
-          currentDate = addDays(currentDate, 1);
+        // No previous day, create a departure day
+          days.push({
+            dateISO: isoDate(currentDate),
+            kind: "travel",
+            label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
+            ptoRequired: false,
+            workPlusFly: true,
+            noTravelDay: true,
+            isRedeyeTravel: true,
+            flightDurationHours: durationHours,
+            nightHours: 0,
+            dayHours: 0,
+            isDepartureDay: true,
+            departureNightHours: nightHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: departTo,
+          });
         }
+        currentDate = addDays(currentDate, 1);
+      }
         
         // Add travel day entries - these are the "next day" spillover days
         for (let t = 0; t < model.travelDays; t++) {
@@ -802,6 +811,8 @@
             dayHours: displayDayHours,
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: toCity,
             noTravelDay: false,
             isRedeyeTravel,
             isArrivalDay,
@@ -1084,6 +1095,191 @@
       console.error('Could not load airports.json:', e);
       return [];
     }
+  }
+
+  // ---- Direct flight routes checker (OpenFlights data) ----
+  
+  let directRoutesSet = null; // Set of "ORIGIN-DEST" pairs
+  let cityToAirportsMap = null; // Map of city name -> array of IATA codes
+  
+  const OPENFLIGHTS_ROUTES_URL = "https://raw.githubusercontent.com/jpatokal/openflights/refs/heads/master/data/routes.dat";
+  
+  async function loadDirectRoutes() {
+    if (directRoutesSet) return directRoutesSet;
+    
+    try {
+      // Try to load from cache first
+      const cached = localStorage.getItem(STORAGE_KEYS.routes);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Cache for 7 days
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+          directRoutesSet = new Set(parsed.routes);
+          console.log(`Loaded ${directRoutesSet.size} direct routes from cache`);
+          return directRoutesSet;
+        }
+      }
+      
+      console.log("Fetching direct routes from OpenFlights...");
+      const res = await fetch(OPENFLIGHTS_ROUTES_URL);
+      if (!res.ok) throw new Error(`Failed to fetch routes (${res.status})`);
+      
+      const text = await res.text();
+      const routes = new Set();
+      
+      // Parse CSV: each line format is "airline,airlineID,origin,originID,dest,destID,..."
+      // We want columns 2 (origin) and 4 (dest) - 0-indexed
+      for (const line of text.split('\n')) {
+        const parts = line.split(',');
+        if (parts.length >= 5) {
+          const origin = parts[2]?.trim();
+          const dest = parts[4]?.trim();
+          // Only add if both are valid 3-letter IATA codes
+          if (origin && dest && /^[A-Z]{3}$/.test(origin) && /^[A-Z]{3}$/.test(dest)) {
+            routes.add(`${origin}-${dest}`);
+          }
+        }
+      }
+      
+      directRoutesSet = routes;
+      console.log(`Loaded ${directRoutesSet.size} direct routes from OpenFlights`);
+      
+      // Cache the routes
+      try {
+        localStorage.setItem(STORAGE_KEYS.routes, JSON.stringify({
+          timestamp: Date.now(),
+          routes: Array.from(routes),
+        }));
+      } catch (e) {
+        // Ignore quota errors
+      }
+      
+      return directRoutesSet;
+    } catch (e) {
+      console.error("Failed to load direct routes:", e);
+      directRoutesSet = new Set();
+      return directRoutesSet;
+    }
+  }
+  
+  // Build city -> airports mapping from our airports database
+  async function buildCityToAirportsMap() {
+    if (cityToAirportsMap) return cityToAirportsMap;
+    
+    const airports = await loadAirportsDB();
+    cityToAirportsMap = new Map();
+    
+    for (const ap of airports) {
+      if (!ap.i || !ap.c) continue;
+      
+      // Normalize city name for grouping
+      const cityKey = ap.c.toLowerCase().split(',')[0].trim();
+      
+      if (!cityToAirportsMap.has(cityKey)) {
+        cityToAirportsMap.set(cityKey, []);
+      }
+      cityToAirportsMap.get(cityKey).push(ap.i);
+    }
+    
+    // Add well-known city aliases for major cities with multiple airports
+    const aliases = {
+      "paris": ["CDG", "ORY", "BVA"],
+      "london": ["LHR", "LGW", "STN", "LTN", "LCY", "SEN"],
+      "new york": ["JFK", "LGA", "EWR"],
+      "tokyo": ["NRT", "HND"],
+      "chicago": ["ORD", "MDW"],
+      "los angeles": ["LAX", "BUR", "SNA", "ONT", "LGB"],
+      "san francisco": ["SFO", "OAK", "SJC"],
+      "washington": ["DCA", "IAD", "BWI"],
+      "milan": ["MXP", "LIN", "BGY"],
+      "rome": ["FCO", "CIA"],
+      "moscow": ["SVO", "DME", "VKO"],
+      "seoul": ["ICN", "GMP"],
+      "shanghai": ["PVG", "SHA"],
+      "beijing": ["PEK", "PKX"],
+      "bangkok": ["BKK", "DMK"],
+      "osaka": ["KIX", "ITM"],
+      "istanbul": ["IST", "SAW"],
+      "dallas": ["DFW", "DAL"],
+      "houston": ["IAH", "HOU"],
+      "miami": ["MIA", "FLL"],
+      "toronto": ["YYZ", "YTZ", "YHM"],
+      "montreal": ["YUL", "YMX"],
+      "buenos aires": ["EZE", "AEP"],
+      "sao paulo": ["GRU", "CGH", "VCP"],
+      "rio de janeiro": ["GIG", "SDU"],
+      "mumbai": ["BOM"],
+      "delhi": ["DEL"],
+      "singapore": ["SIN"],
+      "hong kong": ["HKG"],
+      "sydney": ["SYD"],
+      "melbourne": ["MEL", "AVV"],
+      "stockholm": ["ARN", "BMA", "NYO"],
+      "amsterdam": ["AMS"],
+      "frankfurt": ["FRA", "HHN"],
+      "munich": ["MUC"],
+      "zurich": ["ZRH"],
+      "vienna": ["VIE"],
+      "berlin": ["BER"],
+      "dublin": ["DUB"],
+      "madrid": ["MAD"],
+      "barcelona": ["BCN", "GRO", "REU"],
+    };
+    
+    for (const [city, codes] of Object.entries(aliases)) {
+      const existing = cityToAirportsMap.get(city) || [];
+      const combined = [...new Set([...existing, ...codes])];
+      cityToAirportsMap.set(city, combined);
+    }
+    
+    return cityToAirportsMap;
+  }
+  
+  // Get all airports that could serve a city
+  function getAirportsForCity(cityName, airportIata) {
+    if (!cityToAirportsMap) return airportIata ? [airportIata] : [];
+    
+    const airports = [];
+    
+    // Always include the primary airport
+    if (airportIata) airports.push(airportIata);
+    
+    // Look up by city name
+    if (cityName) {
+      const cityKey = cityName.toLowerCase().split(',')[0].trim();
+      const cityAirports = cityToAirportsMap.get(cityKey);
+      if (cityAirports) {
+        for (const code of cityAirports) {
+          if (!airports.includes(code)) airports.push(code);
+        }
+      }
+    }
+    
+    return airports;
+  }
+  
+  // Check if a direct flight exists between two locations
+  // Returns: { isDirect: boolean, note: string }
+  function checkDirectFlightAvailable(fromCityName, fromIata, toCityName, toIata) {
+    if (!directRoutesSet || directRoutesSet.size === 0) {
+      // Routes not loaded, don't show any direct flight info
+      return { isDirect: null, note: "" };
+    }
+    
+    const fromAirports = getAirportsForCity(fromCityName, fromIata);
+    const toAirports = getAirportsForCity(toCityName, toIata);
+    
+    // Check all combinations
+    for (const from of fromAirports) {
+      for (const to of toAirports) {
+        if (directRoutesSet.has(`${from}-${to}`)) {
+          return { isDirect: true, note: "direct" };
+        }
+      }
+    }
+    
+    // No direct route found
+    return { isDirect: false, note: "connection likely" };
   }
   
   function searchAirports(query, airports, limit = 6) {
@@ -1543,17 +1739,20 @@
       const detailsTd = document.createElement("td");
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
+        const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
+        const directSuffix = directStatus.note ? `, ${directStatus.note}` : "";
         
         // Check if this is an arrival day with spillover from previous night's red-eye
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
           // Show the remaining portion of the flight
-          detailsTd.textContent = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${directSuffix}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (day.isDepartureDay) {
-          // Departure day - label already contains the flight info
-          detailsTd.textContent = day.label;
+          // Departure day - label already contains the flight info, but add direct status
+          const labelWithDirect = directStatus.note ? `${day.label.replace(/\)$/, `${directSuffix})`)}` : day.label;
+          detailsTd.textContent = labelWithDirect;
         } else if (!day.noTravelDay && !day.isArrivalDay) {
           // Regular travel day (full day flight, not a red-eye spillover)
-          detailsTd.textContent = `${day.label} (~${flightTime})`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${directSuffix})`;
         } else {
           detailsTd.textContent = day.label;
         }
@@ -1722,10 +1921,14 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       let details = day.label;
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
+        const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
+        const directSuffix = directStatus.note ? `, ${directStatus.note}` : "";
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          details = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
+          details = `${day.label} (~${flightTime}${directSuffix}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (!day.isDepartureDay && !day.noTravelDay && !day.isArrivalDay) {
-          details = `${day.label} (~${flightTime})`;
+          details = `${day.label} (~${flightTime}${directSuffix})`;
+        } else if (day.isDepartureDay && directStatus.note) {
+          details = day.label.replace(/\)$/, `${directSuffix})`);
         }
       } else if (day.kind === "city" && day.arrivalSpilloverHours > 0) {
         const flightTime = formatHours(day.arrivalFlightDurationHours);
@@ -2115,6 +2318,9 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     }
     renderHolidayDefaults(holidayDefaults);
     refreshHolidays();
+    
+    // Pre-load direct routes data and city-to-airports mapping
+    loadDirectRoutes().then(() => buildCityToAirportsMap());
 
     renderExtraPtoDays(extraPtoOffContainer, 0);
 
@@ -2699,6 +2905,10 @@ addDestinationBtn.addEventListener("click", () => {
             isDepartureDay: true,
             hasNextDaySpillover: model.isRedeye && dayHours > 0,
             spilloverHours: dayHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            fromCityName: fromLabel,
+            toCityName: toLabel,
           });
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
         } else if (days.length > 0) {
@@ -2735,6 +2945,10 @@ addDestinationBtn.addEventListener("click", () => {
               dayHours: 0,
               isDepartureDay: true,
               departureNightHours: nightHours,
+              fromIata: leg.from.airport?.iataCode,
+              toIata: leg.to.airport?.iataCode,
+              fromCityName: fromCity,
+              toCityName: departTo,
             });
           }
           currentDate = addDays(currentDate, 1);
@@ -2787,6 +3001,8 @@ addDestinationBtn.addEventListener("click", () => {
             dayHours: 0,
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: toCity,
             noTravelDay: false,
             isRedeyeTravel,
             isArrivalDay,
