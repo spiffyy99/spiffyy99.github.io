@@ -37,7 +37,7 @@
               <input id="returnCity" name="returnCity" type="text" placeholder="e.g. Los Angeles or LAX" autocomplete="off" />
             </div>
 
-            <div style="margin-bottom: 0.55em;">
+            <div id="dateChangerDiv" style="margin-bottom: 1em;">
               <div class="field">
                 <label for="dateMode">Date mode</label>
                 <select id="dateMode" name="dateMode">
@@ -45,8 +45,8 @@
                   <option value="specific">Specific departure/arrival date</option>
                 </select>
               </div>
-              <div class="row" style="position:relative; margin-top: 2px; margin-bottom:15px">
-                <button type="button" id="dowToggle" style="position:absolute; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline; text-align:left!important;">+ Depart/arrive on specific day of week</button>
+              <div class="row" style="position:relative; margin-top: 2px;">
+                <button type="button" id="dowToggle" style="white-space: normal; position:absolute; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0; text-decoration: underline; text-align:left!important; flex: 1 1 auto; min-width: 0; ">+ Depart/arrive on specific day of week</button>
               </div>
             </div>
 

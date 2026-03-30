@@ -1869,6 +1869,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     const dowDayField = $("dowDayField");
     const specificDirectionField = $("specificDirectionField");
     const specificDateField = $("specificDateField");
+    const dateChangerDiv = $("dateChangerDiv")
 
     function syncDateModeFields() {
       const mode = dateModeSelect ? dateModeSelect.value : "range";
@@ -1878,7 +1879,10 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       
       if (startDateField) startDateField.style.display = isRange ? "" : "none";
       if (endDateField) endDateField.style.display = isRange ? "" : "none";
-      if (dowToggle) dowToggle.style.display = isRange ? "" : "none";
+      if (dowToggle) {
+        dowToggle.style.display = isRange ? "" : "none";
+        dateChangerDiv.style.marginBottom = isRange ? "1em" : "0";
+      }
       if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
       if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";

@@ -172,6 +172,7 @@ input[type="checkbox"]{
 .checkboxField{
   align-self: stretch;
   justify-content: center;
+  padding-top: 4px;
 }
 
 .checkboxLabel{
