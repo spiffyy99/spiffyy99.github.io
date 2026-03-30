@@ -58,5 +58,81 @@
       { "id": "sg_deepavali", "name": "Deepavali", "type": "lookup", "dates": { "2025": "2025-10-20", "2026": "2026-11-08", "2027": "2027-10-29", "2028": "2028-10-17", "2029": "2029-11-05", "2030": "2030-10-26" }, "defaultOn": true, "tooltip": "Festival of Lights. Date varies." },
       { "id": "sg_christmas", "name": "Christmas Day", "type": "fixed_sun_to_monday", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. In-lieu Mon if Sun." }
     ]
+  },
+  "AU": {
+    "name": "Australia",
+    "holidays": [
+      { "id": "au_new_years", "name": "New Year's Day", "type": "fixed_observed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Mon if Sat/Sun." },
+      { "id": "au_australia_day", "name": "Australia Day", "type": "fixed_observed", "month": 0, "day": 26, "defaultOn": true, "tooltip": "Jan 26. Observed Mon if Sat/Sun." },
+      { "id": "au_anzac", "name": "ANZAC Day", "type": "fixed", "month": 3, "day": 25, "defaultOn": true, "tooltip": "Apr 25." },
+      { "id": "au_christmas", "name": "Christmas Day", "type": "fixed_observed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Mon if Sat/Sun." },
+      { "id": "au_boxing", "name": "Boxing Day", "type": "fixed_observed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26. Observed Mon if Sat/Sun." }
+    ]
+  },
+  "NZ": {
+    "name": "New Zealand",
+    "holidays": [
+      { "id": "nz_new_years", "name": "New Year's Day", "type": "fixed_observed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Mon if Sat/Sun." },
+      { "id": "nz_day_after_new_years", "name": "Day After New Year", "type": "fixed_observed", "month": 0, "day": 2, "defaultOn": true, "tooltip": "Jan 2. Observed Mon if Sat/Sun." },
+      { "id": "nz_waitangi", "name": "Waitangi Day", "type": "fixed_observed", "month": 1, "day": 6, "defaultOn": true, "tooltip": "Feb 6. Observed Mon if Sat/Sun." },
+      { "id": "nz_anzac", "name": "ANZAC Day", "type": "fixed", "month": 3, "day": 25, "defaultOn": true, "tooltip": "Apr 25." },
+      { "id": "nz_christmas", "name": "Christmas Day", "type": "fixed_observed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Mon if Sat/Sun." },
+      { "id": "nz_boxing", "name": "Boxing Day", "type": "fixed_observed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26. Observed Mon if Sat/Sun." }
+    ]
+  },
+  "IE": {
+    "name": "Ireland",
+    "holidays": [
+      { "id": "ie_new_years", "name": "New Year's Day", "type": "fixed_observed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Mon if Sat/Sun." },
+      { "id": "ie_st_patrick", "name": "St. Patrick's Day", "type": "fixed_observed", "month": 2, "day": 17, "defaultOn": true, "tooltip": "Mar 17. Observed Mon if Sat/Sun." },
+      { "id": "ie_easter_monday", "name": "Easter Monday", "type": "easter_offset", "offset": 1, "defaultOn": true, "tooltip": "Monday after Easter Sunday." },
+      { "id": "ie_may_day", "name": "May Day", "type": "nth_weekday", "month": 4, "weekday": 1, "nth": 1, "defaultOn": true, "tooltip": "1st Monday in May." },
+      { "id": "ie_christmas", "name": "Christmas Day", "type": "fixed_observed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Mon if Sat/Sun." },
+      { "id": "ie_st_stephens", "name": "St. Stephen's Day", "type": "fixed_observed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26. Observed Mon if Sat/Sun." }
+    ]
+  },
+  "DE": {
+    "name": "Germany",
+    "holidays": [
+      { "id": "de_new_years", "name": "New Year's Day", "type": "fixed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1" },
+      { "id": "de_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": true, "tooltip": "Friday before Easter Sunday" },
+      { "id": "de_easter_monday", "name": "Easter Monday", "type": "easter_offset", "offset": 1, "defaultOn": true, "tooltip": "Monday after Easter Sunday" },
+      { "id": "de_labour_day", "name": "Labour Day", "type": "fixed", "month": 4, "day": 1, "defaultOn": true, "tooltip": "May 1" },
+      { "id": "de_christmas", "name": "Christmas Day", "type": "fixed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25" },
+      { "id": "de_boxing", "name": "2nd Christmas Day", "type": "fixed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26" }
+    ]
+  },
+  "NL": {
+    "name": "Netherlands",
+    "holidays": [
+      { "id": "nl_new_years", "name": "New Year's Day", "type": "fixed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1" },
+      { "id": "nl_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": false, "tooltip": "Friday before Easter Sunday" },
+      { "id": "nl_easter_monday", "name": "Easter Monday", "type": "easter_offset", "offset": 1, "defaultOn": true, "tooltip": "Monday after Easter Sunday" },
+      { "id": "nl_king_day", "name": "King's Day", "type": "fixed", "month": 3, "day": 27, "defaultOn": true, "tooltip": "Apr 27" },
+      { "id": "nl_christmas", "name": "Christmas Day", "type": "fixed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25" },
+      { "id": "nl_boxing", "name": "2nd Christmas Day", "type": "fixed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26" }
+    ]
+  },
+  "FR": {
+    "name": "France",
+    "holidays": [
+      { "id": "fr_new_years", "name": "New Year's Day", "type": "fixed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1" },
+      { "id": "fr_labor_day", "name": "Labor Day", "type": "fixed", "month": 4, "day": 1, "defaultOn": true, "tooltip": "May 1" },
+      { "id": "fr_victory_day", "name": "Victory in Europe Day", "type": "fixed", "month": 4, "day": 8, "defaultOn": true, "tooltip": "May 8" },
+      { "id": "fr_bastille", "name": "Bastille Day", "type": "fixed", "month": 6, "day": 14, "defaultOn": true, "tooltip": "Jul 14" },
+      { "id": "fr_all_saints", "name": "All Saints' Day", "type": "fixed", "month": 10, "day": 1, "defaultOn": true, "tooltip": "Nov 1" },
+      { "id": "fr_christmas", "name": "Christmas Day", "type": "fixed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25" }
+    ]
+  },
+  "SE": {
+    "name": "Sweden",
+    "holidays": [
+      { "id": "se_new_years", "name": "New Year's Day", "type": "fixed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1" },
+      { "id": "se_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": true, "tooltip": "Friday before Easter Sunday" },
+      { "id": "se_easter_monday", "name": "Easter Monday", "type": "easter_offset", "offset": 1, "defaultOn": true, "tooltip": "Monday after Easter Sunday" },
+      { "id": "se_labour_day", "name": "Labour Day", "type": "fixed", "month": 4, "day": 1, "defaultOn": true, "tooltip": "May 1" },
+      { "id": "se_christmas", "name": "Christmas Day", "type": "fixed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25" },
+      { "id": "se_boxing", "name": "Boxing Day", "type": "fixed", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26" }
+    ]
   }
 }

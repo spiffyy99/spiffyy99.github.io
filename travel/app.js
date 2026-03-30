@@ -2056,14 +2056,23 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
 
     function countryCodeFromName(countryName) {
       const n = (countryName || "").toLowerCase();
-      if (n.includes("united states") || n.includes("usa") || n.includes("u.s.a")) return "US";
+    
+      if (n.includes("united states") || n.includes("usa") || n.includes("u.s.a")  || n.includes("america")) return "US";
       if (n.includes("canada")) return "CA";
-      if (n.includes("united kingdom") || n.includes("great britain") ||
+      if (n.includes("united kingdom") || n.includes("britain") ||
           n.includes("england") || n.includes("scotland") || n.includes("wales")) return "GB";
       if (n.includes("singapore")) return "SG";
+      if (n.includes("aus")) return "AU";
+      if (n.includes("new zealand") || n.includes("nz")) return "NZ";
+      if (n.includes("ireland")) return "IE";
+      if (n.includes("germany")) return "DE";
+      if (n.includes("netherlands") || n.includes("holland")) return "NL";
+      if (n.includes("france")) return "FR";
+      if (n.includes("sweden")) return "SE";
+    
       return null;
     }
-
+    
     function countryCodeFromTimezone() {
       try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
@@ -2076,8 +2085,16 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         ]);
         if (caZones.has(tz)) return "CA";
         if (tz.startsWith("America/")) return "US";
-      } catch (e) { /* */ }
-      return "US";
+        if (tz.startsWith("Australia/")) return "AU";
+        if (tz.startsWith("Pacific/Auckland")) return "NZ"; 
+        if (tz.startsWith("Europe/Dublin")) return "IE";
+        if (tz.startsWith("Europe/Berlin") || tz.startsWith("Europe/Frankfurt") || tz.startsWith("Europe/Munich")) return "DE";
+        if (tz.startsWith("Europe/Amsterdam")) return "NL";
+        if (tz.startsWith("Europe/Paris")) return "FR";
+        if (tz.startsWith("Europe/Stockholm")) return "SE";
+      } catch (e) {}
+    
+      return "US"; 
     }
 
     async function refreshHolidays() {
