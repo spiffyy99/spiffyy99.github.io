@@ -1162,100 +1162,124 @@
     }
   }
   
-  // Build city -> airports mapping from our airports database
+  // Calculate distance between two coordinates in km (Haversine formula)
+  function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  // Build city -> airports mapping from airports database using city names and proximity
+  let airportByIata = null; // Map IATA code -> airport object for quick lookup
+  
   async function buildCityToAirportsMap() {
     if (cityToAirportsMap) return cityToAirportsMap;
     
     const airports = await loadAirportsDB();
     cityToAirportsMap = new Map();
+    airportByIata = new Map();
     
+    // First pass: build IATA lookup and group by exact city name
     for (const ap of airports) {
-      if (!ap.i || !ap.c) continue;
+      if (!ap.i) continue;
+      airportByIata.set(ap.i, ap);
+      
+      if (!ap.c) continue;
       
       // Normalize city name for grouping
-      const cityKey = ap.c.toLowerCase().split(',')[0].trim();
+      const cityKey = ap.c.toLowerCase().trim();
       
       if (!cityToAirportsMap.has(cityKey)) {
-        cityToAirportsMap.set(cityKey, []);
+        cityToAirportsMap.set(cityKey, new Set());
       }
-      cityToAirportsMap.get(cityKey).push(ap.i);
+      cityToAirportsMap.get(cityKey).add(ap.i);
     }
     
-    // Add well-known city aliases for major cities with multiple airports
-    const aliases = {
-      "paris": ["CDG", "ORY", "BVA"],
-      "london": ["LHR", "LGW", "STN", "LTN", "LCY", "SEN"],
-      "new york": ["JFK", "LGA", "EWR"],
-      "tokyo": ["NRT", "HND"],
-      "chicago": ["ORD", "MDW"],
-      "los angeles": ["LAX", "BUR", "SNA", "ONT", "LGB"],
-      "san francisco": ["SFO", "OAK", "SJC"],
-      "washington": ["DCA", "IAD", "BWI"],
-      "milan": ["MXP", "LIN", "BGY"],
-      "rome": ["FCO", "CIA"],
-      "moscow": ["SVO", "DME", "VKO"],
-      "seoul": ["ICN", "GMP"],
-      "shanghai": ["PVG", "SHA"],
-      "beijing": ["PEK", "PKX"],
-      "bangkok": ["BKK", "DMK"],
-      "osaka": ["KIX", "ITM"],
-      "istanbul": ["IST", "SAW"],
-      "dallas": ["DFW", "DAL"],
-      "houston": ["IAH", "HOU"],
-      "miami": ["MIA", "FLL"],
-      "toronto": ["YYZ", "YTZ", "YHM"],
-      "montreal": ["YUL", "YMX"],
-      "buenos aires": ["EZE", "AEP"],
-      "sao paulo": ["GRU", "CGH", "VCP"],
-      "rio de janeiro": ["GIG", "SDU"],
-      "mumbai": ["BOM"],
-      "delhi": ["DEL"],
-      "singapore": ["SIN"],
-      "hong kong": ["HKG"],
-      "sydney": ["SYD"],
-      "melbourne": ["MEL", "AVV"],
-      "stockholm": ["ARN", "BMA", "NYO"],
-      "amsterdam": ["AMS"],
-      "frankfurt": ["FRA", "HHN"],
-      "munich": ["MUC"],
-      "zurich": ["ZRH"],
-      "vienna": ["VIE"],
-      "berlin": ["BER"],
-      "dublin": ["DUB"],
-      "madrid": ["MAD"],
-      "barcelona": ["BCN", "GRO", "REU"],
-    };
+    // Second pass: for each airport, find nearby airports (within 75km) and add them to same city groups
+    // This handles cases like Newark (EWR) serving New York even though it's technically in NJ
+    const PROXIMITY_KM = 75;
     
-    for (const [city, codes] of Object.entries(aliases)) {
-      const existing = cityToAirportsMap.get(city) || [];
-      const combined = [...new Set([...existing, ...codes])];
-      cityToAirportsMap.set(city, combined);
-    }
-    
-    return cityToAirportsMap;
-  }
-  
-  // Get all airports that could serve a city
-  function getAirportsForCity(cityName, airportIata) {
-    if (!cityToAirportsMap) return airportIata ? [airportIata] : [];
-    
-    const airports = [];
-    
-    // Always include the primary airport
-    if (airportIata) airports.push(airportIata);
-    
-    // Look up by city name
-    if (cityName) {
-      const cityKey = cityName.toLowerCase().split(',')[0].trim();
-      const cityAirports = cityToAirportsMap.get(cityKey);
-      if (cityAirports) {
-        for (const code of cityAirports) {
-          if (!airports.includes(code)) airports.push(code);
+    for (const ap of airports) {
+      if (!ap.i || !ap.t || !ap.g) continue;
+      
+      const lat = parseFloat(ap.t);
+      const lon = parseFloat(ap.g);
+      if (isNaN(lat) || isNaN(lon)) continue;
+      
+      // Find all airports within proximity
+      const nearbyAirports = [];
+      for (const other of airports) {
+        if (!other.i || other.i === ap.i || !other.t || !other.g) continue;
+        
+        const otherLat = parseFloat(other.t);
+        const otherLon = parseFloat(other.g);
+        if (isNaN(otherLat) || isNaN(otherLon)) continue;
+        
+        const dist = haversineDistance(lat, lon, otherLat, otherLon);
+        if (dist <= PROXIMITY_KM) {
+          nearbyAirports.push(other.i);
+        }
+      }
+      
+      // Add nearby airports to this airport's city group
+      if (nearbyAirports.length > 0 && ap.c) {
+        const cityKey = ap.c.toLowerCase().trim();
+        const citySet = cityToAirportsMap.get(cityKey);
+        if (citySet) {
+          for (const nearbyCode of nearbyAirports) {
+            citySet.add(nearbyCode);
+          }
         }
       }
     }
     
-    return airports;
+    // Convert Sets to Arrays for easier use
+    for (const [city, airportSet] of cityToAirportsMap) {
+      cityToAirportsMap.set(city, Array.from(airportSet));
+    }
+    
+    console.log(`Built city-to-airports map with ${cityToAirportsMap.size} cities`);
+    return cityToAirportsMap;
+  }
+  
+  // Get all airports that could serve a city (by name or by proximity to given airport)
+  function getAirportsForCity(cityName, airportIata) {
+    const airports = new Set();
+    
+    // Always include the primary airport
+    if (airportIata) airports.add(airportIata);
+    
+    // Look up by city name
+    if (cityName && cityToAirportsMap) {
+      const cityKey = cityName.toLowerCase().trim();
+      const cityAirports = cityToAirportsMap.get(cityKey);
+      if (cityAirports) {
+        for (const code of cityAirports) {
+          airports.add(code);
+        }
+      }
+    }
+    
+    // Also look up by the city of the given airport (handles cases where cityName might differ)
+    if (airportIata && airportByIata && cityToAirportsMap) {
+      const ap = airportByIata.get(airportIata);
+      if (ap && ap.c) {
+        const apCityKey = ap.c.toLowerCase().trim();
+        const apCityAirports = cityToAirportsMap.get(apCityKey);
+        if (apCityAirports) {
+          for (const code of apCityAirports) {
+            airports.add(code);
+          }
+        }
+      }
+    }
+    
+    return Array.from(airports);
   }
   
   // Check if a direct flight exists between two locations
