@@ -1161,18 +1161,6 @@
       return directRoutesSet;
     }
   }
-  
-  // Calculate distance between two coordinates in km (Haversine formula)
-  function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
 
   // Build city -> airports mapping from airports database using city names and proximity
   let airportByIata = null; // Map IATA code -> airport object for quick lookup
@@ -1220,7 +1208,7 @@
         const otherLon = parseFloat(other.g);
         if (isNaN(otherLat) || isNaN(otherLon)) continue;
         
-        const dist = haversineDistance(lat, lon, otherLat, otherLon);
+        const dist = haversineKm(lat, lon, otherLat, otherLon);
         if (dist <= PROXIMITY_KM) {
           nearbyAirports.push(other.i);
         }
