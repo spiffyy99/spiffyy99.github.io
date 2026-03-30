@@ -1231,7 +1231,6 @@
       cityToAirportsMap.set(city, Array.from(airportSet));
     }
     
-    console.log(`Built city-to-airports map with ${cityToAirportsMap.size} cities`);
     return cityToAirportsMap;
   }
   
@@ -1277,6 +1276,11 @@
       // Routes not loaded, don't show any direct flight info
       return { isDirect: null, note: "" };
     }
+
+    // first check if direct route exists, no need to check nearby cities if not needed
+    if (directRoutesSet.has(`${fromIata}-${toIata}`)) {
+      return { isDirect: true, note: "direct" };
+    } 
     
     const fromAirports = getAirportsForCity(fromCityName, fromIata);
     const toAirports = getAirportsForCity(toCityName, toIata);
