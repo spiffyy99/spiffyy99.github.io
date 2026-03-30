@@ -142,17 +142,20 @@
   // Holiday definitions are keyed by "type" so we can compute per year.
   // Fixed-date holidays apply observed-day rules (Sat->Fri, Sun->Mon).
   const DEFAULT_HOLIDAYS = [
-    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1, tooltip: "Jan 1. Observed Mon if Sun, Fri if Sat." },
-    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3, tooltip: "3rd Monday in January." },
-    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3, tooltip: "3rd Monday in February." },
-    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1, tooltip: "Last Monday in May." },
-    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19, tooltip: "June 19. Observed Mon if Sun, Fri if Sat." },
-    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4, tooltip: "July 4. Observed Mon if Sun, Fri if Sat." },
-    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1, tooltip: "1st Monday in September." },
-    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11, tooltip: "Nov 11. Observed Mon if Sun, Fri if Sat." },
-    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4, tooltip: "4th Thursday in November." },
-    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25, tooltip: "Dec 25. Observed Mon if Sun, Fri if Sat." },
+    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1, defaultOn: true, tooltip: "Jan 1. Observed Mon if Sun, Fri if Sat." },
+    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3, defaultOn: true, tooltip: "3rd Monday in January." },
+    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3, defaultOn: true, tooltip: "3rd Monday in February." },
+    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1, defaultOn: true, tooltip: "Last Monday in May." },
+    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19, defaultOn: true, tooltip: "June 19. Observed Mon if Sun, Fri if Sat." },
+    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4, defaultOn: true, tooltip: "July 4. Observed Mon if Sun, Fri if Sat." },
+    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1, defaultOn: true, tooltip: "1st Monday in September." },
+    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11, defaultOn: true, tooltip: "Nov 11. Observed Mon if Sun, Fri if Sat." },
+    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4, defaultOn: true, tooltip: "4th Thursday in November." },
+    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25, defaultOn: true, tooltip: "Dec 25. Observed Mon if Sun, Fri if Sat." },
   ];
+
+  // Active holidays for the selected country — replaced when holidays.json loads.
+  let ACTIVE_HOLIDAYS = DEFAULT_HOLIDAYS;
 
   function observedDateForFixed(day) {
     // Federal observed rules:
@@ -164,6 +167,25 @@
     if (dow === 6) d.setDate(d.getDate() - 1);
     if (dow === 0) d.setDate(d.getDate() + 1);
     return d;
+  }
+
+  // Anonymous Gregorian algorithm for Easter Sunday.
+  function computeEasterForYear(year) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month, day);
   }
 
   function computeHolidayDateForYear(holiday, year) {
@@ -183,14 +205,53 @@
 
     if (holiday.type === "last_weekday") {
       // last weekday in month
-      const lastOfMonth = new Date(year, holiday.month + 1, 0); // last day of month
+      const lastOfMonth = new Date(year, holiday.month + 1, 0);
       const desired = holiday.weekday;
       const delta = (lastOfMonth.getDay() - desired + 7) % 7;
       const dayNum = lastOfMonth.getDate() - delta;
       return new Date(year, holiday.month, dayNum);
     }
 
-    throw new Error("Unknown holiday type");
+    // Sat and Sun both shift to following Monday (CA/UK style).
+    if (holiday.type === "fixed_next_monday") {
+      const d = new Date(year, holiday.month, holiday.day);
+      const dow = d.getDay();
+      if (dow === 0) d.setDate(d.getDate() + 1);
+      else if (dow === 6) d.setDate(d.getDate() + 2);
+      return d;
+    }
+
+    // Only Sunday shifts to following Monday (SG style).
+    if (holiday.type === "fixed_sun_to_monday") {
+      const d = new Date(year, holiday.month, holiday.day);
+      if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+      return d;
+    }
+
+    // Offset in days from Easter Sunday (e.g. -2 = Good Friday, +1 = Easter Monday).
+    if (holiday.type === "easter_offset") {
+      const easter = computeEasterForYear(year);
+      const d = new Date(easter);
+      d.setDate(d.getDate() + (holiday.offset || 0));
+      return d;
+    }
+
+    // Last specified weekday on or before a given date (e.g. Victoria Day = last Mon before May 25).
+    if (holiday.type === "before_date") {
+      const d = new Date(year, holiday.month, holiday.day);
+      const delta = (d.getDay() - holiday.weekday + 7) % 7;
+      d.setDate(d.getDate() - delta);
+      return d;
+    }
+
+    // Pre-calculated dates by year (for lunar/Islamic calendar holidays).
+    if (holiday.type === "lookup") {
+      const iso = holiday.dates && holiday.dates[String(year)];
+      if (!iso) return null;
+      return parseISODate(iso);
+    }
+
+    throw new Error("Unknown holiday type: " + holiday.type);
   }
 
   function buildPtoOffSet({ windowStartISO, windowEndISO, enabledHolidayIds, extraPtoOffDates }) {
@@ -204,10 +265,10 @@
 
     // Default holiday offs.
     for (let y = startYear; y <= endYear; y++) {
-      for (const holiday of DEFAULT_HOLIDAYS) {
+      for (const holiday of ACTIVE_HOLIDAYS) {
         if (!enabledHolidayIds.has(holiday.id)) continue;
         const d = computeHolidayDateForYear(holiday, y);
-        if (d >= windowStart && d <= windowEnd) ptoOff.add(isoDate(d));
+        if (d && d >= windowStart && d <= windowEnd) ptoOff.add(isoDate(d));
       }
     }
 
@@ -230,12 +291,12 @@
     const holidayMap = new Map();
     
     for (let y = startYear; y <= endYear; y++) {
-      for (const holiday of DEFAULT_HOLIDAYS) {
+      for (const holiday of ACTIVE_HOLIDAYS) {
         if (!enabledHolidayIds.has(holiday.id)) continue;
         
         const observedDate = computeHolidayDateForYear(holiday, y);
+        if (!observedDate) continue;
         if (observedDate >= windowStart && observedDate <= windowEnd) {
-          // Check if this is an observed date (different from actual date for fixed holidays)
           let isObserved = false;
           if (holiday.type === "fixed_observed") {
             const actualDate = new Date(y, holiday.month, holiday.day);
@@ -1110,7 +1171,7 @@
     return inferCityFromAirportName(ap.n);
   }
   
-  function setupCityAutocomplete(input, container) {
+  function setupCityAutocomplete(input, container, { onSelect } = {}) {
     let listEl = null;
     let selectedIndex = -1;
     let results = [];
@@ -1194,6 +1255,7 @@
         country: selectedCountry,
         iata: selectedIata,
       });
+      if (onSelect) onSelect({ city: selectedCity, country: selectedCountry });
       hideList();
     }
     
@@ -1381,7 +1443,7 @@
 
   function renderHolidayDefaults(container) {
     container.innerHTML = "";
-    for (const holiday of DEFAULT_HOLIDAYS) {
+    for (const holiday of ACTIVE_HOLIDAYS) {
       const item = document.createElement("div");
       item.className = "holidayItem";
       if (holiday.tooltip) {
@@ -1390,7 +1452,7 @@
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = true;
+      checkbox.checked = holiday.defaultOn !== false;
       checkbox.dataset.holidayId = holiday.id;
       checkbox.id = `holiday_${holiday.id}`;
 
@@ -1786,6 +1848,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     const destinationsContainer = $("destinations");
     const addDestinationBtn = $("addDestinationBtn");
     const holidayDefaults = $("holidayDefaults");
+    const holidayCountrySelect = $("holidayCountry");
     const extraPtoOffContainer = $("extraPtoOffDays");
     const addExtraPtoOffBtn = $("addExtraPtoOffBtn");
     const redeyeCheckbox = $("redeyeOk");
@@ -1907,7 +1970,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     const homeCityInput = $("homeCity");
     const homeCityField = homeCityInput.parentElement;
     homeCityField.style.position = "relative";
-    setupCityAutocomplete(homeCityInput, homeCityField);
+    setupCityAutocomplete(homeCityInput, homeCityField, {
+      onSelect: ({ country }) => {
+        const code = countryCodeFromName(country);
+        if (code && holidayCountrySelect && holidayCountrySelect.value !== code) {
+          holidayCountrySelect.value = code;
+          refreshHolidays();
+        }
+      },
+    });
 
     function syncRedeyeOvernightVisibility() {
       if (!redeyeOvernightField || !redeyeCheckbox) return;
@@ -1970,7 +2041,64 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     // Render initial destination row (state is read from DOM on add/remove).
     renderDestinations(destinationsContainer, [{ city: "", stayDays: null }]);
 
+    // ---- Holiday country setup ----
+
+    let holidaysDB = null;
+
+    async function loadHolidaysDB() {
+      if (holidaysDB) return holidaysDB;
+      try {
+        const res = await fetch("./holidays.json");
+        if (res.ok) holidaysDB = await res.json();
+      } catch (e) { /* fall through to defaults */ }
+      return holidaysDB;
+    }
+
+    function countryCodeFromName(countryName) {
+      const n = (countryName || "").toLowerCase();
+      if (n.includes("united states") || n.includes("usa") || n.includes("u.s.a")) return "US";
+      if (n.includes("canada")) return "CA";
+      if (n.includes("united kingdom") || n.includes("great britain") ||
+          n.includes("england") || n.includes("scotland") || n.includes("wales")) return "GB";
+      if (n.includes("singapore")) return "SG";
+      return null;
+    }
+
+    function countryCodeFromTimezone() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        if (tz === "Asia/Singapore") return "SG";
+        if (tz === "Europe/London" || tz === "Europe/Belfast") return "GB";
+        const caZones = new Set([
+          "America/Toronto", "America/Vancouver", "America/Winnipeg",
+          "America/Edmonton", "America/Halifax", "America/Regina",
+          "America/St_Johns", "America/Moncton", "America/Thunder_Bay", "America/Iqaluit",
+        ]);
+        if (caZones.has(tz)) return "CA";
+        if (tz.startsWith("America/")) return "US";
+      } catch (e) { /* */ }
+      return "US";
+    }
+
+    async function refreshHolidays() {
+      const code = (holidayCountrySelect && holidayCountrySelect.value) || "US";
+      const db = await loadHolidaysDB();
+      if (db && db[code]) {
+        ACTIVE_HOLIDAYS = db[code].holidays;
+      } else {
+        ACTIVE_HOLIDAYS = DEFAULT_HOLIDAYS;
+      }
+      renderHolidayDefaults(holidayDefaults);
+    }
+
+    // Set initial country from timezone, then async-load holidays.json and re-render.
+    if (holidayCountrySelect) {
+      holidayCountrySelect.value = countryCodeFromTimezone();
+      holidayCountrySelect.addEventListener("change", refreshHolidays);
+    }
     renderHolidayDefaults(holidayDefaults);
+    refreshHolidays();
+
     renderExtraPtoDays(extraPtoOffContainer, 0);
 
 addDestinationBtn.addEventListener("click", () => {

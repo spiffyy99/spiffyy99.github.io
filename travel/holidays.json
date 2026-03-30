@@ -1,0 +1,62 @@
+{
+  "US": {
+    "name": "United States",
+    "holidays": [
+      { "id": "us_new_years", "name": "New Year's Day", "type": "fixed_observed", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Fri if Sat, Mon if Sun." },
+      { "id": "us_mlk", "name": "MLK Day", "type": "nth_weekday", "month": 0, "weekday": 1, "nth": 3, "defaultOn": true, "tooltip": "3rd Monday in January." },
+      { "id": "us_presidents", "name": "Presidents Day", "type": "nth_weekday", "month": 1, "weekday": 1, "nth": 3, "defaultOn": true, "tooltip": "3rd Monday in February." },
+      { "id": "us_memorial", "name": "Memorial Day", "type": "last_weekday", "month": 4, "weekday": 1, "defaultOn": true, "tooltip": "Last Monday in May." },
+      { "id": "us_juneteenth", "name": "Juneteenth", "type": "fixed_observed", "month": 5, "day": 19, "defaultOn": true, "tooltip": "Jun 19. Observed Fri if Sat, Mon if Sun." },
+      { "id": "us_independence", "name": "Independence Day", "type": "fixed_observed", "month": 6, "day": 4, "defaultOn": true, "tooltip": "Jul 4. Observed Fri if Sat, Mon if Sun." },
+      { "id": "us_labor", "name": "Labor Day", "type": "nth_weekday", "month": 8, "weekday": 1, "nth": 1, "defaultOn": true, "tooltip": "1st Monday in September." },
+      { "id": "us_veterans", "name": "Veterans Day", "type": "fixed_observed", "month": 10, "day": 11, "defaultOn": true, "tooltip": "Nov 11. Observed Fri if Sat, Mon if Sun." },
+      { "id": "us_thanksgiving", "name": "Thanksgiving", "type": "nth_weekday", "month": 10, "weekday": 4, "nth": 4, "defaultOn": true, "tooltip": "4th Thursday in November." },
+      { "id": "us_christmas", "name": "Christmas Day", "type": "fixed_observed", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Fri if Sat, Mon if Sun." }
+    ]
+  },
+  "CA": {
+    "name": "Canada",
+    "holidays": [
+      { "id": "ca_new_years", "name": "New Year's Day", "type": "fixed_next_monday", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Mon if weekend." },
+      { "id": "ca_family", "name": "Family Day", "type": "nth_weekday", "month": 1, "weekday": 1, "nth": 3, "defaultOn": true, "tooltip": "3rd Monday in February. Not observed in all provinces." },
+      { "id": "ca_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": true, "tooltip": "Friday before Easter Sunday." },
+      { "id": "ca_victoria", "name": "Victoria Day", "type": "before_date", "month": 4, "day": 24, "weekday": 1, "defaultOn": true, "tooltip": "Last Monday before May 25." },
+      { "id": "ca_canada_day", "name": "Canada Day", "type": "fixed_next_monday", "month": 6, "day": 1, "defaultOn": true, "tooltip": "Jul 1. Observed Mon if weekend." },
+      { "id": "ca_labour", "name": "Labour Day", "type": "nth_weekday", "month": 8, "weekday": 1, "nth": 1, "defaultOn": true, "tooltip": "1st Monday in September." },
+      { "id": "ca_truth", "name": "Truth & Reconciliation Day", "type": "fixed_next_monday", "month": 8, "day": 30, "defaultOn": true, "tooltip": "Sep 30. Federal employees and some provinces." },
+      { "id": "ca_thanksgiving", "name": "Thanksgiving", "type": "nth_weekday", "month": 9, "weekday": 1, "nth": 2, "defaultOn": true, "tooltip": "2nd Monday in October." },
+      { "id": "ca_remembrance", "name": "Remembrance Day", "type": "fixed_next_monday", "month": 10, "day": 11, "defaultOn": true, "tooltip": "Nov 11. Observed Mon if weekend." },
+      { "id": "ca_christmas", "name": "Christmas Day", "type": "fixed_next_monday", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Mon if weekend." },
+      { "id": "ca_boxing", "name": "Boxing Day", "type": "fixed_next_monday", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26. Observed Mon if weekend." }
+    ]
+  },
+  "GB": {
+    "name": "United Kingdom",
+    "holidays": [
+      { "id": "gb_new_years", "name": "New Year's Day", "type": "fixed_next_monday", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. Observed Mon if weekend (England & Wales)." },
+      { "id": "gb_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": true, "tooltip": "Friday before Easter Sunday." },
+      { "id": "gb_easter_monday", "name": "Easter Monday", "type": "easter_offset", "offset": 1, "defaultOn": true, "tooltip": "Monday after Easter Sunday (England & Wales)." },
+      { "id": "gb_early_may", "name": "Early May Bank Holiday", "type": "nth_weekday", "month": 4, "weekday": 1, "nth": 1, "defaultOn": true, "tooltip": "1st Monday in May." },
+      { "id": "gb_spring_bank", "name": "Spring Bank Holiday", "type": "last_weekday", "month": 4, "weekday": 1, "defaultOn": true, "tooltip": "Last Monday in May." },
+      { "id": "gb_summer_bank", "name": "Summer Bank Holiday", "type": "last_weekday", "month": 7, "weekday": 1, "defaultOn": true, "tooltip": "Last Monday in August (England & Wales)." },
+      { "id": "gb_christmas", "name": "Christmas Day", "type": "fixed_next_monday", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. Observed Mon if weekend." },
+      { "id": "gb_boxing", "name": "Boxing Day", "type": "fixed_next_monday", "month": 11, "day": 26, "defaultOn": true, "tooltip": "Dec 26. Observed Mon if weekend." }
+    ]
+  },
+  "SG": {
+    "name": "Singapore",
+    "holidays": [
+      { "id": "sg_new_years", "name": "New Year's Day", "type": "fixed_sun_to_monday", "month": 0, "day": 1, "defaultOn": true, "tooltip": "Jan 1. In-lieu Mon if Sun." },
+      { "id": "sg_cny_1", "name": "Chinese New Year", "type": "lookup", "dates": { "2025": "2025-01-29", "2026": "2026-02-17", "2027": "2027-02-06", "2028": "2028-01-26", "2029": "2029-02-13", "2030": "2030-02-03" }, "defaultOn": true, "tooltip": "First day of Chinese New Year." },
+      { "id": "sg_cny_2", "name": "Chinese New Year (2nd day)", "type": "lookup", "dates": { "2025": "2025-01-30", "2026": "2026-02-18", "2027": "2027-02-08", "2028": "2028-01-27", "2029": "2029-02-14", "2030": "2030-02-04" }, "defaultOn": true, "tooltip": "Second day of Chinese New Year." },
+      { "id": "sg_good_friday", "name": "Good Friday", "type": "easter_offset", "offset": -2, "defaultOn": true, "tooltip": "Friday before Easter Sunday." },
+      { "id": "sg_labour", "name": "Labour Day", "type": "fixed_sun_to_monday", "month": 4, "day": 1, "defaultOn": true, "tooltip": "May 1. In-lieu Mon if Sun." },
+      { "id": "sg_vesak", "name": "Vesak Day", "type": "lookup", "dates": { "2025": "2025-05-12", "2026": "2026-05-31", "2027": "2027-05-21", "2028": "2028-05-10", "2029": "2029-05-28", "2030": "2030-05-18" }, "defaultOn": true, "tooltip": "Buddha's birthday. Date varies." },
+      { "id": "sg_hari_raya_puasa", "name": "Hari Raya Puasa", "type": "lookup", "dates": { "2025": "2025-03-31", "2026": "2026-03-20", "2027": "2027-03-09", "2028": "2028-02-28", "2029": "2029-02-16", "2030": "2030-02-05" }, "defaultOn": true, "tooltip": "Eid al-Fitr. Follows Islamic lunar calendar." },
+      { "id": "sg_national", "name": "National Day", "type": "fixed_sun_to_monday", "month": 7, "day": 9, "defaultOn": true, "tooltip": "Aug 9. In-lieu Mon if Sun." },
+      { "id": "sg_hari_raya_haji", "name": "Hari Raya Haji", "type": "lookup", "dates": { "2025": "2025-06-06", "2026": "2026-05-27", "2027": "2027-05-17", "2028": "2028-05-05", "2029": "2029-04-25", "2030": "2030-04-14" }, "defaultOn": true, "tooltip": "Eid al-Adha. Follows Islamic lunar calendar." },
+      { "id": "sg_deepavali", "name": "Deepavali", "type": "lookup", "dates": { "2025": "2025-10-20", "2026": "2026-11-08", "2027": "2027-10-29", "2028": "2028-10-17", "2029": "2029-11-05", "2030": "2030-10-26" }, "defaultOn": true, "tooltip": "Festival of Lights. Date varies." },
+      { "id": "sg_christmas", "name": "Christmas Day", "type": "fixed_sun_to_monday", "month": 11, "day": 25, "defaultOn": true, "tooltip": "Dec 25. In-lieu Mon if Sun." }
+    ]
+  }
+}
