@@ -2423,8 +2423,9 @@ addDestinationBtn.addEventListener("click", () => {
         startDateISO = $("startDate").value;
         endDateISO = $("endDate").value;
         const dowDirectionEl = $("dowDirection");
+        const dowDayField = $("dowDayField");
         const dowDayEl = $("dowDay");
-        const dowFieldsVisible = dowDirectionEl && dowDirectionEl.style.display !== "none";
+        const dowFieldsVisible = dowDayField && dowDayField.style.display !== "none";
         if (dowFieldsVisible) {
           const dowDirection = (dowDirectionEl && dowDirectionEl.value) || "depart";
           const dowDay = parseInt((dowDayEl && dowDayEl.value) ?? "1", 10);
