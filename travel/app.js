@@ -55,7 +55,9 @@
     }
 
     // Most flights, including typical long-haul, should use one travel day.
-    if (durationHours <= 20) {
+    // For layover flights, total journey time can be 20-24h but still fits in one travel day
+    // (you depart morning, arrive evening/night same day or early next morning)
+    if (durationHours <= 24) {
       return {
         travelDays: 1,
         ptoOffsets: [0],
@@ -660,11 +662,16 @@
   
   // Route-aware duration estimate that considers connections
   // Returns: { hours: number, route: object, isDirect: boolean, note: string }
-  function estimateLegDurationWithRoute(airportA, airportB) {
+  async function estimateLegDurationWithRoute(airportA, airportB) {
     const fromIata = airportA?.iataCode;
     const toIata = airportB?.iataCode;
     
-    // If we don't have IATA codes or graph isn't loaded, fall back to direct estimate
+    // Ensure airport graph is loaded
+    if (!airportGraph) {
+      await loadAirportsDB();
+    }
+    
+    // If we still don't have IATA codes or graph, fall back to direct estimate
     if (!fromIata || !toIata || !airportGraph) {
       const hours = estimateLegDurationHours(airportA, airportB);
       return { hours, route: null, isDirect: true, note: "" };
@@ -699,7 +706,7 @@
     return legs;
   }
 
-  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
+  async function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
     // Produce day-by-day entries + PTO required + heuristic flight hours.
     const days = [];
     let currentDate = parseISODate(startISO);
@@ -711,7 +718,7 @@
       const leg = legs[legIdx];
 
       // Use route-aware duration estimation
-      const durationResult = estimateLegDurationWithRoute(leg.from.airport, leg.to.airport);
+      const durationResult = await estimateLegDurationWithRoute(leg.from.airport, leg.to.airport);
       const durationHours = durationResult.hours;
       const routeInfo = durationResult.route;
       const isDirect = durationResult.isDirect;
@@ -1111,7 +1118,7 @@
     return bestRoute;
   }
 
-  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest, dateConstraint }) {
+  async function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest, dateConstraint }) {
     const n = cities.length;
     if (n === 0) return null;
 
@@ -1127,7 +1134,7 @@
         const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
         const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
         for (const startISO of candidatesCapped) {
-          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
+          const sim = await simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
           best = compareItineraries(best, sim, objective);
         }
       }
@@ -1138,7 +1145,7 @@
       const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
       const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
       for (const startISO of candidatesCapped) {
-        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
+        const sim = await simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
         best = compareItineraries(best, sim, objective);
       }
     }
@@ -3003,7 +3010,7 @@ addDestinationBtn.addEventListener("click", () => {
           extraPtoOffDates: extraPtoInputs,
         });
 
-        const best = optimizeOrderAndDates({
+        const best = await optimizeOrderAndDates({
           home,
           cities,
           windowStartISO: startDateISO,
