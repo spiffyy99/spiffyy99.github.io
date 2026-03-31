@@ -8,9 +8,17 @@
   const $ = (id) => document.getElementById(id);
 
   const STORAGE_KEYS = {
-    geo: "travel:geoCache:v1",
-    airport: "travel:airportCache:v1",
-    flight: "travel:flightCache:v1",
+    geo: "travel:geoCache:v2",      // Bumped version to invalidate old caches
+    airport: "travel:airportCache:v2",
+    flight: "travel:flightCache:v2",
+  };
+  
+  // Cache expiration times (in milliseconds)
+  const CACHE_TTL = {
+    geo: 24 * 60 * 60 * 1000,        // 24 hours for geocoding
+    airport: 24 * 60 * 60 * 1000,    // 24 hours for airport lookups
+    flight: 7 * 24 * 60 * 60 * 1000, // 7 days for flight durations
+    route: 60 * 60 * 1000,           // 1 hour for route calculations (in-memory)
   };
   const SELECTED_LOCATION_META = new WeakMap();
   
@@ -334,22 +342,37 @@
 
   // ---- Geocoding + nearest airport ----
 
-  async function cachedJson(cacheKey, cacheObj, key, mustHaveKeys, fetchFn) {
-    if (cacheObj[key]) {
+  // Check if a cached entry is still valid (not expired)
+  function isCacheEntryValid(entry, ttlMs) {
+    if (!entry || !entry._timestamp) return false;
+    return (Date.now() - entry._timestamp) < ttlMs;
+  }
+
+  async function cachedJson(cacheKey, cacheObj, key, mustHaveKeys, fetchFn, ttlMs = CACHE_TTL.geo) {
+    const entry = cacheObj[key];
+    
+    // Check if we have a valid cached entry
+    if (entry && isCacheEntryValid(entry, ttlMs)) {
       let hasAllKeys = true;
       if (mustHaveKeys) {
-        for (const key of mustHaveKeys) {
-          if (!cacheObj[key] || isNullOrEmpty(cacheObj[key])) {
+        for (const k of mustHaveKeys) {
+          if (!entry[k] || isNullOrEmpty(entry[k])) {
             hasAllKeys = false;
+            break;
           }
         }
       } 
       if (hasAllKeys) {
-        return cacheObj[key];
+        return entry;
       }
     }
+    
+    // Fetch fresh data
     const value = await fetchFn();
+    // Add timestamp for expiration checking
+    value._timestamp = Date.now();
     cacheObj[key] = value;
+    
     try {
       localStorage.setItem(cacheKey, JSON.stringify(cacheObj));
     } catch {
@@ -360,11 +383,37 @@
 
   function loadCache(storageKey) {
     try {
-      return JSON.parse(localStorage.getItem(storageKey) || "{}");
+      const data = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      // Clean up expired entries on load
+      const now = Date.now();
+      const ttl = storageKey.includes('geo') ? CACHE_TTL.geo : 
+                  storageKey.includes('airport') ? CACHE_TTL.airport : 
+                  CACHE_TTL.flight;
+      for (const key of Object.keys(data)) {
+        if (data[key]?._timestamp && (now - data[key]._timestamp) > ttl) {
+          delete data[key];
+        }
+      }
+      return data;
     } catch {
       return {};
     }
   }
+  
+  // Clear all travel-related caches (useful for debugging)
+  // Note: routeCache and routeCacheTimestamps are defined later in the file
+  function clearAllCaches() {
+    localStorage.removeItem(STORAGE_KEYS.geo);
+    localStorage.removeItem(STORAGE_KEYS.airport);
+    localStorage.removeItem(STORAGE_KEYS.flight);
+    // Clear in-memory route caches if they exist
+    if (typeof routeCache !== 'undefined') routeCache.clear();
+    if (typeof routeCacheTimestamps !== 'undefined') routeCacheTimestamps.clear();
+    console.log('All travel caches cleared');
+  }
+  
+  // Expose to window for manual cache clearing if needed
+  window.clearTravelCaches = clearAllCaches;
 
   async function geocodeCity(cityName, geoCache) {
     const key = `geo:${cityName.toLowerCase().trim()}`;
@@ -1292,8 +1341,15 @@
   
   // Compute the best route between two airports (direct or 1-stop)
   // Returns: { type, legs, estimatedHours, hub?, isDirect, note }
-  // Cache for computed routes to reuse for reverse trips
+  // Cache for computed routes to reuse for reverse trips (with expiration)
   const routeCache = new Map();
+  const routeCacheTimestamps = new Map();
+  
+  function isRouteCacheValid(cacheKey) {
+    const timestamp = routeCacheTimestamps.get(cacheKey);
+    if (!timestamp) return false;
+    return (Date.now() - timestamp) < CACHE_TTL.route;
+  }
   
   function computeBestRoute(fromIata, toIata) {
     if (!airportGraph) {
@@ -1304,15 +1360,16 @@
     const cacheKey = `${fromIata}-${toIata}`;
     const reverseCacheKey = `${toIata}-${fromIata}`;
     
-    if (routeCache.has(cacheKey)) {
+    if (routeCache.has(cacheKey) && isRouteCacheValid(cacheKey)) {
       return routeCache.get(cacheKey);
     }
     
     // Check if we have the reverse route cached - if so, just reverse it
-    if (routeCache.has(reverseCacheKey)) {
+    if (routeCache.has(reverseCacheKey) && isRouteCacheValid(reverseCacheKey)) {
       const reverseRoute = routeCache.get(reverseCacheKey);
       const result = reverseRouteResult(reverseRoute, fromIata, toIata);
       routeCache.set(cacheKey, result);
+      routeCacheTimestamps.set(cacheKey, Date.now());
       return result;
     }
     
@@ -1346,6 +1403,7 @@
         note: "direct"
       };
       routeCache.set(cacheKey, result);
+      routeCacheTimestamps.set(cacheKey, Date.now());
       return result;
     }
     
@@ -1388,6 +1446,7 @@
             altTo: toAlt
           };
           routeCache.set(cacheKey, result);
+          routeCacheTimestamps.set(cacheKey, Date.now());
           return result;
         }
       }
@@ -1471,6 +1530,7 @@
     
     if (best) {
       routeCache.set(cacheKey, best);
+      routeCacheTimestamps.set(cacheKey, Date.now());
       return best;
     }
     
@@ -1484,6 +1544,7 @@
       note: "connection likely"
     };
     routeCache.set(cacheKey, result);
+    routeCacheTimestamps.set(cacheKey, Date.now());
     return result;
   }
   
@@ -2374,6 +2435,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       const isDark = document.documentElement.hasAttribute("data-theme");
       setTheme(!isDark);
     });
+    
+    // Clear cache button
+    const clearCacheBtn = $("clearCacheBtn");
+    if (clearCacheBtn) {
+      clearCacheBtn.addEventListener("click", () => {
+        clearAllCaches();
+        alert("Cache cleared! Refresh the page for a fresh start.");
+      });
+    }
     
     // Set default dates
     const today = new Date();

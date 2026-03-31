@@ -54,6 +54,13 @@ body{
   min-width: 0;
 }
 
+.header-right{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .header-left h1{
   font-size: 28px;
   margin: 0 0 6px;
@@ -61,6 +68,22 @@ body{
 
 .subtitle{
   color: var(--muted);
+}
+
+.clear-cache-btn{
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.clear-cache-btn:hover{
+  background: var(--border);
+  color: var(--text);
 }
 
 .theme-toggle{
