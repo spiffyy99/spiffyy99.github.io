@@ -11,9 +11,13 @@
     geo: "travel:geoCache:v1",
     airport: "travel:airportCache:v1",
     flight: "travel:flightCache:v1",
-    routes: "travel:routesCache:v1",
   };
   const SELECTED_LOCATION_META = new WeakMap();
+  
+  // Airport graph data - loaded from airport_graph.json
+  let airportGraph = null; // Object keyed by IATA code
+  let airportsArray = null; // Array version for search
+  let cityToAirportsMap = null; // Map of city name -> array of IATA codes
 
   // Travel block model with configurable threshold
   // - travelDayThresholdH: user-set threshold (in hours) for what requires a travel day
@@ -412,8 +416,11 @@
   }
 
   function inferCityFromAirportName(airportName = "") {
-    for (const airport of airportsDB) {
-      if (airport.n === airportName) return airport.c;
+    // Check in loaded airports array
+    if (airportsArray) {
+      for (const airport of airportsArray) {
+        if (airport.n === airportName) return airport.c;
+      }
     }
     const cleaned = String(airportName || "")
       .replace(/\s*\([^)]*\)\s*/g, " ")
@@ -476,6 +483,26 @@
 
     if (isIataToken(raw)) {
       const code = raw.toUpperCase();
+      
+      // First try local airport graph
+      if (airportGraph && airportGraph[code]) {
+        const ap = airportGraph[code];
+        const airport = {
+          iataCode: ap.i,
+          name: ap.n,
+          city: ap.c || "",
+          latitude: ap.t,
+          longitude: ap.g,
+        };
+        return {
+          displayName: ap.n || ap.i,
+          cityName: preferredCity || ap.c || inferCityFromAirportName(ap.n || ""),
+          country: preferredCountry || ap.o || "",
+          airport,
+        };
+      }
+      
+      // Fall back to external API
       const key = `iata:${code}`;
       const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, ["displayName", "cityName", "country"], async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
@@ -613,13 +640,50 @@
   }
 
   function estimateLegDistanceKm(airportA, airportB) {
+    if (!airportA?.latitude || !airportB?.latitude) {
+      console.warn('Missing airport coordinates', { airportA, airportB });
+      return 5000; // Default fallback distance
+    }
     return haversineKm(airportA.latitude, airportA.longitude, airportB.latitude, airportB.longitude);
   }
   
+  // Basic duration estimate based on distance (used as fallback)
   function estimateLegDurationHours(airportA, airportB) {
+    if (!airportA?.latitude || !airportB?.latitude) {
+      console.warn('Missing airport coordinates for duration', { airportA, airportB });
+      return 8; // Default fallback duration
+    }
     const distanceKm = estimateLegDistanceKm(airportA, airportB);
     const westward = isWestwardFlight(airportA.longitude, airportB.longitude);
     return getDurationHoursFromDistanceKm(distanceKm, westward);
+  }
+  
+  // Route-aware duration estimate that considers connections
+  // Returns: { hours: number, route: object, isDirect: boolean, note: string }
+  function estimateLegDurationWithRoute(airportA, airportB) {
+    const fromIata = airportA?.iataCode;
+    const toIata = airportB?.iataCode;
+    
+    // If we don't have IATA codes or graph isn't loaded, fall back to direct estimate
+    if (!fromIata || !toIata || !airportGraph) {
+      const hours = estimateLegDurationHours(airportA, airportB);
+      return { hours, route: null, isDirect: true, note: "" };
+    }
+    
+    const route = computeBestRoute(fromIata, toIata);
+    
+    if (route.estimatedHours != null) {
+      return {
+        hours: route.estimatedHours,
+        route,
+        isDirect: route.isDirect,
+        note: route.note || ""
+      };
+    }
+    
+    // Fallback to direct estimate if route computation failed
+    const hours = estimateLegDurationHours(airportA, airportB);
+    return { hours, route: null, isDirect: true, note: "" };
   }
 
   function buildLegs(home, orderedCities, returnDest) {
@@ -646,7 +710,13 @@
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
       const leg = legs[legIdx];
 
-      const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
+      // Use route-aware duration estimation
+      const durationResult = estimateLegDurationWithRoute(leg.from.airport, leg.to.airport);
+      const durationHours = durationResult.hours;
+      const routeInfo = durationResult.route;
+      const isDirect = durationResult.isDirect;
+      const routeNote = durationResult.note;
+      
       totalFlightHoursHeuristic += durationHours;
 
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
@@ -666,12 +736,14 @@
           const fromLabel = leg.from.cityName || leg.from.displayName;
           
           // Build departure day label - only show what happens on THIS day
+          // Include connection info if not direct
+          const connectionNote = !isDirect && routeNote ? ` [${routeNote}]` : "";
           let flightNote;
           if (model.isRedeye && nightHours > 0) {
             // Red-eye: show total flight time and overnight portion for departure day
-            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`;
+            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}${connectionNote}, ${formatHours(nightHours)} overnight)`;
           } else {
-            flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+            flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)}${connectionNote})`;
           }
           
         days.push({
@@ -693,6 +765,9 @@
           toIata: leg.to.airport?.iataCode,
           fromCityName: fromLabel,
           toCityName: toLabel,
+          routeInfo,
+          isDirect,
+          routeNote,
         });
           
           // Red-eye arrives the next calendar day - add an arrival row if there's spillover
@@ -776,13 +851,14 @@
               travelLabel = `Travel: ${fromCity} → ${toCity}`;
             }
           } else {
-            // Multi-day travel - clarify which day
+            // Multi-day travel - clarify which day and include connection info
+            const connectionNote = !isDirect && routeNote ? ` [${routeNote}]` : "";
             if (t === 0) {
-              travelLabel = `Travel Day 1: Depart ${fromCity}`;
+              travelLabel = `Travel Day 1: Depart ${fromCity} → ${toCity} (~${formatHours(durationHours)} total${connectionNote})`;
             } else if (t === model.travelDays - 1) {
               travelLabel = `Travel Day ${t + 1}: Arrive ${toCity}`;
             } else {
-              travelLabel = `Travel Day ${t + 1}: ${fromCity} → ${toCity}`;
+              travelLabel = `Travel Day ${t + 1}: In transit`;
             }
           }
           
@@ -817,6 +893,9 @@
             isRedeyeTravel,
             isArrivalDay,
             arrivalSpilloverHours,
+            routeInfo,
+            isDirect,
+            routeNote,
           });
         }
         currentDate = addDays(currentDate, model.travelDays);
@@ -1079,105 +1158,38 @@
     });
   }
 
-  // City/airport autocomplete using airports.json database + Open-Meteo geocoding
+  // City/airport autocomplete using airport_graph.json database + Open-Meteo geocoding
   let autocompleteDebounce = null;
-  let airportsDB = null; // Will be loaded on first use
   
   async function loadAirportsDB() {
-    if (airportsDB) return airportsDB;
+    if (airportGraph) return airportsArray;
     try {
-      const res = await fetch('./airports.json');
+      const res = await fetch('./airport_graph.json');
       if (!res.ok) throw new Error('Failed to load airports database');
-      airportsDB = await res.json();
-      console.log(`Loaded ${airportsDB.length} airports`);
-      return airportsDB;
+      airportGraph = await res.json();
+      // Convert to array for search compatibility
+      airportsArray = Object.values(airportGraph);
+      console.log(`Loaded ${airportsArray.length} airports from graph`);
+      // Build city mapping
+      buildCityToAirportsMap();
+      return airportsArray;
     } catch (e) {
-      console.error('Could not load airports.json:', e);
+      console.error('Could not load airport_graph.json:', e);
+      airportGraph = {};
+      airportsArray = [];
       return [];
     }
   }
 
-  // ---- Direct flight routes checker (OpenFlights data) ----
-  
-  let directRoutesSet = null; // Set of "ORIGIN-DEST" pairs
-  let cityToAirportsMap = null; // Map of city name -> array of IATA codes
-  
-  const OPENFLIGHTS_ROUTES_URL = "https://raw.githubusercontent.com/jpatokal/openflights/refs/heads/master/data/routes.dat";
-  
-  async function loadDirectRoutes() {
-    if (directRoutesSet) return directRoutesSet;
-    
-    try {
-      // Try to load from cache first
-      const cached = localStorage.getItem(STORAGE_KEYS.routes);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Cache for 7 days
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
-          directRoutesSet = new Set(parsed.routes);
-          console.log(`Loaded ${directRoutesSet.size} direct routes from cache`);
-          return directRoutesSet;
-        }
-      }
-      
-      console.log("Fetching direct routes from OpenFlights...");
-      const res = await fetch(OPENFLIGHTS_ROUTES_URL);
-      if (!res.ok) throw new Error(`Failed to fetch routes (${res.status})`);
-      
-      const text = await res.text();
-      const routes = new Set();
-      
-      // Parse CSV: each line format is "airline,airlineID,origin,originID,dest,destID,..."
-      // We want columns 2 (origin) and 4 (dest) - 0-indexed
-      for (const line of text.split('\n')) {
-        const parts = line.split(',');
-        if (parts.length >= 5) {
-          const origin = parts[2]?.trim();
-          const dest = parts[4]?.trim();
-          // Only add if both are valid 3-letter IATA codes
-          if (origin && dest && /^[A-Z]{3}$/.test(origin) && /^[A-Z]{3}$/.test(dest)) {
-            routes.add(`${origin}-${dest}`);
-          }
-        }
-      }
-      
-      directRoutesSet = routes;
-      console.log(`Loaded ${directRoutesSet.size} direct routes from OpenFlights`);
-      
-      // Cache the routes
-      try {
-        localStorage.setItem(STORAGE_KEYS.routes, JSON.stringify({
-          timestamp: Date.now(),
-          routes: Array.from(routes),
-        }));
-      } catch (e) {
-        // Ignore quota errors
-      }
-      
-      return directRoutesSet;
-    } catch (e) {
-      console.error("Failed to load direct routes:", e);
-      directRoutesSet = new Set();
-      return directRoutesSet;
-    }
-  }
-
   // Build city -> airports mapping from airports database using city names and proximity
-  let airportByIata = null; // Map IATA code -> airport object for quick lookup
-  
-  async function buildCityToAirportsMap() {
-    if (cityToAirportsMap) return cityToAirportsMap;
+  function buildCityToAirportsMap() {
+    if (cityToAirportsMap || !airportsArray) return cityToAirportsMap;
     
-    const airports = await loadAirportsDB();
     cityToAirportsMap = new Map();
-    airportByIata = new Map();
     
-    // First pass: build IATA lookup and group by exact city name
-    for (const ap of airports) {
-      if (!ap.i) continue;
-      airportByIata.set(ap.i, ap);
-      
-      if (!ap.c) continue;
+    // First pass: group by exact city name
+    for (const ap of airportsArray) {
+      if (!ap.i || !ap.c) continue;
       
       // Normalize city name for grouping
       const cityKey = ap.c.toLowerCase().trim();
@@ -1192,7 +1204,7 @@
     // This handles cases like Newark (EWR) serving New York even though it's technically in NJ
     const PROXIMITY_KM = 75;
     
-    for (const ap of airports) {
+    for (const ap of airportsArray) {
       if (!ap.i || !ap.t || !ap.g) continue;
       
       const lat = parseFloat(ap.t);
@@ -1201,7 +1213,7 @@
       
       // Find all airports within proximity
       const nearbyAirports = [];
-      for (const other of airports) {
+      for (const other of airportsArray) {
         if (!other.i || other.i === ap.i || !other.t || !other.g) continue;
         
         const otherLat = parseFloat(other.t);
@@ -1253,8 +1265,8 @@
     }
     
     // Also look up by the city of the given airport (handles cases where cityName might differ)
-    if (airportIata && airportByIata && cityToAirportsMap) {
-      const ap = airportByIata.get(airportIata);
+    if (airportIata && airportGraph && cityToAirportsMap) {
+      const ap = airportGraph[airportIata];
       if (ap && ap.c) {
         const apCityKey = ap.c.toLowerCase().trim();
         const apCityAirports = cityToAirportsMap.get(apCityKey);
@@ -1269,33 +1281,171 @@
     return Array.from(airports);
   }
   
-  // Check if a direct flight exists between two locations
-  // Returns: { isDirect: boolean, note: string }
-  function checkDirectFlightAvailable(fromCityName, fromIata, toCityName, toIata) {
-    if (!directRoutesSet || directRoutesSet.size === 0) {
-      // Routes not loaded, don't show any direct flight info
-      return { isDirect: null, note: "" };
+  // ---- Route computation using airport_graph.json ----
+  
+  // Compute the best route between two airports (direct or 1-stop)
+  // Returns: { type, legs, estimatedHours, hub?, isDirect, note }
+  function computeBestRoute(fromIata, toIata) {
+    if (!airportGraph) {
+      return { type: "error", reason: "Airport graph not loaded", estimatedHours: null };
     }
-
-    // first check if direct route exists, no need to check nearby cities if not needed
-    if (directRoutesSet.has(`${fromIata}-${toIata}`)) {
-      return { isDirect: true, note: "direct" };
-    } 
     
-    const fromAirports = getAirportsForCity(fromCityName, fromIata);
-    const toAirports = getAirportsForCity(toCityName, toIata);
+    const start = airportGraph[fromIata];
+    const end = airportGraph[toIata];
     
-    // Check all combinations
-    for (const from of fromAirports) {
-      for (const to of toAirports) {
-        if (directRoutesSet.has(`${from}-${to}`)) {
-          return { isDirect: true, note: "direct" };
+    if (!start || !end) {
+      return { type: "invalid", reason: "Missing airport in graph", estimatedHours: null };
+    }
+    
+    if (fromIata === toIata) {
+      return { type: "same_airport", legs: [fromIata], estimatedHours: 0, isDirect: true };
+    }
+    
+    const startRoutes = new Set(start.r || []);
+    
+    // Calculate direct distance for reference
+    const directDistanceKm = haversineKm(start.t, start.g, end.t, end.g);
+    const isWestward = isWestwardFlight(start.g, end.g);
+    const directHours = getDurationHoursFromDistanceKm(directDistanceKm, isWestward);
+    
+    // Check for direct flight
+    if (startRoutes.has(toIata)) {
+      return {
+        type: "direct",
+        legs: [fromIata, toIata],
+        estimatedHours: directHours,
+        distanceKm: directDistanceKm,
+        isDirect: true,
+        note: "direct"
+      };
+    }
+    
+    // Check if there's a direct flight from a nearby airport in the same city
+    const fromCityAirports = getAirportsForCity(start.c, fromIata);
+    const toCityAirports = getAirportsForCity(end.c, toIata);
+    
+    for (const fromAlt of fromCityAirports) {
+      if (fromAlt === fromIata) continue;
+      const fromAltAp = airportGraph[fromAlt];
+      if (!fromAltAp) continue;
+      const fromAltRoutes = new Set(fromAltAp.r || []);
+      
+      for (const toAlt of toCityAirports) {
+        if (fromAltRoutes.has(toAlt)) {
+          const altDistKm = haversineKm(fromAltAp.t, fromAltAp.g, 
+            airportGraph[toAlt]?.t || end.t, airportGraph[toAlt]?.g || end.g);
+          const altWestward = isWestwardFlight(fromAltAp.g, airportGraph[toAlt]?.g || end.g);
+          return {
+            type: "direct_alt",
+            legs: [fromAlt, toAlt],
+            estimatedHours: getDurationHoursFromDistanceKm(altDistKm, altWestward),
+            distanceKm: altDistKm,
+            isDirect: true,
+            note: `direct via ${fromAlt}→${toAlt}`,
+            altFrom: fromAlt,
+            altTo: toAlt
+          };
         }
       }
     }
     
-    // No direct route found
-    return { isDirect: false, note: "connection likely" };
+    // No direct flight - find best 1-stop connection
+    let best = null;
+    
+    for (const hubCode of start.r || []) {
+      if (hubCode === toIata) continue;
+      
+      const hub = airportGraph[hubCode];
+      if (!hub) continue;
+      
+      // Only use medium/large airports as layover hubs
+      if (hub.s !== "M" && hub.s !== "L") continue;
+      
+      // Must have direct onward route to final destination
+      const hubRoutes = new Set(hub.r || []);
+      if (!hubRoutes.has(toIata)) continue;
+      
+      const leg1DistKm = haversineKm(start.t, start.g, hub.t, hub.g);
+      const leg2DistKm = haversineKm(hub.t, hub.g, end.t, end.g);
+      
+      // Path stretch: how inefficient is this compared to direct?
+      const stretch = (leg1DistKm + leg2DistKm) / directDistanceKm;
+      
+      // Large hubs get more tolerance than medium hubs
+      const maxStretch = hub.s === "L" ? 1.6 : 1.4;
+      if (stretch > maxStretch) continue;
+      
+      // On long routes, reject very tiny first hops
+      if (directDistanceKm > 3000 && leg1DistKm < 500) continue;
+      
+      const leg1Westward = isWestwardFlight(start.g, hub.g);
+      const leg2Westward = isWestwardFlight(hub.g, end.g);
+      const leg1Hours = getDurationHoursFromDistanceKm(leg1DistKm, leg1Westward);
+      const leg2Hours = getDurationHoursFromDistanceKm(leg2DistKm, leg2Westward);
+      
+      // Layover time: 2.5h for large hubs, 2h for medium
+      const layoverHours = hub.s === "L" ? 2.5 : 2.0;
+      
+      const estimatedHours = leg1Hours + layoverHours + leg2Hours;
+      
+      // Prefer shorter total time, smaller detour, and stronger hubs
+      const hubBonus = Math.min((hub.d || 0) / 100, 1.0);
+      const score = estimatedHours + (stretch - 1.0) * 4 - hubBonus;
+      
+      const candidate = {
+        type: "one_stop",
+        hub: hubCode,
+        hubName: hub.c || hub.n,
+        legs: [fromIata, hubCode, toIata],
+        estimatedHours,
+        leg1Hours,
+        leg2Hours,
+        layoverHours,
+        distanceKm: leg1DistKm + leg2DistKm,
+        stretch,
+        score,
+        isDirect: false,
+        note: `via ${hubCode}`
+      };
+      
+      if (!best || candidate.score < best.score) {
+        best = candidate;
+      }
+    }
+    
+    if (best) {
+      return best;
+    }
+    
+    // No route found - fall back to direct estimate (hypothetical)
+    return {
+      type: "no_route",
+      legs: [fromIata, toIata],
+      estimatedHours: directHours,
+      distanceKm: directDistanceKm,
+      isDirect: false,
+      note: "no direct route found"
+    };
+  }
+  
+  // Check if a direct flight exists between two locations (simplified for display)
+  // Returns: { isDirect: boolean, note: string, route: object }
+  function checkDirectFlightAvailable(fromCityName, fromIata, toCityName, toIata) {
+    if (!airportGraph) {
+      return { isDirect: null, note: "", route: null };
+    }
+    
+    const route = computeBestRoute(fromIata, toIata);
+    
+    if (route.type === "direct" || route.type === "direct_alt") {
+      return { isDirect: true, note: route.note || "direct", route };
+    }
+    
+    if (route.type === "one_stop") {
+      return { isDirect: false, note: route.note || "connection required", route };
+    }
+    
+    return { isDirect: false, note: "connection likely", route };
   }
   
   function searchAirports(query, airports, limit = 6) {
@@ -1755,20 +1905,28 @@
       const detailsTd = document.createElement("td");
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
-        const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
-        const directSuffix = directStatus.note ? `, ${directStatus.note}` : "";
+        // Use pre-computed route info if available, otherwise check
+        let connectionNote = "";
+        if (day.routeNote) {
+          connectionNote = day.isDirect ? "" : ` [${day.routeNote}]`;
+        } else {
+          const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
+          connectionNote = directStatus.isDirect === false && directStatus.note ? ` [${directStatus.note}]` : "";
+        }
         
         // Check if this is an arrival day with spillover from previous night's red-eye
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
           // Show the remaining portion of the flight
-          detailsTd.textContent = `${day.label} (~${flightTime}${directSuffix}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (day.isDepartureDay) {
-          // Departure day - label already contains the flight info, but add direct status
-          const labelWithDirect = directStatus.note ? `${day.label.replace(/\)$/, `${directSuffix})`)}` : day.label;
-          detailsTd.textContent = labelWithDirect;
+          // Departure day - label already contains the flight info
+          detailsTd.textContent = day.label;
+        } else if (day.label.includes('~')) {
+          // Label already contains flight time (multi-day travel first day)
+          detailsTd.textContent = day.label;
         } else if (!day.noTravelDay && !day.isArrivalDay) {
           // Regular travel day (full day flight, not a red-eye spillover)
-          detailsTd.textContent = `${day.label} (~${flightTime}${directSuffix})`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote})`;
         } else {
           detailsTd.textContent = day.label;
         }
@@ -2335,8 +2493,8 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     renderHolidayDefaults(holidayDefaults);
     refreshHolidays();
     
-    // Pre-load direct routes data and city-to-airports mapping
-    loadDirectRoutes().then(() => buildCityToAirportsMap());
+    // Pre-load airport graph data (includes routes)
+    loadAirportsDB();
 
     renderExtraPtoDays(extraPtoOffContainer, 0);
 
