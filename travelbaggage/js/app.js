@@ -119,7 +119,14 @@ function filterDropdown() {
 
 function addAirline(iata) {
   if (state.flights.find(f => f.iata === iata)) return;
-  state.flights.push({ iata, tierIndex: 0 });
+  // Auto-select the cheapest tier that supports current bag selection
+  const airline = getAirline(iata);
+  let bestTier = 0;
+  if (airline) {
+    const idx = airline.ticketTiers.findIndex(t => isTierSupported(t));
+    if (idx !== -1) bestTier = idx;
+  }
+  state.flights.push({ iata, tierIndex: bestTier });
   document.getElementById('airline-search').value = '';
   document.getElementById('airline-dropdown').style.display = 'none';
   renderSelectedTags();
