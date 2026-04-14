@@ -329,6 +329,7 @@ function renderCheckedSpec(airline, tier) {
   const weightStr = bag ? formatWeight(bag.weightKg) : null;
   const checkedCount = state.bags.checked;
   const oversizedFee = airline.oversizedCheckedBagCostUsd;
+  const overweightFee = airline.overweightCheckedBagCostUsd;
 
   // Resolve effective prices: if bag price is null and not included, fall back to 1st bag price
   const firstBagPrice = (tier.checkedBags && tier.checkedBags[0]) ? tier.checkedBags[0].avgAddOnPriceUsd : null;
@@ -375,6 +376,12 @@ function renderCheckedSpec(airline, tier) {
     } else {
       oversizedHtml = `<div class="oversize-fee">Overweight / oversized bag fee: Not listed</div>`;
     }
+    if (overweightFee !== null && overweightFee !== undefined) {
+      overweightHtml = `<div class="overweight-fee">Overweight: $${overweightFee}</div>`;
+    } else {
+      overweightHtml = `<div class="overweight-fee">Overweight bag fee: Not listed</div>`;
+    }
+    oversizedHtml += overweightHtml;
   }
 
   return `<div class="${cls}" data-testid="bag-spec-checked-${airline.iata}">
