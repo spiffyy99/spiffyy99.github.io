@@ -411,7 +411,7 @@ function renderCheckedSpec(airline, tier) {
       const entry = tier.checkedBags[i];
       const w = entry ? formatWeight(entry.weightKg) : (tier.checkedBags[0] ? formatWeight(tier.checkedBags[0].weightKg) : null);
       if (isEffectivelyIncluded(entry, i)) {
-        lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: Included${w ? ' (' + w + ')' : ''}</div>`);
+        lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: Included</div>`);
       } else {
         const price = resolvePrice(entry);
         if (price !== null && price > 0) {
