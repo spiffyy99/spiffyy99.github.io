@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Baggage Planner</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <i data-lucide="luggage" style="width:24px;height:24px"></i>
+        <div>
+          <div class="header-title">Travel Baggage Planner</div>
+          <div class="header-subtitle">Compare bag fees & sizes across airlines</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <span class="updated-badge" data-testid="data-updated-badge">Data: Apr 2026</span>
+        <div class="toggle-group" data-testid="unit-toggle">
+          <button class="toggle-btn unit-btn active" data-unit="metric" data-testid="unit-metric" onclick="setUnits('metric')">Metric</button>
+          <button class="toggle-btn unit-btn" data-unit="imperial" data-testid="unit-imperial" onclick="setUnits('imperial')">Imperial</button>
+        </div>
+        <button class="icon-btn" id="theme-toggle" data-testid="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <i data-lucide="moon" style="width:18px;height:18px"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Layout ── -->
+  <main class="main-container">
+
+    <!-- ── Left: Inputs ── -->
+    <div class="left-panel">
+
+      <!-- Airline Selection -->
+      <div class="section" data-testid="airline-selection-section">
+        <div class="section-header">
+          <span class="section-title">Select Your Airlines</span>
+          <span class="section-title" style="font-weight:400; letter-spacing:0.1em" id="airline-count-label">0 selected</span>
+        </div>
+        <div class="section-body">
+          <div class="airline-grid" id="airline-grid" data-testid="airline-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Flight Cards -->
+      <div class="section" data-testid="flights-section">
+        <div class="section-header">
+          <span class="section-title">Your Flights</span>
+        </div>
+        <div class="section-body" id="flight-cards" data-testid="flight-cards">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right: Summary ── -->
+    <div class="right-panel">
+
+      <!-- Total Cost -->
+      <div class="section" data-testid="summary-section">
+        <div class="summary-total">
+          <div class="summary-total-label">Estimated Total Baggage Cost</div>
+          <div class="summary-total-value" id="summary-total-value" data-testid="summary-total-value">$0</div>
+          <div class="summary-total-note" id="summary-total-note" data-testid="summary-total-note">Select airlines to calculate</div>
+        </div>
+      </div>
+
+      <!-- Minimum Dimensions -->
+      <div class="section" data-testid="min-dims-section">
+        <div class="section-header">
+          <span class="section-title">Minimum Allowed Sizes</span>
+        </div>
+        <div class="section-body" style="padding:0;">
+          <div class="min-warning" id="min-dims-warning" data-testid="min-dims-warning" style="display:none;"></div>
+          <table class="dim-table" data-testid="min-dims-table">
+            <thead>
+              <tr>
+                <th>Bag Type</th>
+                <th>Dimensions</th>
+                <th>Weight</th>
+              </tr>
+            </thead>
+            <tbody id="min-dims-body">
+              <tr><td colspan="3" class="dim-na" style="text-align:center; padding:1rem;">No airlines selected</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Per-Airline Breakdown -->
+      <div class="section" data-testid="breakdown-section">
+        <div class="section-header">
+          <span class="section-title">Cost by Airline</span>
+        </div>
+        <div id="airline-breakdown" data-testid="airline-breakdown">
+          <div class="empty-state" style="padding:1.5rem">
+            <p style="font-size:0.8125rem">Cost breakdown will appear here</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
