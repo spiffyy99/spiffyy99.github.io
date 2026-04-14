@@ -716,6 +716,44 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Unsupported tier overlay ── */
+.flight-card-unsupported .flight-card-total {
+  color: var(--text-secondary);
+}
+
+.unsupported-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--warning);
+  background: var(--unavailable-bg);
+  border: 1px dashed var(--unavailable-border);
+}
+
+.unsupported-overlay svg { opacity: 0.7; }
+
+.unsupported-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+}
+
+.unsupported-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+/* Disabled tier options */
+.tier-select option:disabled {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

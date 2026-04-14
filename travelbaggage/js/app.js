@@ -107,7 +107,7 @@ function filterDropdown() {
     if (selectedIatas.includes(a.iata)) return false;
     if (!query) return true;
     return a.name.toLowerCase().includes(query) || a.iata.toLowerCase().includes(query);
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name));
 
   dd.innerHTML = matches.length === 0
     ? '<div class="dropdown-empty">No airlines found</div>'
@@ -136,7 +136,37 @@ function removeAirline(iata) {
 
 function setTier(iata, tierIndex) {
   const flight = state.flights.find(f => f.iata === iata);
-  if (flight) { flight.tierIndex = tierIndex; renderAirlineCards(); renderSummary(); }
+  if (flight) {
+    const airline = getAirline(iata);
+    const tier = airline?.ticketTiers[tierIndex];
+    // Prevent selecting unsupported tiers
+    if (tier && !isTierSupported(tier)) return;
+    flight.tierIndex = tierIndex;
+    renderAirlineCards();
+    renderSummary();
+  }
+}
+
+// ── Tier support check ──
+function isTierSupported(tier) {
+  if (state.bags.personal && !tier.included.personal) return false;
+  if (state.bags.carryOn && !tier.included.carryOn && tier.avgAddOnPriceUsd.carryOn === null) return false;
+  if (state.bags.checked > 0 && tier.checkedBags) {
+    const first = tier.checkedBags[0];
+    if (first && !first.included && first.avgAddOnPriceUsd === null) return false;
+  }
+  return true;
+}
+
+function getTierUnsupportedReason(tier) {
+  const reasons = [];
+  if (state.bags.personal && !tier.included.personal) reasons.push('personal item');
+  if (state.bags.carryOn && !tier.included.carryOn && tier.avgAddOnPriceUsd.carryOn === null) reasons.push('carry-on');
+  if (state.bags.checked > 0 && tier.checkedBags) {
+    const first = tier.checkedBags[0];
+    if (first && !first.included && first.avgAddOnPriceUsd === null) reasons.push('checked bags');
+  }
+  return reasons;
 }
 
 // ── Selected tags ──
@@ -161,6 +191,7 @@ function getFlightCost(flight) {
   if (!airline) return 0;
   const tier = airline.ticketTiers[flight.tierIndex];
   if (!tier) return 0;
+  if (!isTierSupported(tier)) return 0;
   let cost = 0;
 
   // Carry-on
@@ -239,29 +270,47 @@ function renderAirlineCards() {
     if (!airline) return '';
     const tier = airline.ticketTiers[flight.tierIndex];
     const totalCost = getFlightCost(flight);
+    const supported = isTierSupported(tier);
+    const unsupportedReasons = supported ? [] : getTierUnsupportedReason(tier);
 
-    return `
-      <div class="section flight-card" data-testid="flight-card-${flight.iata}">
-        <div class="flight-card-header">
-          <div class="flight-card-airline">
-            <span class="flight-card-iata">${airline.iata}</span>
-            <span class="flight-card-name">${airline.name}</span>
-          </div>
-          <span class="flight-card-total" data-testid="flight-total-${flight.iata}">$${totalCost}</span>
-        </div>
-        <div class="flight-card-body">
-          <div class="tier-row">
-            <span class="tier-label">Ticket Tier</span>
-            <select class="tier-select" data-testid="tier-select-${flight.iata}" onchange="setTier('${flight.iata}', parseInt(this.value))">
-              ${airline.ticketTiers.map((t, i) => `<option value="${i}" ${i === flight.tierIndex ? 'selected' : ''}>${t.name}</option>`).join('')}
-            </select>
-          </div>
+    // Build tier options with disabled for unsupported
+    const tierOptions = airline.ticketTiers.map((t, i) => {
+      const sup = isTierSupported(t);
+      const reasons = sup ? [] : getTierUnsupportedReason(t);
+      const label = sup ? t.name : `${t.name} — no ${reasons.join(', ')}`;
+      return `<option value="${i}" ${i === flight.tierIndex ? 'selected' : ''} ${!sup ? 'disabled' : ''}>${label}</option>`;
+    }).join('');
+
+    const bodyContent = supported ? `
           <div class="bag-spec-grid">
             ${renderPersonalSpec(airline, tier)}
             ${renderCarryOnSpec(airline, tier)}
             ${renderCheckedSpec(airline, tier)}
           </div>
-          <div class="airline-note">${airline.notes}</div>
+          <div class="airline-note">${airline.notes}</div>`
+      : `<div class="unsupported-overlay" data-testid="unsupported-overlay-${flight.iata}">
+            <i data-lucide="circle-alert" style="width:24px;height:24px"></i>
+            <div class="unsupported-text">Selected baggage not supported on this tier</div>
+            <div class="unsupported-detail">No ${unsupportedReasons.join(', ')} on ${tier.name}. Choose a different tier above.</div>
+          </div>`;
+
+    return `
+      <div class="section flight-card ${supported ? '' : 'flight-card-unsupported'}" data-testid="flight-card-${flight.iata}">
+        <div class="flight-card-header">
+          <div class="flight-card-airline">
+            <span class="flight-card-iata">${airline.iata}</span>
+            <span class="flight-card-name">${airline.name}</span>
+          </div>
+          <span class="flight-card-total" data-testid="flight-total-${flight.iata}">${supported ? '$' + totalCost : '—'}</span>
+        </div>
+        <div class="flight-card-body">
+          <div class="tier-row">
+            <span class="tier-label">Ticket Tier</span>
+            <select class="tier-select" data-testid="tier-select-${flight.iata}" onchange="setTier('${flight.iata}', parseInt(this.value))">
+              ${tierOptions}
+            </select>
+          </div>
+          ${bodyContent}
         </div>
       </div>`;
   }).join('');
@@ -331,13 +380,23 @@ function renderCheckedSpec(airline, tier) {
   const oversizedFee = airline.oversizedCheckedBagCostUsd;
   const overweightFee = airline.overweightCheckedBagCostUsd;
 
-  // Resolve effective prices: if bag price is null and not included, fall back to 1st bag price
-  const firstBagPrice = (tier.checkedBags && tier.checkedBags[0]) ? tier.checkedBags[0].avgAddOnPriceUsd : null;
+  // Resolve: is this bag effectively included or paid?
+  const firstBag = (tier.checkedBags && tier.checkedBags[0]) ? tier.checkedBags[0] : null;
+  const firstBagIncluded = firstBag ? firstBag.included : false;
+  const firstBagPrice = firstBag ? firstBag.avgAddOnPriceUsd : null;
 
   function resolvePrice(entry) {
     if (!entry) return firstBagPrice;
     if (entry.included) return 0;
     return entry.avgAddOnPriceUsd !== null ? entry.avgAddOnPriceUsd : firstBagPrice;
+  }
+
+  function isEffectivelyIncluded(entry, idx) {
+    if (!entry) return firstBagIncluded;
+    if (entry.included) return true;
+    // If price is null and falls back to 1st bag which is included, treat as included
+    if (entry.avgAddOnPriceUsd === null && firstBagIncluded) return true;
+    return false;
   }
 
   // No grey-out needed now since null prices fall back to 1st bag price
@@ -351,19 +410,22 @@ function renderCheckedSpec(airline, tier) {
     for (let i = 0; i < checkedCount; i++) {
       const entry = tier.checkedBags[i];
       const w = entry ? formatWeight(entry.weightKg) : (tier.checkedBags[0] ? formatWeight(tier.checkedBags[0].weightKg) : null);
-      if (entry && entry.included) {
+      if (isEffectivelyIncluded(entry, i)) {
         lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: Included${w ? ' (' + w + ')' : ''}</div>`);
       } else {
         const price = resolvePrice(entry);
         if (price !== null && price > 0) {
           const isFallback = entry && entry.avgAddOnPriceUsd === null;
-          lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${price}${w ? ' (' + w + ')' : ''}</div>`);
-        } else if (price === 0) {
-          lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: $0${w ? ' (' + w + ')' : ''}</div>`);
+          lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${price}${w ? ' (' + w + ')' : ''}${isFallback ? ' *' : ''}</div>`);
         } else {
           lines.push(`<div class="checked-bag-line unavail">Bag ${i + 1}: Varies by route${w ? ' (' + w + ')' : ''}</div>`);
         }
       }
+    }
+    // Footnote for fallback pricing (only for paid fallbacks, not included ones)
+    const hasFallback = tier.checkedBags.slice(0, checkedCount).some((e, i) => i > 0 && e && !e.included && e.avgAddOnPriceUsd === null && firstBagPrice !== null && firstBagPrice > 0 && !firstBagIncluded);
+    if (hasFallback) {
+      lines.push(`<div class="checked-bag-footnote">* Estimated from 1st bag price</div>`);
     }
     statusHtml = `<div class="checked-bag-breakdown">${lines.join('')}</div>`;
   }
