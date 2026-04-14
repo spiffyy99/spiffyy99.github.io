@@ -11,12 +11,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Basic Economy", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 40 } },
-        { "name": "Main Cabin", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 40 } },
-        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Business / First", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Basic Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 40 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Main Cabin", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 40 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "Business / First", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Basic/Main usually pay for checked bags. Personal item max 45x35x20 cm."
+      "notes": "Basic/Main usually pay for checked bags. Personal item max 45x35x20 cm.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Delta Air Lines",
@@ -27,12 +28,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Basic Economy", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 35 } },
-        { "name": "Main Cabin / Comfort+", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 35 } },
-        { "name": "Premium Select", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "First / Delta One", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Basic Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 35 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Main Cabin / Comfort+", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 35 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Premium Select", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "First / Delta One", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Carry-on + personal item free even on Basic. Personal item size not formally listed."
+      "notes": "Carry-on + personal item free even on Basic. Personal item size not formally listed.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "United Airlines",
@@ -43,12 +45,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Basic Economy", "included": { "personal": true, "carryOn": false, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 45, "checked": 45 } },
-        { "name": "Economy", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 45 } },
-        { "name": "Premium Plus", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Business / First", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Basic Economy", "included": { "personal": true, "carryOn": false }, "avgAddOnPriceUsd": { "carryOn": 45 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 45 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 45 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Premium Plus", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "Business / First", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Basic Economy generally gets only a personal item; carry-on starts at $45 if prepaid."
+      "notes": "Basic Economy generally gets only a personal item; carry-on starts at $45 if prepaid.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Ryanair",
@@ -59,12 +62,13 @@
         "checked": { "dimensionsCm": null, "weightKg": 10 }
       },
       "ticketTiers": [
-        { "name": "Basic", "included": { "personal": true, "carryOn": false, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 26, "checked": 29 } },
-        { "name": "Regular / Plus", "included": { "personal": true, "carryOn": false, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 26, "checked": 0 } },
-        { "name": "Priority", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 29 } },
-        { "name": "Flexi Plus", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 29 } }
+        { "name": "Basic", "included": { "personal": true, "carryOn": false }, "avgAddOnPriceUsd": { "carryOn": 26 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 10, "avgAddOnPriceUsd": 29 }, { "count": 2, "included": false, "weightKg": 10, "avgAddOnPriceUsd": null }] },
+        { "name": "Regular / Plus", "included": { "personal": true, "carryOn": false }, "avgAddOnPriceUsd": { "carryOn": 26 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 10, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 10, "avgAddOnPriceUsd": null }] },
+        { "name": "Priority", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 10, "avgAddOnPriceUsd": 29 }, { "count": 2, "included": false, "weightKg": 10, "avgAddOnPriceUsd": null }] },
+        { "name": "Flexi Plus", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 10, "avgAddOnPriceUsd": 29 }, { "count": 2, "included": false, "weightKg": 10, "avgAddOnPriceUsd": null }] }
       ],
-      "notes": "Strict sizer enforcement. Personal bag 40x30x20 cm; Priority adds 10kg cabin bag. 10kg and 20kg checked options sold separately."
+      "notes": "Strict sizer enforcement. Personal bag 40x30x20 cm; Priority adds 10kg cabin bag. 10kg and 20kg checked options sold separately.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "easyJet",
@@ -75,11 +79,12 @@
         "checked": { "dimensionsCm": null, "weightKg": 15 }
       },
       "ticketTiers": [
-        { "name": "Standard", "included": { "personal": true, "carryOn": false, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 9, "checked": 22 } },
-        { "name": "Standard Plus", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 22 } },
-        { "name": "ESSENTIAL / FLEXI", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 22 } }
+        { "name": "Standard", "included": { "personal": true, "carryOn": false }, "avgAddOnPriceUsd": { "carryOn": 9 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 15, "avgAddOnPriceUsd": 22 }, { "count": 2, "included": false, "weightKg": 15, "avgAddOnPriceUsd": null }] },
+        { "name": "Standard Plus", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 15, "avgAddOnPriceUsd": 22 }, { "count": 2, "included": false, "weightKg": 15, "avgAddOnPriceUsd": null }] },
+        { "name": "ESSENTIAL / FLEXI", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 15, "avgAddOnPriceUsd": 22 }, { "count": 2, "included": false, "weightKg": 15, "avgAddOnPriceUsd": null }] }
       ],
-      "notes": "Everyone gets one under-seat bag. Large cabin bag is usually paid unless bundled. Hold-bag options start at 15kg; 23kg is standard."
+      "notes": "Everyone gets one under-seat bag. Large cabin bag is usually paid unless bundled. Hold-bag options start at 15kg; 23kg is standard.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Lufthansa",
@@ -90,12 +95,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Economy Light", "included": { "personal": true, "carryOn": true, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": null } },
-        { "name": "Economy Classic / Flex", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Business / First", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Economy Light", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Classic / Flex", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Business / First", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Economy Light usually excludes checked bags. Optional checked-bag pricing is route-dependent via baggage calculator."
+      "notes": "Economy Light usually excludes checked bags. Optional checked-bag pricing is route-dependent via baggage calculator.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Air France",
@@ -106,12 +112,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Economy Light", "included": { "personal": true, "carryOn": false, "checked": 0 }, "avgAddOnPriceUsd": { "carryOn": null, "checked": null } },
-        { "name": "Economy Standard / Flex", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Premium", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Business / La Premiere", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Economy Light", "included": { "personal": true, "carryOn": false }, "avgAddOnPriceUsd": { "carryOn": null }, "checkedBags": [{ "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Standard / Flex", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Premium", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "Business / La Premiere", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Economy cabin baggage is 0-1 hand bag depending on fare plus 1 small bag; 12kg combined cabin weight. Light fares can exclude cabin bag on some channels."
+      "notes": "Economy cabin baggage is 0-1 hand bag depending on fare plus 1 small bag; 12kg combined cabin weight. Light fares can exclude cabin bag on some channels.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Emirates",
@@ -122,12 +129,13 @@
         "checked": { "dimensionsCm": null, "weightKg": 20 }
       },
       "ticketTiers": [
-        { "name": "Economy Special", "included": { "personal": false, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Saver", "included": { "personal": false, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Flex", "included": { "personal": false, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Flex Plus", "included": { "personal": false, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Economy Special", "included": { "personal": false, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Saver", "included": { "personal": false, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Flex", "included": { "personal": false, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Flex Plus", "included": { "personal": false, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }] }
       ],
-      "notes": "Economy uses weight concept on most routes: Special 20kg, Saver 25kg, Flex 30kg, Flex Plus 35kg. Cabin bag is one 55x38x22 cm piece up to 7kg."
+      "notes": "Economy uses weight concept on most routes: Special 20kg, Saver 25kg, Flex 30kg, Flex Plus 35kg. Cabin bag is one 55x38x22 cm piece up to 7kg.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "Singapore Airlines",
@@ -138,12 +146,13 @@
         "checked": { "dimensionsCm": null, "weightKg": 25 }
       },
       "ticketTiers": [
-        { "name": "Economy Lite", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Value", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Standard", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Economy Flexi", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Economy Lite", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 25, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 25, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Value", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 25, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 25, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Standard", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 25, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 25, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Flexi", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 25, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 25, "avgAddOnPriceUsd": null }] }
       ],
-      "notes": "Economy allows 1 cabin bag up to 7kg and 115cm total dimensions. Checked allowance is usually 25kg (Lite/Value) or 30kg (Standard/Flexi) outside the USA."
+      "notes": "Economy allows 1 cabin bag up to 7kg and 115cm total dimensions. Checked allowance is usually 25kg (Lite/Value) or 30kg (Standard/Flexi) outside the USA.",
+      "oversizedCheckedBagCostUsd": null
     },
     {
       "name": "ANA",
@@ -154,12 +163,13 @@
         "checked": { "dimensionsCm": [158], "weightKg": 23 }
       },
       "ticketTiers": [
-        { "name": "Economy Light / Value", "included": { "personal": true, "carryOn": true, "checked": 1 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": null } },
-        { "name": "Economy Basic / Standard", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } },
-        { "name": "Business / First", "included": { "personal": true, "carryOn": true, "checked": 2 }, "avgAddOnPriceUsd": { "carryOn": 0, "checked": 0 } }
+        { "name": "Economy Light / Value", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }] },
+        { "name": "Economy Basic / Standard", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "Premium Economy", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] },
+        { "name": "Business / First", "included": { "personal": true, "carryOn": true }, "avgAddOnPriceUsd": { "carryOn": 0 }, "checkedBags": [{ "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }, { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }] }
       ],
-      "notes": "Most travellers get 1 carry-on + 1 personal item; total cabin weight 10kg. Economy Light/Value routes often drop from 2 free checked bags to 1."
+      "notes": "Most travellers get 1 carry-on + 1 personal item; total cabin weight 10kg. Economy Light/Value routes often drop from 2 free checked bags to 1.",
+      "oversizedCheckedBagCostUsd": null
     }
   ]
 }

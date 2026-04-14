@@ -45,31 +45,34 @@
         </div>
         <div class="section-body">
           <div class="global-bags" data-testid="global-bags">
+            <!-- Personal Item: toggle -->
             <div class="global-bag" data-testid="global-bag-personal">
               <i data-lucide="briefcase" style="width:20px;height:20px;color:var(--text-secondary)"></i>
               <span class="global-bag-label">Personal Item</span>
-              <div class="bag-counter-controls">
-                <button class="counter-btn" data-testid="decrement-personal" onclick="setGlobalBag('personal', -1)" aria-label="Decrease personal items">-</button>
-                <span class="counter-value" data-testid="count-personal" id="count-personal">0</span>
-                <button class="counter-btn" data-testid="increment-personal" onclick="setGlobalBag('personal', 1)" aria-label="Increase personal items">+</button>
-              </div>
+              <label class="toggle-switch" data-testid="toggle-personal">
+                <input type="checkbox" id="personal-toggle" onchange="togglePersonal()" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+              <span class="toggle-label-text" id="personal-label">Not bringing</span>
             </div>
+            <!-- Carry-On: 0 or 1 -->
             <div class="global-bag" data-testid="global-bag-carryOn">
               <i data-lucide="backpack" style="width:20px;height:20px;color:var(--text-secondary)"></i>
               <span class="global-bag-label">Carry-On</span>
-              <div class="bag-counter-controls">
-                <button class="counter-btn" data-testid="decrement-carryOn" onclick="setGlobalBag('carryOn', -1)" aria-label="Decrease carry-ons">-</button>
-                <span class="counter-value" data-testid="count-carryOn" id="count-carryOn">0</span>
-                <button class="counter-btn" data-testid="increment-carryOn" onclick="setGlobalBag('carryOn', 1)" aria-label="Increase carry-ons">+</button>
-              </div>
+              <label class="toggle-switch" data-testid="toggle-carryOn">
+                <input type="checkbox" id="carryOn-toggle" onchange="toggleCarryOn()" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+              <span class="toggle-label-text" id="carryOn-label">Not bringing</span>
             </div>
+            <!-- Checked: 0, 1, or 2 -->
             <div class="global-bag" data-testid="global-bag-checked">
               <i data-lucide="luggage" style="width:20px;height:20px;color:var(--text-secondary)"></i>
-              <span class="global-bag-label">Checked</span>
+              <span class="global-bag-label">Checked Bags</span>
               <div class="bag-counter-controls">
-                <button class="counter-btn" data-testid="decrement-checked" onclick="setGlobalBag('checked', -1)" aria-label="Decrease checked bags">-</button>
+                <button class="counter-btn" data-testid="decrement-checked" onclick="setCheckedCount(-1)" aria-label="Decrease checked bags">-</button>
                 <span class="counter-value" data-testid="count-checked" id="count-checked">0</span>
-                <button class="counter-btn" data-testid="increment-checked" onclick="setGlobalBag('checked', 1)" aria-label="Increase checked bags">+</button>
+                <button class="counter-btn" data-testid="increment-checked" onclick="setCheckedCount(1)" aria-label="Increase checked bags">+</button>
               </div>
             </div>
           </div>
@@ -83,43 +86,24 @@
           <span class="section-title" style="font-weight:400; letter-spacing:0.1em" id="airline-count-label">0 selected</span>
         </div>
         <div class="section-body">
-          <!-- Search dropdown -->
           <div class="airline-search-wrap" data-testid="airline-search-wrap">
             <div class="airline-search-input-wrap">
               <i data-lucide="search" style="width:16px;height:16px;color:var(--text-secondary);flex-shrink:0"></i>
-              <input
-                type="text"
-                class="airline-search-input"
-                id="airline-search"
-                data-testid="airline-search-input"
-                placeholder="Search and add airlines..."
-                autocomplete="off"
-                onfocus="openDropdown()"
-                oninput="filterDropdown()"
-              />
+              <input type="text" class="airline-search-input" id="airline-search" data-testid="airline-search-input" placeholder="Search and add airlines..." autocomplete="off" onfocus="openDropdown()" oninput="filterDropdown()" />
             </div>
-            <div class="airline-dropdown" id="airline-dropdown" data-testid="airline-dropdown" style="display:none;">
-              <!-- Rendered by JS -->
-            </div>
+            <div class="airline-dropdown" id="airline-dropdown" data-testid="airline-dropdown" style="display:none;"></div>
           </div>
-          <!-- Selected airline tags -->
-          <div class="selected-airlines" id="selected-airlines" data-testid="selected-airlines">
-            <!-- Rendered by JS -->
-          </div>
+          <div class="selected-airlines" id="selected-airlines" data-testid="selected-airlines"></div>
         </div>
       </div>
 
       <!-- Airline Detail Cards -->
-      <div id="airline-cards" data-testid="airline-cards">
-        <!-- Rendered by JS -->
-      </div>
+      <div id="airline-cards" data-testid="airline-cards"></div>
 
     </div>
 
     <!-- ── Right: Summary ── -->
     <div class="right-panel">
-
-      <!-- Total Cost -->
       <div class="section" data-testid="summary-section">
         <div class="summary-total">
           <div class="summary-total-label">Estimated Total Baggage Cost</div>
@@ -128,7 +112,6 @@
         </div>
       </div>
 
-      <!-- Minimum Dimensions -->
       <div class="section" data-testid="min-dims-section">
         <div class="section-header">
           <span class="section-title">Minimum Allowed Sizes</span>
@@ -136,32 +119,20 @@
         <div class="section-body" style="padding:0;">
           <div class="min-warning" id="min-dims-warning" data-testid="min-dims-warning" style="display:none;"></div>
           <table class="dim-table" data-testid="min-dims-table">
-            <thead>
-              <tr>
-                <th>Bag Type</th>
-                <th>Dimensions</th>
-                <th>Weight</th>
-              </tr>
-            </thead>
-            <tbody id="min-dims-body">
-              <tr><td colspan="3" class="dim-na" style="text-align:center; padding:1rem;">No airlines selected</td></tr>
-            </tbody>
+            <thead><tr><th>Bag Type</th><th>Dimensions</th><th>Weight</th></tr></thead>
+            <tbody id="min-dims-body"><tr><td colspan="3" class="dim-na" style="text-align:center; padding:1rem;">No airlines selected</td></tr></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Per-Airline Breakdown -->
       <div class="section" data-testid="breakdown-section">
         <div class="section-header">
           <span class="section-title">Cost by Airline</span>
         </div>
         <div id="airline-breakdown" data-testid="airline-breakdown">
-          <div class="empty-state" style="padding:1.5rem">
-            <p style="font-size:0.8125rem">Cost breakdown will appear here</p>
-          </div>
+          <div class="empty-state" style="padding:1.5rem"><p style="font-size:0.8125rem">Cost breakdown will appear here</p></div>
         </div>
       </div>
-
     </div>
 
   </main>
