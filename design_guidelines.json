@@ -1,0 +1,91 @@
+{
+  "theme": "light/dark",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "typography": {
+    "headings": "Outfit",
+    "body": "IBM Plex Sans",
+    "scales": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-light",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-medium",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm uppercase tracking-[0.2em]"
+    }
+  },
+  "colors": {
+    "light": {
+      "background": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "text_primary": "#0A0A0A",
+      "text_secondary": "#52525B",
+      "primary_accent": "#2563EB",
+      "border": "#E4E4E7",
+      "warning": "#E11D48"
+    },
+    "dark": {
+      "background": "#09090B",
+      "surface": "#18181B",
+      "text_primary": "#FAFAFA",
+      "text_secondary": "#A1A1AA",
+      "primary_accent": "#3B82F6",
+      "border": "#27272A",
+      "warning": "#F43F5E"
+    }
+  },
+  "surface_strategy": {
+    "style": "Grid Borders (Technical Look)",
+    "description": "Expose the skeleton. Sharp edges, flat backgrounds, visible 1px borders. Minimal to no shadows.",
+    "border_radius": "rounded-none",
+    "shadows": "none"
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "p-2, p-4, p-8, p-12, p-16",
+    "grid": {
+      "mode": "Control Room",
+      "desktop": "grid-cols-1 md:grid-cols-3 gap-8",
+      "left_col": "col-span-1 md:col-span-2",
+      "right_col": "col-span-1"
+    }
+  },
+  "components": {
+    "header": {
+      "style": "Solid background, hard bottom border. Contains Logo, Theme Switcher, Unit Toggle (Metric/Imperial)."
+    },
+    "airline_selector": {
+      "style": "Command style or Combobox for multi-selecting 10 airlines."
+    },
+    "baggage_inputs": {
+      "style": "For each selected airline, display a flat outlined container (border-collapse style). Include a Select for Ticket Tier, and Stepper (+/- buttons) for Personal Item, Carry-on, Checked Bags."
+    },
+    "summary_panel": {
+      "style": "Sticky on desktop. Large, prominent typography for Total Cost (e.g., text-5xl). Highlight 'Minimum Allowed Dimensions' across the selected flights to warn the user."
+    }
+  },
+  "icons_and_assets": {
+    "library": "lucide-react",
+    "usage": "Use strictly for functional UI (Sun/Moon for theme, +/- for counters, plane icon for airlines, ruler/scale for dimensions). No decorative illustrations to maintain the minimalist Swiss feel.",
+    "images_urls": []
+  },
+  "animations": {
+    "hover": "Background darkens/lightens slightly, border color intensifies.",
+    "transitions": "transition-colors duration-200 ease-in-out for theme switching and interactive elements."
+  },
+  "accessibility": {
+    "testing": "All interactive elements MUST include data-testid (e.g., data-testid='theme-toggle', data-testid='airline-select').",
+    "contrast": "Ensure 4.5:1 ratio for text."
+  },
+  "instructions_to_main_agent": [
+    "1. Setup standard React app with Tailwind CSS and Shadcn UI. Install 'lucide-react' for icons.",
+    "2. Configure 'Outfit' (headings) and 'IBM Plex Sans' (body) via Google Fonts in index.css.",
+    "3. Set up next-themes or basic state for Light/Dark mode toggling. Implement a Unit Toggle state (Metric/Imperial) globally.",
+    "4. Create a static JSON file or constants object containing exactly 10 airlines (e.g., Delta, United, American, Ryanair, EasyJet, Lufthansa, Emirates, Air France, JetBlue, Southwest). Structure the data so each airline has different ticket tiers, baggage fees per tier, and strict dimension/weight rules for personal item, carry-on, and checked bags. Provide dimensions in both Metric (cm/kg) and Imperial (in/lbs).",
+    "5. Build the UI using the 'Control Room' grid layout: airline multi-select and baggage inputs on the left (col-span-2), and a sticky summary on the right (col-span-1).",
+    "6. Build a dynamic Baggage Input section: When airlines are selected, list them as flat bordered cards. Each card must let the user select their ticket tier for that airline, and increment/decrement the count of Personal Items, Carry-ons, and Checked Bags.",
+    "7. Ensure the Summary Panel calculates the TOTAL BAGGAGE COST across all airlines.",
+    "8. CRITICAL LOGIC: Calculate 'Minimum Dimensions'. For the selected airlines, find the SMALLEST allowed width, height, length, and weight for each bag type to guarantee the user's bag will fit everywhere.",
+    "9. Update all dimension and weight displays based on the Metric/Imperial unit toggle.",
+    "10. Apply 'rounded-none' to all Shadcn components (buttons, inputs, select) to strictly adhere to the Swiss Technical archetype.",
+    "11. Ensure there are no complex gradients or soft shadows. Stick to the monochromatic base with the primary accent color for active states."
+  ]
+}
