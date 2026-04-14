@@ -65,14 +65,12 @@ function getAirline(iata) {
 // ── Global bag controls ──
 function togglePersonal() {
   state.bags.personal = document.getElementById('personal-toggle').checked;
-  document.getElementById('personal-label').textContent = state.bags.personal ? 'Bringing' : 'Not bringing';
   renderAirlineCards();
   renderSummary();
 }
 
 function toggleCarryOn() {
   state.bags.carryOn = document.getElementById('carryOn-toggle').checked;
-  document.getElementById('carryOn-label').textContent = state.bags.carryOn ? 'Bringing' : 'Not bringing';
   renderAirlineCards();
   renderSummary();
 }
@@ -358,18 +356,13 @@ function renderCheckedSpec(airline, tier) {
         const price = resolvePrice(entry);
         if (price !== null && price > 0) {
           const isFallback = entry && entry.avgAddOnPriceUsd === null;
-          lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${price}${w ? ' (' + w + ')' : ''}${isFallback ? ' *' : ''}</div>`);
+          lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${price}${w ? ' (' + w + ')' : ''}</div>`);
         } else if (price === 0) {
           lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: $0${w ? ' (' + w + ')' : ''}</div>`);
         } else {
           lines.push(`<div class="checked-bag-line unavail">Bag ${i + 1}: Varies by route${w ? ' (' + w + ')' : ''}</div>`);
         }
       }
-    }
-    // Add footnote if any fallback was used
-    const hasFallback = tier.checkedBags.slice(0, checkedCount).some((e, i) => i > 0 && e && !e.included && e.avgAddOnPriceUsd === null && firstBagPrice !== null);
-    if (hasFallback) {
-      lines.push(`<div class="checked-bag-footnote">* Estimated from 1st bag price</div>`);
     }
     statusHtml = `<div class="checked-bag-breakdown">${lines.join('')}</div>`;
   }
@@ -380,7 +373,7 @@ function renderCheckedSpec(airline, tier) {
     if (oversizedFee !== null && oversizedFee !== undefined) {
       oversizedHtml = `<div class="oversize-fee">Overweight / oversized: $${oversizedFee}</div>`;
     } else {
-      oversizedHtml = `<div class="oversize-fee">Overweight / oversized: Not listed</div>`;
+      oversizedHtml = `<div class="oversize-fee">Overweight / oversized bag fee: Not listed</div>`;
     }
   }
 
