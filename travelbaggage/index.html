@@ -38,27 +38,80 @@
     <!-- ── Left: Inputs ── -->
     <div class="left-panel">
 
+      <!-- Your Bags (global) -->
+      <div class="section" data-testid="bags-section">
+        <div class="section-header">
+          <span class="section-title">Your Bags</span>
+        </div>
+        <div class="section-body">
+          <div class="global-bags" data-testid="global-bags">
+            <div class="global-bag" data-testid="global-bag-personal">
+              <i data-lucide="briefcase" style="width:20px;height:20px;color:var(--text-secondary)"></i>
+              <span class="global-bag-label">Personal Item</span>
+              <div class="bag-counter-controls">
+                <button class="counter-btn" data-testid="decrement-personal" onclick="setGlobalBag('personal', -1)" aria-label="Decrease personal items">-</button>
+                <span class="counter-value" data-testid="count-personal" id="count-personal">0</span>
+                <button class="counter-btn" data-testid="increment-personal" onclick="setGlobalBag('personal', 1)" aria-label="Increase personal items">+</button>
+              </div>
+            </div>
+            <div class="global-bag" data-testid="global-bag-carryOn">
+              <i data-lucide="backpack" style="width:20px;height:20px;color:var(--text-secondary)"></i>
+              <span class="global-bag-label">Carry-On</span>
+              <div class="bag-counter-controls">
+                <button class="counter-btn" data-testid="decrement-carryOn" onclick="setGlobalBag('carryOn', -1)" aria-label="Decrease carry-ons">-</button>
+                <span class="counter-value" data-testid="count-carryOn" id="count-carryOn">0</span>
+                <button class="counter-btn" data-testid="increment-carryOn" onclick="setGlobalBag('carryOn', 1)" aria-label="Increase carry-ons">+</button>
+              </div>
+            </div>
+            <div class="global-bag" data-testid="global-bag-checked">
+              <i data-lucide="luggage" style="width:20px;height:20px;color:var(--text-secondary)"></i>
+              <span class="global-bag-label">Checked</span>
+              <div class="bag-counter-controls">
+                <button class="counter-btn" data-testid="decrement-checked" onclick="setGlobalBag('checked', -1)" aria-label="Decrease checked bags">-</button>
+                <span class="counter-value" data-testid="count-checked" id="count-checked">0</span>
+                <button class="counter-btn" data-testid="increment-checked" onclick="setGlobalBag('checked', 1)" aria-label="Increase checked bags">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Airline Selection -->
       <div class="section" data-testid="airline-selection-section">
         <div class="section-header">
-          <span class="section-title">Select Your Airlines</span>
+          <span class="section-title">Your Airlines</span>
           <span class="section-title" style="font-weight:400; letter-spacing:0.1em" id="airline-count-label">0 selected</span>
         </div>
         <div class="section-body">
-          <div class="airline-grid" id="airline-grid" data-testid="airline-grid">
+          <!-- Search dropdown -->
+          <div class="airline-search-wrap" data-testid="airline-search-wrap">
+            <div class="airline-search-input-wrap">
+              <i data-lucide="search" style="width:16px;height:16px;color:var(--text-secondary);flex-shrink:0"></i>
+              <input
+                type="text"
+                class="airline-search-input"
+                id="airline-search"
+                data-testid="airline-search-input"
+                placeholder="Search and add airlines..."
+                autocomplete="off"
+                onfocus="openDropdown()"
+                oninput="filterDropdown()"
+              />
+            </div>
+            <div class="airline-dropdown" id="airline-dropdown" data-testid="airline-dropdown" style="display:none;">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <!-- Selected airline tags -->
+          <div class="selected-airlines" id="selected-airlines" data-testid="selected-airlines">
             <!-- Rendered by JS -->
           </div>
         </div>
       </div>
 
-      <!-- Flight Cards -->
-      <div class="section" data-testid="flights-section">
-        <div class="section-header">
-          <span class="section-title">Your Flights</span>
-        </div>
-        <div class="section-body" id="flight-cards" data-testid="flight-cards">
-          <!-- Rendered by JS -->
-        </div>
+      <!-- Airline Detail Cards -->
+      <div id="airline-cards" data-testid="airline-cards">
+        <!-- Rendered by JS -->
       </div>
 
     </div>
@@ -113,7 +166,6 @@
 
   </main>
 
-  <script src="js/data.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

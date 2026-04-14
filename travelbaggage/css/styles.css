@@ -14,6 +14,8 @@
   --tag-text: #3F3F46;
   --input-bg: #FFFFFF;
   --hover-bg: #F4F4F5;
+  --unavailable-bg: #FEF2F2;
+  --unavailable-border: #FECACA;
 }
 
 [data-theme="dark"] {
@@ -30,13 +32,11 @@
   --tag-text: #D4D4D8;
   --input-bg: #18181B;
   --hover-bg: #27272A;
+  --unavailable-bg: #1C1017;
+  --unavailable-border: #4C1D2C;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'IBM Plex Sans', sans-serif;
@@ -46,9 +46,7 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
-}
+h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
 
 /* ── Header ── */
 .header {
@@ -57,7 +55,7 @@ h1, h2, h3, h4, h5, h6 {
   position: sticky;
   top: 0;
   z-index: 50;
-  transition: background 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .header-inner {
@@ -68,6 +66,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .header-left {
@@ -76,14 +75,13 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.75rem;
 }
 
-.header-left svg {
-  color: var(--accent);
-}
+.header-left svg { color: var(--accent); }
 
 .header-title {
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  font-family: 'Outfit', sans-serif;
 }
 
 .header-subtitle {
@@ -94,18 +92,10 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
 }
 
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.header-controls { display: flex; align-items: center; gap: 0.5rem; }
 
-/* ── Toggle Buttons ── */
-.toggle-group {
-  display: flex;
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
+/* ── Toggle / Icon Buttons ── */
+.toggle-group { display: flex; border: 1px solid var(--border); }
 
 .toggle-btn {
   padding: 0.375rem 0.75rem;
@@ -116,38 +106,32 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
   letter-spacing: 0.03em;
 }
 
-.toggle-btn:not(:last-child) {
-  border-right: 1px solid var(--border);
-}
-
-.toggle-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.toggle-btn:hover:not(.active) {
-  background: var(--hover-bg);
-}
+.toggle-btn:not(:last-child) { border-right: 1px solid var(--border); }
+.toggle-btn.active { background: var(--accent); color: #fff; }
+.toggle-btn:hover:not(.active) { background: var(--hover-bg); }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
 }
 
-.icon-btn:hover {
-  background: var(--hover-bg);
+.icon-btn:hover { background: var(--hover-bg); }
+
+.updated-badge {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 /* ── Main Layout ── */
@@ -161,23 +145,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (min-width: 768px) {
-  .main-container {
-    grid-template-columns: 2fr 1fr;
-  }
+  .main-container { grid-template-columns: 2fr 1fr; }
 }
 
-/* ── Left Panel ── */
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.left-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.right-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+
+@media (min-width: 768px) {
+  .right-panel { position: sticky; top: 5rem; align-self: start; }
 }
 
 /* ── Section ── */
 .section {
   border: 1px solid var(--border);
   background: var(--surface);
-  transition: background 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .section-header {
@@ -196,78 +179,179 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
 }
 
-.section-body {
-  padding: 1rem;
-}
+.section-body { padding: 1rem; }
 
-/* ── Airline Grid ── */
-.airline-grid {
+/* ── Global Bags ── */
+.global-bags {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.global-bag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
 }
 
-@media (min-width: 640px) {
-  .airline-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.global-bag-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
-@media (min-width: 1024px) {
-  .airline-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
+.bag-counter-controls { display: flex; align-items: center; gap: 0.5rem; }
+
+.counter-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: all 0.15s;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 
-.airline-chip {
+.counter-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.counter-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.counter-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  min-width: 2rem;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .global-bags { grid-template-columns: 1fr; }
+}
+
+/* ── Airline Search Dropdown ── */
+.airline-search-wrap { position: relative; }
+
+.airline-search-input-wrap {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.airline-search-input-wrap:focus-within { border-color: var(--accent); }
+
+.airline-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
   background: transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
   font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--text-primary);
-  font-weight: 400;
 }
 
-.airline-chip:hover {
-  border-color: var(--accent);
-  background: var(--hover-bg);
+.airline-search-input::placeholder { color: var(--text-secondary); }
+
+.airline-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  border: 1px solid var(--border);
+  border-top: none;
+  background: var(--surface);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 40;
 }
 
-.airline-chip.selected {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.875rem;
+  text-align: left;
+  transition: background 0.1s;
 }
 
-.airline-chip .iata {
-  font-weight: 600;
-  color: var(--accent);
+.dropdown-item:hover { background: var(--hover-bg); }
+
+.dropdown-iata {
+  font-weight: 700;
   font-size: 0.75rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  min-width: 2rem;
+}
+
+.dropdown-empty {
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+/* ── Selected Airline Tags ── */
+.selected-airlines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.selected-airlines:empty { margin-top: 0; }
+
+.airline-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-size: 0.8125rem;
+  transition: all 0.15s;
+}
+
+.airline-tag-iata {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--accent);
   letter-spacing: 0.05em;
 }
 
-.airline-chip .checkmark {
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  color: var(--accent);
+.airline-tag-name { font-weight: 400; }
+
+.airline-tag-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  padding: 0.125rem;
+  margin-left: 0.125rem;
+  transition: color 0.15s;
 }
 
-.airline-chip.selected .checkmark {
-  opacity: 1;
-}
+.airline-tag-remove:hover { color: var(--warning); }
 
 /* ── Flight Card ── */
-.flight-card {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  transition: all 0.2s ease-in-out;
-}
+.flight-card { animation: fadeIn 0.2s ease-out; margin-bottom: 1.5rem; }
 
 .flight-card-header {
   padding: 0.75rem 1rem;
@@ -278,11 +362,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1rem;
 }
 
-.flight-card-airline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.flight-card-airline { display: flex; align-items: center; gap: 0.5rem; }
 
 .flight-card-iata {
   font-weight: 700;
@@ -291,23 +371,14 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em;
 }
 
-.flight-card-name {
-  font-weight: 500;
-  font-size: 0.875rem;
-}
+.flight-card-name { font-weight: 500; font-size: 0.875rem; }
 
-.flight-card-remove {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.25rem;
-  display: flex;
-  transition: color 0.15s ease;
-}
+.flight-card-right { display: flex; align-items: center; gap: 0.75rem; }
 
-.flight-card-remove:hover {
-  color: var(--warning);
+.flight-card-total {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .flight-card-body {
@@ -318,11 +389,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ── Tier Select ── */
-.tier-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
+.tier-row { display: flex; align-items: center; gap: 0.75rem; }
 
 .tier-label {
   font-size: 0.75rem;
@@ -343,7 +410,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s;
   appearance: none;
   -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -352,118 +419,99 @@ h1, h2, h3, h4, h5, h6 {
   padding-right: 2rem;
 }
 
-.tier-select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
+.tier-select:focus { outline: none; border-color: var(--accent); }
 
-/* ── Bag Counters ── */
-.bag-counters {
+/* ── Bag Spec Grid ── */
+.bag-spec-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
 
-.bag-counter {
+@media (max-width: 640px) {
+  .bag-spec-grid { grid-template-columns: 1fr; }
+}
+
+.bag-spec {
   border: 1px solid var(--border);
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  transition: border-color 0.15s ease;
+  gap: 0.25rem;
+  transition: all 0.2s;
 }
 
-.bag-counter-label {
+.bag-spec.unavailable {
+  border-color: var(--unavailable-border);
+  background: var(--unavailable-bg);
+  opacity: 0.6;
+}
+
+.bag-spec-label {
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   font-weight: 600;
   color: var(--text-secondary);
-  text-align: center;
+  margin-bottom: 0.125rem;
 }
 
-.bag-counter-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.counter-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 1rem;
+.bag-spec-dims {
+  font-size: 0.8125rem;
   font-weight: 500;
-  transition: all 0.15s ease;
-  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-.counter-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.counter-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.counter-value {
-  font-size: 1.125rem;
-  font-weight: 600;
-  font-family: 'Outfit', sans-serif;
-  min-width: 1.5rem;
-  text-align: center;
-}
-
-.bag-counter-cost {
+.bag-spec-weight {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  min-height: 1.125rem;
 }
 
-.bag-counter-cost.has-cost {
-  color: var(--warning);
-  font-weight: 500;
-}
-
-.bag-counter-included {
+.bag-spec-status {
   font-size: 0.6875rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.375rem;
+  display: inline-block;
+  width: fit-content;
+}
+
+.bag-spec-status.included {
   color: var(--success);
-  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
-.bag-counter-unavailable {
-  font-size: 0.6875rem;
-  color: var(--text-secondary);
-  font-weight: 400;
+.bag-spec-status.paid {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+}
+
+.bag-spec-status.unavailable-msg {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  font-weight: 500;
   font-style: italic;
 }
 
-/* ── Right Panel (Summary) ── */
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.dim-na {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.75rem;
 }
 
-@media (min-width: 768px) {
-  .right-panel {
-    position: sticky;
-    top: 5rem;
-    align-self: start;
-  }
+/* ── Airline Notes ── */
+.airline-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border);
+  background: var(--hover-bg);
+  line-height: 1.5;
 }
 
+/* ── Summary Panel ── */
 .summary-total {
   padding: 1.5rem 1rem;
   text-align: center;
@@ -494,10 +542,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ── Dimensions Table ── */
-.dim-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.dim-table { width: 100%; border-collapse: collapse; }
 
 .dim-table th {
   font-size: 0.6875rem;
@@ -517,24 +562,9 @@ h1, h2, h3, h4, h5, h6 {
   font-variant-numeric: tabular-nums;
 }
 
-.dim-table tr:last-child td {
-  border-bottom: none;
-}
-
-.dim-bag-type {
-  font-weight: 500;
-}
-
-.dim-value {
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.dim-na {
-  color: var(--text-secondary);
-  font-style: italic;
-  font-size: 0.75rem;
-}
+.dim-table tr:last-child td { border-bottom: none; }
+.dim-bag-type { font-weight: 500; }
+.dim-value { color: var(--text-primary); font-weight: 500; }
 
 /* ── Airline Breakdown ── */
 .breakdown-item {
@@ -545,15 +575,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
 }
 
-.breakdown-item:last-child {
-  border-bottom: none;
-}
-
-.breakdown-airline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.breakdown-item:last-child { border-bottom: none; }
+.breakdown-airline { display: flex; align-items: center; gap: 0.5rem; }
 
 .breakdown-iata {
   font-size: 0.75rem;
@@ -562,15 +585,8 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em;
 }
 
-.breakdown-name {
-  font-size: 0.8125rem;
-  font-weight: 400;
-}
-
-.breakdown-tier {
-  font-size: 0.6875rem;
-  color: var(--text-secondary);
-}
+.breakdown-name { font-size: 0.8125rem; font-weight: 400; }
+.breakdown-tier { font-size: 0.6875rem; color: var(--text-secondary); }
 
 .breakdown-cost {
   font-family: 'Outfit', sans-serif;
@@ -585,72 +601,18 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-secondary);
 }
 
-.empty-state svg {
-  margin: 0 auto 1rem;
-  opacity: 0.4;
-}
+.empty-state svg { margin: 0 auto 1rem; opacity: 0.4; }
+.empty-state p { font-size: 0.875rem; }
+.empty-state .hint { font-size: 0.75rem; margin-top: 0.5rem; opacity: 0.7; }
 
-.empty-state p {
-  font-size: 0.875rem;
-}
-
-.empty-state .hint {
-  font-size: 0.75rem;
-  margin-top: 0.5rem;
-  opacity: 0.7;
-}
-
-/* ── Airline Notes ── */
-.airline-note {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+/* ── Warning ── */
+.min-warning {
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid var(--border);
-  background: var(--hover-bg);
-  line-height: 1.5;
-}
-
-/* ── Updated Badge ── */
-.updated-badge {
-  font-size: 0.6875rem;
+  border-left: 3px solid var(--warning);
+  background: color-mix(in srgb, var(--warning) 5%, transparent);
+  font-size: 0.75rem;
   color: var(--text-secondary);
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-/* ── Responsive ── */
-@media (max-width: 767px) {
-  .header-inner {
-    flex-wrap: wrap;
-  }
-
-  .bag-counters {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-total-value {
-    font-size: 2.5rem;
-  }
-}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-}
-
-/* ── Focus ── */
-*:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  line-height: 1.5;
 }
 
 /* ── Animations ── */
@@ -659,57 +621,14 @@ h1, h2, h3, h4, h5, h6 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.flight-card {
-  animation: fadeIn 0.2s ease-out;
-}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); }
 
-/* ── Per-airline detail specs ── */
-.airline-specs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.spec-box {
-  border: 1px solid var(--border);
-  padding: 0.5rem;
-}
-
-.spec-box-label {
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 0.25rem;
-}
-
-.spec-box-dim {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.spec-box-weight {
-  font-size: 0.6875rem;
-  color: var(--text-secondary);
-  margin-top: 0.125rem;
-}
+/* ── Focus ── */
+*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (max-width: 767px) {
-  .airline-specs {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Warning callout ── */
-.min-warning {
-  padding: 0.5rem 0.75rem;
-  border-left: 3px solid var(--warning);
-  background: color-mix(in srgb, var(--warning) 5%, transparent);
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
+  .summary-total-value { font-size: 2.5rem; }
 }
