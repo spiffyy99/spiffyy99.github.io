@@ -172,12 +172,14 @@ function getFlightCost(flight) {
   }
 
   // Checked bags — use the checkedBags array
+  // If a bag's price is null and it's not included, fall back to 1st bag's price
   if (state.bags.checked > 0 && tier.checkedBags) {
+    const firstBagPrice = tier.checkedBags[0] ? tier.checkedBags[0].avgAddOnPriceUsd : null;
     for (let i = 0; i < state.bags.checked; i++) {
       const bagEntry = tier.checkedBags[i];
-      if (!bagEntry) break;
+      if (!bagEntry) { if (firstBagPrice !== null) cost += firstBagPrice; continue; }
       if (!bagEntry.included) {
-        const price = bagEntry.avgAddOnPriceUsd;
+        const price = bagEntry.avgAddOnPriceUsd !== null ? bagEntry.avgAddOnPriceUsd : firstBagPrice;
         if (price !== null && price > 0) cost += price;
       }
     }
@@ -330,17 +332,17 @@ function renderCheckedSpec(airline, tier) {
   const checkedCount = state.bags.checked;
   const oversizedFee = airline.oversizedCheckedBagCostUsd;
 
-  // Determine unavailable: if user wants bags but all requested are unavailable
-  let anyUnavailable = false;
-  if (checkedCount > 0 && tier.checkedBags) {
-    for (let i = 0; i < checkedCount; i++) {
-      const entry = tier.checkedBags[i];
-      if (!entry) { anyUnavailable = true; break; }
-      if (!entry.included && entry.avgAddOnPriceUsd === null) { anyUnavailable = true; }
-    }
+  // Resolve effective prices: if bag price is null and not included, fall back to 1st bag price
+  const firstBagPrice = (tier.checkedBags && tier.checkedBags[0]) ? tier.checkedBags[0].avgAddOnPriceUsd : null;
+
+  function resolvePrice(entry) {
+    if (!entry) return firstBagPrice;
+    if (entry.included) return 0;
+    return entry.avgAddOnPriceUsd !== null ? entry.avgAddOnPriceUsd : firstBagPrice;
   }
 
-  const cls = (checkedCount > 0 && anyUnavailable) ? 'bag-spec unavailable' : 'bag-spec';
+  // No grey-out needed now since null prices fall back to 1st bag price
+  const cls = 'bag-spec';
 
   let statusHtml = '';
   if (checkedCount === 0) {
@@ -349,25 +351,37 @@ function renderCheckedSpec(airline, tier) {
     const lines = [];
     for (let i = 0; i < checkedCount; i++) {
       const entry = tier.checkedBags[i];
-      if (!entry) { lines.push(`<div class="checked-bag-line unavail">Bag ${i + 1}: Not available</div>`); continue; }
-      const w = formatWeight(entry.weightKg);
-      if (entry.included) {
+      const w = entry ? formatWeight(entry.weightKg) : (tier.checkedBags[0] ? formatWeight(tier.checkedBags[0].weightKg) : null);
+      if (entry && entry.included) {
         lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: Included${w ? ' (' + w + ')' : ''}</div>`);
-      } else if (entry.avgAddOnPriceUsd === null) {
-        lines.push(`<div class="checked-bag-line unavail">Bag ${i + 1}: Varies by route${w ? ' (' + w + ')' : ''}</div>`);
       } else {
-        lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${entry.avgAddOnPriceUsd}${w ? ' (' + w + ')' : ''}</div>`);
+        const price = resolvePrice(entry);
+        if (price !== null && price > 0) {
+          const isFallback = entry && entry.avgAddOnPriceUsd === null;
+          lines.push(`<div class="checked-bag-line cost">Bag ${i + 1}: $${price}${w ? ' (' + w + ')' : ''}${isFallback ? ' *' : ''}</div>`);
+        } else if (price === 0) {
+          lines.push(`<div class="checked-bag-line incl">Bag ${i + 1}: $0${w ? ' (' + w + ')' : ''}</div>`);
+        } else {
+          lines.push(`<div class="checked-bag-line unavail">Bag ${i + 1}: Varies by route${w ? ' (' + w + ')' : ''}</div>`);
+        }
       }
+    }
+    // Add footnote if any fallback was used
+    const hasFallback = tier.checkedBags.slice(0, checkedCount).some((e, i) => i > 0 && e && !e.included && e.avgAddOnPriceUsd === null && firstBagPrice !== null);
+    if (hasFallback) {
+      lines.push(`<div class="checked-bag-footnote">* Estimated from 1st bag price</div>`);
     }
     statusHtml = `<div class="checked-bag-breakdown">${lines.join('')}</div>`;
   }
 
-  // Overweight / oversized fee
+  // Overweight / oversized fee — always show line when checked bags selected
   let oversizedHtml = '';
-  if (checkedCount > 0 && oversizedFee !== null && oversizedFee !== undefined) {
-    oversizedHtml = `<div class="oversize-fee">Overweight / oversized fee: $${oversizedFee}</div>`;
-  } else if (checkedCount > 0 && oversizedFee === null) {
-    oversizedHtml = '';
+  if (checkedCount > 0) {
+    if (oversizedFee !== null && oversizedFee !== undefined) {
+      oversizedHtml = `<div class="oversize-fee">Overweight / oversized: $${oversizedFee}</div>`;
+    } else {
+      oversizedHtml = `<div class="oversize-fee">Overweight / oversized: Not listed</div>`;
+    }
   }
 
   return `<div class="${cls}" data-testid="bag-spec-checked-${airline.iata}">
@@ -394,9 +408,11 @@ function renderSummary() {
       if (state.bags.personal && !tier.included.personal) return true;
       if (state.bags.carryOn && !tier.included.carryOn && tier.avgAddOnPriceUsd.carryOn === null) return true;
       if (state.bags.checked > 0 && tier.checkedBags) {
+        const fb = tier.checkedBags[0] ? tier.checkedBags[0].avgAddOnPriceUsd : null;
         for (let i = 0; i < state.bags.checked; i++) {
           const e = tier.checkedBags[i];
-          if (!e || (!e.included && e.avgAddOnPriceUsd === null)) return true;
+          if (!e) { if (fb === null) return true; continue; }
+          if (!e.included && e.avgAddOnPriceUsd === null && fb === null) return true;
         }
       }
       return false;
