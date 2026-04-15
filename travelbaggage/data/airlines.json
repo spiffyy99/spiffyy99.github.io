@@ -3397,6 +3397,735 @@
       "notes": "Generous cabin weight. Extra baggage pricing depends on route.",
       "oversizedCheckedBagCostUsd": null,
       "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Frontier Airlines",
+      "iata": "F9",
+      "baggage": {
+        "personal": { "dimensionsCm": [45, 35, 20], "weightKg": null },
+        "carryOn": { "dimensionsCm": [61, 41, 25], "weightKg": null },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Basic",
+          "included": { "personal": true, "carryOn": false },
+          "avgAddOnPriceUsd": { "carryOn": 45 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 45 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 70 }
+          ]
+        },
+        {
+          "name": "Economy Bundle",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 45 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 70 }
+          ]
+        },
+        {
+          "name": "Business Bundle",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 70 }
+          ]
+        }
+      ],
+      "notes": "Ultra low-cost. Personal item only on cheapest fare.",
+      "oversizedCheckedBagCostUsd": 75,
+      "overweightCheckedBagCostUsd": 75
+    },
+    {
+      "name": "Spirit Airlines",
+      "iata": "NK",
+      "baggage": {
+        "personal": { "dimensionsCm": [45, 35, 20], "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 46, 25], "weightKg": null },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Go",
+          "included": { "personal": true, "carryOn": false },
+          "avgAddOnPriceUsd": { "carryOn": 60 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 50 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 75 }
+          ]
+        },
+        {
+          "name": "Go Savvy",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 50 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 75 }
+          ]
+        },
+        {
+          "name": "Go Big",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 75 }
+          ]
+        }
+      ],
+      "notes": "Budget carrier. Cheapest fare excludes carry-on.",
+      "oversizedCheckedBagCostUsd": 150,
+      "overweightCheckedBagCostUsd": 100
+    },
+    {
+      "name": "Hawaiian Airlines",
+      "iata": "HA",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": null },
+        "checked": { "dimensionsCm": [157], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Main Cabin Basic",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 40 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 60 }
+          ]
+        },
+        {
+          "name": "Main Cabin",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 40 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 60 }
+          ]
+        },
+        {
+          "name": "Extra Comfort / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": 60 }
+          ]
+        }
+      ],
+      "notes": "Standard US baggage rules.",
+      "oversizedCheckedBagCostUsd": 100,
+      "overweightCheckedBagCostUsd": 100
+    },
+    {
+      "name": "El Al",
+      "iata": "LY",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 45, 25], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Lite",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Classic",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Flex / Business / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Pricing varies heavily by route.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "LOT Polish Airlines",
+      "iata": "LO",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 40, 23], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Saver",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Standard / Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Premium Economy / Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Typical European legacy carrier.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "SWISS",
+      "iata": "LX",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 40, 23], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Light",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Classic / Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Business / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Similar to Lufthansa.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "TAP Air Portugal",
+      "iata": "TP",
+      "baggage": {
+        "personal": { "dimensionsCm": [40, 30, 15], "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 40, 20], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Discount",
+          "included": { "personal": true, "carryOn": false },
+          "avgAddOnPriceUsd": { "carryOn": null },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Basic / Classic",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Plus / Executive / Top Executive",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Discount fares often exclude standard cabin bag.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Scandinavian Airlines",
+      "iata": "SK",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 40, 23], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Go Light",
+          "included": { "personal": true, "carryOn": false },
+          "avgAddOnPriceUsd": { "carryOn": null },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Go Smart / Pro",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Plus / Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Go Light can exclude cabin bag depending on market.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Iberia",
+      "iata": "IB",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 40, 25], "weightKg": 10 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Basic",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Classic / Flexible",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Premium Economy / Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Standard EU legacy.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "ITA Airways",
+      "iata": "AZ",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 35, 25], "weightKg": 8 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Light",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Classic / Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Business / Superior",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Successor to Alitalia. Route-dependent fees.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Pegasus Airlines",
+      "iata": "PC",
+      "baggage": {
+        "personal": { "dimensionsCm": [40, 30, 15], "weightKg": null },
+        "carryOn": { "dimensionsCm": [55, 40, 20], "weightKg": 8 },
+        "checked": { "dimensionsCm": null, "weightKg": 20 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Light",
+          "included": { "personal": true, "carryOn": false },
+          "avgAddOnPriceUsd": { "carryOn": null },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Saver / Saver Plus",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Comfort Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Low-cost carrier. Strict cabin enforcement.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Saudia",
+      "iata": "SV",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 45, 25], "weightKg": 7 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Guest Saver",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Guest Basic / Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        },
+        {
+          "name": "Business / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Route-dependent baggage concepts.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Oman Air",
+      "iata": "WY",
+      "baggage": {
+        "personal": { "dimensionsCm": null, "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 45, 25], "weightKg": 7 },
+        "checked": { "dimensionsCm": null, "weightKg": 20 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Saver",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 30, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 30, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Business / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 40, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 40, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Weight concept common on many routes.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Malaysia Airlines",
+      "iata": "MH",
+      "baggage": {
+        "personal": { "dimensionsCm": [40, 30, 10], "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": 7 },
+        "checked": { "dimensionsCm": [158], "weightKg": 20 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Lite",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Basic / Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 }
+          ]
+        },
+        {
+          "name": "Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 35, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 35, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Fairly standard Asia legacy carrier allowances.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Scoot",
+      "iata": "TR",
+      "baggage": {
+        "personal": { "dimensionsCm": [40, 30, 10], "weightKg": null },
+        "carryOn": { "dimensionsCm": [54, 38, 23], "weightKg": 10 },
+        "checked": { "dimensionsCm": null, "weightKg": 20 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 20, "avgAddOnPriceUsd": 40 },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": 70 }
+          ]
+        },
+        {
+          "name": "ScootPlus",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 30, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 30, "avgAddOnPriceUsd": 70 }
+          ]
+        }
+      ],
+      "notes": "Low-cost long-haul. Paid checked bags in Economy.",
+      "oversizedCheckedBagCostUsd": 100,
+      "overweightCheckedBagCostUsd": 100
+    },
+    {
+      "name": "Jetstar",
+      "iata": "JQ",
+      "baggage": {
+        "personal": { "dimensionsCm": [40, 30, 15], "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": 7 },
+        "checked": { "dimensionsCm": null, "weightKg": 20 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Starter",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Starter Plus",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Flex / Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 30, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 30, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Budget airline. Extra bag pricing varies.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Qantas",
+      "iata": "QF",
+      "baggage": {
+        "personal": { "dimensionsCm": [36, 34, 18], "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": 7 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Economy Sale / Saver",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Economy Flex",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        },
+        {
+          "name": "Premium Economy / Business / First",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 32, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Australia domestic and international rules can differ slightly.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
+    },
+    {
+      "name": "Air New Zealand",
+      "iata": "NZ",
+      "baggage": {
+        "personal": { "dimensionsCm": [30, 25, 10], "weightKg": null },
+        "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": 7 },
+        "checked": { "dimensionsCm": [158], "weightKg": 23 }
+      },
+      "ticketTiers": [
+        {
+          "name": "Seat / Seat+Bag",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "FlexiRefund / Economy Standard",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": false, "weightKg": 23, "avgAddOnPriceUsd": null }
+          ]
+        },
+        {
+          "name": "Premium Economy / Business",
+          "included": { "personal": true, "carryOn": true },
+          "avgAddOnPriceUsd": { "carryOn": 0 },
+          "checkedBags": [
+            { "count": 1, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 },
+            { "count": 2, "included": true, "weightKg": 23, "avgAddOnPriceUsd": 0 }
+          ]
+        }
+      ],
+      "notes": "Domestic and long-haul fare bundles differ somewhat.",
+      "oversizedCheckedBagCostUsd": null,
+      "overweightCheckedBagCostUsd": null
     }
   ]
 }
