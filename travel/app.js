@@ -7,6 +7,36 @@
 (function () {
   const $ = (id) => document.getElementById(id);
 
+  // Small, non-blocking toast notification (auto-dismisses).
+  function showToast(message, type = "info", durationMs = 6000) {
+    let container = document.getElementById("toastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.style.cssText =
+        "position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;";
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    const accent =
+      type === "warn" ? "#f59e0b" : type === "error" ? "#ef4444" : "#3b82f6";
+    toast.style.cssText =
+      "background:var(--card,#fff);color:var(--text,#111);border:1px solid var(--border,#e5e5e5);border-left:3px solid " +
+      accent +
+      ";border-radius:8px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,0.15);font-size:13px;line-height:1.4;opacity:0;transform:translateY(-8px);transition:opacity 220ms ease,transform 220ms ease;pointer-events:auto;";
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateY(0)";
+    });
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-8px)";
+      setTimeout(() => toast.remove(), 260);
+    }, durationMs);
+  }
+
   const STORAGE_KEYS = {
     geo: "travel:geoCache:v2",      // Bumped version to invalidate old caches
     airport: "travel:airportCache:v2",
@@ -2691,39 +2721,104 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     delete homeCityInput.dataset.selectedIata;
     SELECTED_LOCATION_META.delete(homeCityInput);
 
-    // Always ask geolocation fresh on every load. (The browser controls the
-    // permission prompt; if the user has previously granted, it returns silently
-    // but still runs a fresh request — we never read from any cached value.)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            // Don't overwrite anything the user typed in the meantime.
-            if (homeCityInput.value.trim()) return;
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(
-              lat
-            )}&longitude=${encodeURIComponent(lon)}&language=en&format=json`;
-            const res = await fetch(url);
-            if (res.ok) {
-              const data = await res.json();
-              const place = data?.results?.[0];
-              const city = place?.name || place?.admin1 || place?.country;
-              if (city && !homeCityInput.value.trim()) {
-                homeCityInput.value = city;
-              }
-            }
-          } catch (e) {
-            // Silent fail - user can enter manually
-          }
-        },
-        () => {
-          // User denied or error - leave empty so they type it
-        },
-        { maximumAge: 0, timeout: 10000 }
-      );
+    // Holiday country: default to US, then update to whatever location we
+    // detect. Never inferred from timezone.
+    if (holidayCountrySelect) {
+      holidayCountrySelect.value = "US";
+      refreshHolidays();
     }
+
+    // Helper to apply a detected location to the form.
+    function applyDetectedLocation({ city, country }) {
+      if (city && !homeCityInput.value.trim()) {
+        homeCityInput.value = city;
+      }
+      if (country && holidayCountrySelect) {
+        const code = countryCodeFromName(country);
+        if (code && holidayCountrySelect.value !== code) {
+          holidayCountrySelect.value = code;
+          refreshHolidays();
+        }
+      }
+    }
+
+    async function reverseGeocode(lat, lon) {
+      const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(
+        lat
+      )}&longitude=${encodeURIComponent(lon)}&language=en&format=json`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Reverse geocode failed (${res.status})`);
+      const data = await res.json();
+      const place = data?.results?.[0];
+      return {
+        city: place?.name || place?.admin1 || place?.country || "",
+        country: place?.country || "",
+      };
+    }
+
+    async function detectByIp() {
+      // Free IP geolocation, no auth required.
+      const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
+      if (!res.ok) throw new Error(`IP lookup failed (${res.status})`);
+      const data = await res.json();
+      const city = data?.city || data?.region || "";
+      const country = data?.country || "";
+      if (!city && !country) throw new Error("IP lookup returned no location");
+      return { city, country };
+    }
+
+    async function detectLocation() {
+      // 1) Try the browser's Geolocation API.
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              maximumAge: 0,
+              timeout: 8000,
+              enableHighAccuracy: false,
+            });
+          });
+          if (homeCityInput.value.trim()) return; // user already typed
+          const { city, country } = await reverseGeocode(
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
+          applyDetectedLocation({ city, country });
+          return;
+        } catch (err) {
+          // Fall through to IP-based fallback. Capture reason for the toast
+          // if both methods fail.
+          var browserGeoError = err;
+        }
+      } else {
+        var browserGeoError = new Error("Geolocation not supported in this browser");
+      }
+
+      // 2) IP-based fallback (works inside iframes / when permission denied).
+      try {
+        if (homeCityInput.value.trim()) return;
+        const loc = await detectByIp();
+        applyDetectedLocation(loc);
+        return;
+      } catch (ipErr) {
+        // Both failed — give the user a clear, brief, non-blocking notification.
+        let reason = "Couldn't detect your location";
+        if (browserGeoError) {
+          if (browserGeoError.code === 1 /* PERMISSION_DENIED */) {
+            reason = "Location permission denied — please type your home city";
+          } else if (browserGeoError.code === 2 /* POSITION_UNAVAILABLE */) {
+            reason = "Location unavailable — please type your home city";
+          } else if (browserGeoError.code === 3 /* TIMEOUT */) {
+            reason = "Location request timed out — please type your home city";
+          } else if (browserGeoError.message) {
+            reason = `Couldn't auto-detect your location — please type it`;
+          }
+        }
+        showToast(reason, "warn", 6000);
+      }
+    }
+
+    detectLocation();
 
     // Render initial destination row (state is read from DOM on add/remove).
     renderDestinations(destinationsContainer, [{ city: "", stayDays: null }]);
@@ -2795,13 +2890,12 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       renderHolidayDefaults(holidayDefaults);
     }
 
-    // Set initial country from timezone, then async-load holidays.json and re-render.
+    // Holiday country defaults to US and is later overridden by detectLocation().
+    // Never inferred from timezone.
     if (holidayCountrySelect) {
-      holidayCountrySelect.value = countryCodeFromTimezone();
       holidayCountrySelect.addEventListener("change", refreshHolidays);
     }
     renderHolidayDefaults(holidayDefaults);
-    refreshHolidays();
     
     // Pre-load airport graph data (includes routes)
     loadAirportsDB();
