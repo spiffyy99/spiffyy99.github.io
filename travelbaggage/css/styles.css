@@ -383,6 +383,15 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
 
 .airline-tag-name { font-weight: 400; }
 
+.airline-tag-tier {
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding-left: 0.25rem;
+  border-left: 1px solid var(--border);
+  margin-left: 0.125rem;
+}
+
 .airline-tag-remove {
   background: none;
   border: none;

@@ -5,6 +5,7 @@
     {
       "name": "American Airlines",
       "iata": "AA",
+      "checkedBagFeeNote": "AA publishes different checked-bag fees by region and ticketed date; domestic/short-haul often $45–$50 (online vs airport) for bag 1 and $55–$60 for bag 2.",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -44,13 +45,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": 40
+              "avgAddOnPriceUsd": { "min": 45, "max": 50 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 55, "max": 60 }
             }
           ]
         },
@@ -68,13 +69,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": 40
+              "avgAddOnPriceUsd": { "min": 45, "max": 50 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 55, "max": 60 }
             }
           ]
         },
@@ -134,6 +135,7 @@
     {
       "name": "Delta Air Lines",
       "iata": "DL",
+      "checkedBagFeeNote": "Delta publishes domestic baseline checked-bag fees ($45/$55) but notes fees vary by route, fare class, and ticket purchase date.",
       "baggage": {
         "personal": {
           "dimensionsCm": null,
@@ -169,13 +171,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": 35
+              "avgAddOnPriceUsd": 45
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 55
             }
           ]
         },
@@ -193,13 +195,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": 35
+              "avgAddOnPriceUsd": 45
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 55
             }
           ]
         },
@@ -259,6 +261,7 @@
     {
       "name": "United Airlines",
       "iata": "UA",
+      "checkedBagFeeNote": "United encourages using its baggage fee calculator; fees vary by route/fare/status. Prepaying online can be cheaper than paying at the airport.",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -304,7 +307,7 @@
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 55
             }
           ]
         },
@@ -328,7 +331,7 @@
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 55
             }
           ]
         },
@@ -388,6 +391,7 @@
     {
       "name": "Ryanair",
       "iata": "FR",
+      "checkedBagFeeNote": "Ryanair’s 10kg/20kg check-in bag prices vary by route and travel dates; buying at the airport or gate is usually higher.",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -425,13 +429,13 @@
               "count": 1,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": 29
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             }
           ]
         },
@@ -473,13 +477,13 @@
               "count": 1,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": 29
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             }
           ]
         },
@@ -497,13 +501,13 @@
               "count": 1,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": 29
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 10,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 10, "max": 60 }
             }
           ]
         }
@@ -515,6 +519,7 @@
     {
       "name": "easyJet",
       "iata": "U2",
+      "checkedBagFeeNote": "easyJet hold-luggage prices vary per flight and are cheaper online; adding bags at the airport is significantly more expensive.",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -618,6 +623,7 @@
     {
       "name": "Lufthansa",
       "iata": "LH",
+      "checkedBagFeeNote": "Lufthansa’s checked-bag fees depend on route and fare (often via baggage calculator), especially for Economy Light.",
       "baggage": {
         "personal": {
           "dimensionsCm": null,
@@ -1320,6 +1326,7 @@
     {
       "name": "JetBlue",
       "iata": "B6",
+      "checkedBagFeeNote": "JetBlue checked-bag fees vary by route, peak/off-peak dates, and when you add the bag (early vs within 24h).",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -1530,6 +1537,7 @@
     {
       "name": "Air Canada",
       "iata": "AC",
+      "checkedBagFeeNote": "Air Canada publishes checked-bag fees that vary by fare brand and itinerary (e.g., for North America/sun routes ticketed on/after Apr 13, 2026: bag 1 $45 on Basic/Standard; bag 2 $60; Flex often includes bag 1).",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -1569,13 +1577,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 45
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 60
             }
           ]
         },
@@ -1593,13 +1601,13 @@
               "count": 1,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 0, "max": 45 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 60
             }
           ]
         },
@@ -1623,7 +1631,7 @@
               "count": 2,
               "included": false,
               "weightKg": 23,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": 60
             }
           ]
         },
@@ -1659,6 +1667,7 @@
     {
       "name": "British Airways",
       "iata": "BA",
+      "checkedBagFeeNote": "British Airways sells checked bags on Economy Basic; price varies by route and when you prepay (use the baggage calculator/Manage My Booking).",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -1917,6 +1926,7 @@
     {
       "name": "Vueling",
       "iata": "VY",
+      "checkedBagFeeNote": "Vueling publishes wide checked-bag price ranges by destination and purchase channel (web/app vs airport).",
       "baggage": {
         "personal": {
           "dimensionsCm": [
@@ -1954,13 +1964,13 @@
               "count": 1,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             }
           ]
         },
@@ -1978,13 +1988,13 @@
               "count": 1,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             }
           ]
         },
@@ -2002,13 +2012,13 @@
               "count": 1,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             },
             {
               "count": 2,
               "included": false,
               "weightKg": 25,
-              "avgAddOnPriceUsd": null
+              "avgAddOnPriceUsd": { "min": 12, "max": 120 }
             }
           ]
         }
@@ -4007,6 +4017,7 @@
     {
       "name": "Jetstar",
       "iata": "JQ",
+      "checkedBagFeeNote": "Jetstar checked-baggage pricing varies by route and purchase channel; airport pricing for the first 20kg is published (and is higher than online).",
       "baggage": {
         "personal": { "dimensionsCm": [40, 30, 15], "weightKg": null },
         "carryOn": { "dimensionsCm": [56, 36, 23], "weightKg": 7 },
@@ -4018,8 +4029,8 @@
           "included": { "personal": true, "carryOn": true },
           "avgAddOnPriceUsd": { "carryOn": 0 },
           "checkedBags": [
-            { "count": 1, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null },
-            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+            { "count": 1, "included": false, "weightKg": 20, "avgAddOnPriceUsd": { "min": 55, "max": 112 } },
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": { "min": 55, "max": 112 } }
           ]
         },
         {
@@ -4028,7 +4039,7 @@
           "avgAddOnPriceUsd": { "carryOn": 0 },
           "checkedBags": [
             { "count": 1, "included": true, "weightKg": 20, "avgAddOnPriceUsd": 0 },
-            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": null }
+            { "count": 2, "included": false, "weightKg": 20, "avgAddOnPriceUsd": { "min": 55, "max": 112 } }
           ]
         },
         {
