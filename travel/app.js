@@ -435,7 +435,47 @@
     });
   }
 
+  // Find the best airport near given coords using local airport graph.
+  // Prefers major hubs (large size, many routes) over geographically closest small airports.
+  // Returns null if nothing found within radius.
+  function findBestAirportNearCoords(latitude, longitude, maxKm = 100) {
+    if (!airportGraph) return null;
+    const candidates = [];
+    for (const code in airportGraph) {
+      const ap = airportGraph[code];
+      if (!ap || ap.t == null || ap.g == null) continue;
+      const dist = haversineKm(latitude, longitude, ap.t, ap.g);
+      if (dist <= maxKm) candidates.push({ code, ap, dist });
+    }
+    if (!candidates.length) return null;
+    // Score: lower is better. Prioritize large hubs with many routes.
+    // size weight: L=0, M=10. Routes count subtracted (more = better).
+    // Distance adds a small penalty (1 per 25km) so we don't pick a far hub when a similarly good closer one exists.
+    candidates.sort((a, b) => {
+      const sizeA = a.ap.s === "L" ? 0 : a.ap.s === "M" ? 10 : 20;
+      const sizeB = b.ap.s === "L" ? 0 : b.ap.s === "M" ? 10 : 20;
+      const routesA = (a.ap.r || []).length;
+      const routesB = (b.ap.r || []).length;
+      const scoreA = sizeA - Math.min(routesA, 200) * 0.5 + a.dist / 25;
+      const scoreB = sizeB - Math.min(routesB, 200) * 0.5 + b.dist / 25;
+      return scoreA - scoreB;
+    });
+    const best = candidates[0];
+    return {
+      iataCode: best.code,
+      icaoCode: null,
+      name: best.ap.n,
+      city: best.ap.c || "",
+      latitude: best.ap.t,
+      longitude: best.ap.g,
+    };
+  }
+
   async function nearestAirport({ latitude, longitude, rangeMeters, airportCache }) {
+    // First try local graph (smarter: prefers major hubs over closest tiny airports)
+    const local = findBestAirportNearCoords(latitude, longitude, 100);
+    if (local) return local;
+
     const key = `near:${latitude.toFixed(4)},${longitude.toFixed(4)}:${rangeMeters || 500000}`;
     const cacheObj = airportCache;
     return cachedJson(STORAGE_KEYS.airport, cacheObj, key, ["iataCode", "icaoCode", "name", "city"], async () => {
@@ -450,6 +490,18 @@
       const data = await res.json();
       const airport = data?.data;
       if (!airport?.iataCode) throw new Error("No airport found");
+      // If returned IATA exists in graph, prefer the graph's data (more reliable city/coords)
+      if (airportGraph && airportGraph[airport.iataCode]) {
+        const ap = airportGraph[airport.iataCode];
+        return {
+          iataCode: ap.i,
+          icaoCode: airport.icaoCode,
+          name: ap.n,
+          city: ap.c || "",
+          latitude: ap.t,
+          longitude: ap.g,
+        };
+      }
       return {
         iataCode: airport.iataCode,
         icaoCode: airport.icaoCode,
@@ -459,6 +511,23 @@
         longitude: airport.coordinates?.longitude ?? longitude,
       };
     });
+  }
+
+  // Title-case a typed city input so "jakarta" -> "Jakarta", "new york" -> "New York".
+  function titleCaseTypedCity(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+    // If user typed something like "Foo, Country", drop the country tail.
+    const left = s.split(",")[0].trim();
+    return left
+      .split(/\s+/)
+      .map((w) => {
+        if (!w) return w;
+        // Preserve all-caps tokens (e.g. "NYC", "USA").
+        if (/^[A-Z]{2,}$/.test(w)) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      })
+      .join(" ");
   }
 
   function isIataToken(token) {
@@ -591,14 +660,19 @@
     });
 
     const typedCityGuess = normalizeTypedCity(raw);
+    const titledTyped = titleCaseTypedCity(typedCityGuess || raw);
     const airportLike = looksAirportLikeInput(raw);
+    // For typed (non-IATA) city inputs, the user's typed text is the canonical
+    // city name. Geocoders can return sub-districts ("Sunda Kelapa" for "jakarta"),
+    // and "nearest airport" can return an airport whose city differs from the typed
+    // city. Trust the user.
     return {
-      displayName: geo.name || typedCityGuess || raw,
+      displayName: geo.name || titledTyped || raw,
       cityName: preferredCity
         ? preferredCity
         : airportLike
-        ? (airport?.city || airport?.municipality || geo.name || typedCityGuess || raw)
-        : (geo.name || typedCityGuess || airport?.city || airport?.municipality || raw),
+        ? (airport?.city || airport?.municipality || titledTyped || geo.name || raw)
+        : (titledTyped || geo.name || airport?.city || airport?.municipality || raw),
       country: preferredCountry || geo.country || "",
       airport,
     };
@@ -1535,15 +1609,69 @@
       routeCacheTimestamps.set(cacheKey, Date.now());
       return best;
     }
-    
-    // No route found - fall back to direct estimate (hypothetical)
+
+    // No one-stop found through origin's listed routes. This commonly happens
+    // when the origin airport has limited international service (e.g. LGA).
+    // For long-haul (anything beyond a plausible nonstop ~14000km), search ALL
+    // large hubs in the graph geometrically — picking the hub with the smallest
+    // detour. This avoids absurd "direct" estimates for impossible routes like
+    // NYC->Jakarta.
+    const NONSTOP_PLAUSIBLE_KM = 14000;
+    if (directDistanceKm > NONSTOP_PLAUSIBLE_KM) {
+      let geomBest = null;
+      for (const hubCode in airportGraph) {
+        if (hubCode === fromIata || hubCode === toIata) continue;
+        const hub = airportGraph[hubCode];
+        if (!hub || hub.s !== "L") continue;
+        // Hub must be a real international gateway (lots of routes).
+        if (!hub.r || hub.r.length < 30) continue;
+        const leg1Km = haversineKm(start.t, start.g, hub.t, hub.g);
+        const leg2Km = haversineKm(hub.t, hub.g, end.t, end.g);
+        if (leg1Km < 500 || leg2Km < 500) continue;
+        const stretch = (leg1Km + leg2Km) / directDistanceKm;
+        if (stretch > 1.35) continue;
+        const leg1Hours = getDurationHoursFromDistanceKm(leg1Km, isWestwardFlight(start.g, hub.g));
+        const leg2Hours = getDurationHoursFromDistanceKm(leg2Km, isWestwardFlight(hub.g, end.g));
+        const layoverHours = 3.0;
+        const estHours = leg1Hours + layoverHours + leg2Hours;
+        const score = estHours + (stretch - 1.0) * 4;
+        const candidate = {
+          type: "one_stop",
+          hub: hubCode,
+          hubName: hub.c || hub.n,
+          legs: [fromIata, hubCode, toIata],
+          estimatedHours: estHours,
+          leg1Hours,
+          leg2Hours,
+          layoverHours,
+          distanceKm: leg1Km + leg2Km,
+          stretch,
+          score,
+          isDirect: false,
+          note: `via ${hubCode} (estimated)`,
+        };
+        if (!geomBest || candidate.score < geomBest.score) geomBest = candidate;
+      }
+      if (geomBest) {
+        routeCache.set(cacheKey, geomBest);
+        routeCacheTimestamps.set(cacheKey, Date.now());
+        return geomBest;
+      }
+    }
+
+    // True no-route: keep an estimate but never call it "direct". For routes
+    // exceeding plausible nonstop range, add a synthetic layover so we don't
+    // report impossible nonstop times.
+    const noRouteHours = directDistanceKm > NONSTOP_PLAUSIBLE_KM
+      ? directHours * 1.15 + 3.0
+      : directHours;
     const result = {
       type: "no_route",
       legs: [fromIata, toIata],
-      estimatedHours: directHours,
+      estimatedHours: noRouteHours,
       distanceKm: directDistanceKm,
       isDirect: false,
-      note: "connection likely"
+      note: "connection required"
     };
     routeCache.set(cacheKey, result);
     routeCacheTimestamps.set(cacheKey, Date.now());
@@ -2555,33 +2683,25 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       redeyeCheckbox.addEventListener("change", syncRedeyeOvernightVisibility);
     }
 
-    // Permission-free fallback based on browser timezone, e.g.
-    // "America/Los_Angeles" -> "Los Angeles".
-    function guessCityFromTimezone() {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-        const parts = tz.split("/");
-        const last = parts[parts.length - 1] || "";
-        const city = last.replace(/_/g, " ").trim();
-        return city || null;
-      } catch {
-        return null;
-      }
-    }
+    // Always start with an empty home field — never persist or guess from
+    // timezone. Browsers may try to autofill this; clear it explicitly.
+    homeCityInput.value = "";
+    delete homeCityInput.dataset.selectedCity;
+    delete homeCityInput.dataset.selectedCountry;
+    delete homeCityInput.dataset.selectedIata;
+    SELECTED_LOCATION_META.delete(homeCityInput);
 
-    const tzCity = guessCityFromTimezone();
-    if (tzCity && !homeCityInput.value.trim()) {
-      homeCityInput.value = tzCity;
-    }
-    
-    // Attempt geolocation
+    // Always ask geolocation fresh on every load. (The browser controls the
+    // permission prompt; if the user has previously granted, it returns silently
+    // but still runs a fresh request — we never read from any cached value.)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
+            // Don't overwrite anything the user typed in the meantime.
+            if (homeCityInput.value.trim()) return;
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            // Reverse geocode to get city name
             const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(
               lat
             )}&longitude=${encodeURIComponent(lon)}&language=en&format=json`;
@@ -2590,7 +2710,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
               const data = await res.json();
               const place = data?.results?.[0];
               const city = place?.name || place?.admin1 || place?.country;
-              if (city) {
+              if (city && !homeCityInput.value.trim()) {
                 homeCityInput.value = city;
               }
             }
@@ -2599,8 +2719,9 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
           }
         },
         () => {
-          // Silent fail - user denied or error
-        }
+          // User denied or error - leave empty so they type it
+        },
+        { maximumAge: 0, timeout: 10000 }
       );
     }
 
