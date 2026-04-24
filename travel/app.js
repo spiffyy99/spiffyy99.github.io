@@ -356,7 +356,7 @@
       let hasAllKeys = true;
       if (mustHaveKeys) {
         for (const k of mustHaveKeys) {
-          if (!entry[k] || isNullOrEmpty(entry[k])) {
+          if (entry[k] == null || String(entry[k]).trim() === "") {
             hasAllKeys = false;
             break;
           }
@@ -555,6 +555,7 @@
       
       // Fall back to external API
       const key = `iata:${code}`;
+      const airportFromDb = airportsDB?.find?.((ap) => String(ap.iataCode || "").toUpperCase() === code);
       const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, ["displayName", "cityName", "country"], async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
         const res = await fetch(url);
@@ -562,17 +563,18 @@
         const payload = await res.json();
         const data = payload?.data;
         if (!data?.iataCode || !data?.coordinates) throw new Error("No airport found for IATA code");
+        const localCity = airportFromDb?.city || airportFromDb?.municipality || airportFromDb?.cityName || "";
         const airport = {
           iataCode: data.iataCode,
           icaoCode: data.icaoCode,
           name: data.name,
-          city: data.city || data.municipality || "",
+          city: data.city || data.municipality || localCity || "",
           latitude: data.coordinates.latitude,
           longitude: data.coordinates.longitude,
         };
         return {
           displayName: data.name || data.iataCode,
-          cityName: preferredCity || data.city || data.municipality || inferCityFromAirportName(data.name || ""),
+          cityName: preferredCity || data.city || data.municipality || localCity || inferCityFromAirportName(data.name || ""),
           country: preferredCountry || data.country || "",
           airport,
         };
@@ -706,7 +708,7 @@
     }
     const distanceKm = estimateLegDistanceKm(airportA, airportB);
     const westward = isWestwardFlight(airportA.longitude, airportB.longitude);
-    return getDurationHoursFromDistanceKm(distanceKm, westward);
+    return Math.max(getDurationHoursFromDistanceKm(distanceKm, westward), 0.75);
   }
   
   // Route-aware duration estimate that considers connections
@@ -1541,7 +1543,7 @@
       estimatedHours: directHours,
       distanceKm: directDistanceKm,
       isDirect: false,
-      note: "connection likely"
+      note: directHours <= 20 ? "direct or simple connection likely" : "connection likely"
     };
     routeCache.set(cacheKey, result);
     routeCacheTimestamps.set(cacheKey, Date.now());
