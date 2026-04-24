@@ -1543,7 +1543,7 @@
       estimatedHours: directHours,
       distanceKm: directDistanceKm,
       isDirect: false,
-      note: directHours <= 20 ? "direct or simple connection likely" : "connection likely"
+      note: "connection likely"
     };
     routeCache.set(cacheKey, result);
     routeCacheTimestamps.set(cacheKey, Date.now());
