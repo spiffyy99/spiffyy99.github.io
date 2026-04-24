@@ -2597,13 +2597,13 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     });
     
     // Clear cache button
-    const clearCacheBtn = $("clearCacheBtn");
-    if (clearCacheBtn) {
-      clearCacheBtn.addEventListener("click", () => {
-        clearAllCaches();
-        alert("Cache cleared! Refresh the page for a fresh start.");
-      });
-    }
+    //const clearCacheBtn = $("clearCacheBtn");
+    //if (clearCacheBtn) {
+    //  clearCacheBtn.addEventListener("click", () => {
+    //    clearAllCaches();
+    //    alert("Cache cleared! Refresh the page for a fresh start.");
+    //  });
+    //}
     
     // Set default dates
     const today = new Date();
