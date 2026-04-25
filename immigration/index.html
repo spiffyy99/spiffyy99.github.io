@@ -6,8 +6,8 @@
     <title>Vibe Visa &amp; Entry Briefing</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260425b" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=20260425c" />
   </head>
   <body>
     <main class="page">
@@ -25,11 +25,9 @@
       <section class="card">
         <form id="visaForm" class="form">
           <div class="sectionTitle">Your passports</div>
+          <div class="hint">Type to search, then click to add. Add as many as you hold.</div>
           <div id="passportChips" class="chips"></div>
-          <div class="row">
-            <input type="text" id="passportInput" list="passportDatalist" placeholder="Type a country name&hellip;" autocomplete="off" />
-            <datalist id="passportDatalist"></datalist>
-          </div>
+          <div class="row" id="passportComboMount"></div>
 
           <div class="sectionTitle">Destinations</div>
           <div id="destinations"></div>
@@ -54,6 +52,6 @@
       </section>
     </main>
 
-    <script src="./app.js?v=20260425b"></script>
+    <script src="./app.js?v=20260425c"></script>
   </body>
 </html>

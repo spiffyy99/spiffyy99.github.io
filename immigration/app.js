@@ -102,29 +102,156 @@
     return COUNTRIES_DB;
   }
 
-  // -------- Passport selection (type-ahead, no button) ----------
+  // -------- Custom typeable combobox ----------
+  // A small reusable component: input + filtered dropdown panel anchored
+  // directly below it. Selection only happens on explicit click / Enter,
+  // never on typing alone.
+  //
+  //   createCombobox({ items: [{value,label}], placeholder, onSelect })
+  //   -> { root, setItems, clear, getValue, focus }
+  function createCombobox({ items, placeholder, onSelect, role }) {
+    const root = document.createElement("div");
+    root.className = "combobox";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "cb-input";
+    input.placeholder = placeholder || "";
+    input.autocomplete = "off";
+
+    // Hidden field carries the selected value so existing
+    // `[data-role="..."]` queries keep working.
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    if (role) hidden.dataset.role = role;
+
+    const panel = document.createElement("div");
+    panel.className = "cb-panel";
+    panel.hidden = true;
+
+    root.append(input, hidden, panel);
+
+    let currentItems = items.slice();
+    let highlight = -1;
+
+    function visibleItems() {
+      const f = input.value.trim().toLowerCase();
+      if (!f) return currentItems.slice();
+      return currentItems.filter((it) => it.label.toLowerCase().includes(f));
+    }
+
+    function rebuild() {
+      panel.innerHTML = "";
+      const list = visibleItems();
+      if (list.length === 0) {
+        const e = document.createElement("div");
+        e.className = "cb-empty";
+        e.textContent = "No matches";
+        panel.appendChild(e);
+      } else {
+        list.forEach((it, i) => {
+          const opt = document.createElement("div");
+          opt.className = "cb-option" + (i === highlight ? " is-active" : "");
+          opt.textContent = it.label;
+          opt.setAttribute("role", "option");
+          // mousedown fires before input's blur — prevents the panel from
+          // closing before the click registers.
+          opt.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            select(it);
+          });
+          panel.appendChild(opt);
+        });
+      }
+      panel.hidden = false;
+    }
+
+    function select(item) {
+      input.value = item.label;
+      hidden.value = item.value;
+      panel.hidden = true;
+      highlight = -1;
+      if (typeof onSelect === "function") onSelect(item);
+    }
+
+    function open() { highlight = -1; rebuild(); }
+    function close() { panel.hidden = true; }
+
+    input.addEventListener("focus", open);
+    input.addEventListener("input", () => {
+      // Typing invalidates a previously committed selection.
+      hidden.value = "";
+      highlight = -1;
+      rebuild();
+    });
+    // Delay close so option click can register first.
+    input.addEventListener("blur", () => setTimeout(close, 120));
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const list = visibleItems();
+        if (list.length === 0) return;
+        highlight = Math.min(list.length - 1, highlight + 1);
+        rebuild();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const list = visibleItems();
+        if (list.length === 0) return;
+        highlight = Math.max(0, highlight <= 0 ? 0 : highlight - 1);
+        rebuild();
+      } else if (e.key === "Enter") {
+        // Enter only commits when an item is actively highlighted by the user.
+        const list = visibleItems();
+        if (highlight >= 0 && list[highlight]) {
+          e.preventDefault();
+          select(list[highlight]);
+        } else if (list.length === 1 && input.value.trim()) {
+          e.preventDefault();
+          select(list[0]);
+        }
+      } else if (e.key === "Escape") {
+        close();
+      }
+    });
+
+    return {
+      root,
+      setItems(newItems) {
+        currentItems = newItems.slice();
+        if (!panel.hidden) rebuild();
+      },
+      clear() {
+        input.value = "";
+        hidden.value = "";
+        close();
+      },
+      getValue: () => hidden.value,
+      focus: () => input.focus(),
+    };
+  }
+
+  // -------- Passport selection (custom combobox) ----------
   const passportChips = $("passportChips");
-  const passportInput = $("passportInput");
-  const passportDatalist = $("passportDatalist");
+  const passportComboMount = $("passportComboMount");
   const SELECTED_PASSPORTS = new Set();
 
-  // Build an index for matching typed input -> code. Names are unique in our
-  // catalog; we also accept the bare ISO-2 code typed directly (e.g. "US").
-  const NAME_TO_CODE = new Map();
-  for (const [c, n] of PASSPORTS) {
-    NAME_TO_CODE.set(n.toLowerCase(), c);
-    NAME_TO_CODE.set(c.toLowerCase(), c);
+  function passportComboItems() {
+    return PASSPORTS
+      .filter(([c]) => !SELECTED_PASSPORTS.has(c))
+      .map(([c, n]) => ({ value: c, label: n }));
   }
 
-  function refreshPassportDatalist() {
-    passportDatalist.innerHTML = "";
-    for (const [code, name] of PASSPORTS) {
-      if (SELECTED_PASSPORTS.has(code)) continue;
-      const opt = document.createElement("option");
-      opt.value = name;
-      passportDatalist.appendChild(opt);
-    }
-  }
+  const passportCombo = createCombobox({
+    items: passportComboItems(),
+    placeholder: "Type a country name\u2026",
+    onSelect: (item) => {
+      SELECTED_PASSPORTS.add(item.value);
+      passportCombo.clear();
+      passportCombo.setItems(passportComboItems());
+      renderPassportChips();
+    },
+  });
+  passportComboMount.appendChild(passportCombo.root);
 
   function renderPassportChips() {
     passportChips.innerHTML = "";
@@ -149,36 +276,12 @@
       x.addEventListener("click", () => {
         SELECTED_PASSPORTS.delete(code);
         renderPassportChips();
-        refreshPassportDatalist();
+        passportCombo.setItems(passportComboItems());
       });
       chip.appendChild(x);
       passportChips.appendChild(chip);
     }
   }
-
-  function tryAddPassportFromInput() {
-    const raw = passportInput.value.trim();
-    if (!raw) return false;
-    const code = NAME_TO_CODE.get(raw.toLowerCase());
-    if (!code || SELECTED_PASSPORTS.has(code)) return false;
-    SELECTED_PASSPORTS.add(code);
-    passportInput.value = "";
-    renderPassportChips();
-    refreshPassportDatalist();
-    return true;
-  }
-
-  // The `input` event fires both on typing and on selecting from the datalist.
-  // When it matches an exact catalog entry, instantly add the chip.
-  passportInput.addEventListener("input", tryAddPassportFromInput);
-  // Pressing Enter committed a typed value -> try to match it.
-  passportInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      tryAddPassportFromInput();
-    }
-  });
-  passportInput.addEventListener("blur", tryAddPassportFromInput);
 
   // -------- Destination rows ----------
   const destinationsContainer = $("destinations");
@@ -216,14 +319,20 @@
     fCountry.className = "destField";
     const lblC = document.createElement("label");
     lblC.textContent = "Country";
-    const sel = document.createElement("select");
-    sel.dataset.role = "country";
-    sel.innerHTML =
-      `<option value="" disabled ${initial.code ? "" : "selected"}>Select a country&hellip;</option>` +
-      COUNTRIES_DB.countries
-        .map((c) => `<option value="${c.code}" ${initial.code === c.code ? "selected" : ""}>${c.name}</option>`)
-        .join("");
-    fCountry.append(lblC, sel);
+    const countryItems = COUNTRIES_DB.countries.map((c) => ({ value: c.code, label: c.name }));
+    const countryCombo = createCombobox({
+      items: countryItems,
+      placeholder: "Type a country name\u2026",
+      role: "country",
+    });
+    if (initial.code) {
+      const found = countryItems.find((it) => it.value === initial.code);
+      if (found) {
+        countryCombo.root.querySelector(".cb-input").value = found.label;
+        countryCombo.root.querySelector('input[type="hidden"]').value = found.value;
+      }
+    }
+    fCountry.append(lblC, countryCombo.root);
 
     const fDays = document.createElement("div");
     fDays.className = "destField";
@@ -693,52 +802,67 @@
         ));
       }
     } else {
-      // No match for requested purpose
+      // No exact match — be helpful, not defeatist. The default answer is
+      // always: "you'll need to apply for a visa, contact the consulate."
       card.classList.add("no-match");
-      const msg = `No ${purpose === "work" ? "remote-work or digital-nomad" : "tourism"} option in our data fits your plan with the passports you've added.`;
-      card.append(el("div", { class: "visaSummary" }, msg));
 
       const relax = match.bestIgnoringDays || match.bestIgnoringEntries || match.bestIgnoringBoth;
+
+      // Concise summary of why no instant option fits.
+      let summary;
+      if (relax && relax.rule.durationDays != null && dest.days > relax.rule.durationDays) {
+        summary = `Your ${dest.days}-day stay is longer than the ${relax.rule.durationDays}-day ` +
+                  `${visaBadgeText(relax.rule).toLowerCase()} window for this country.`;
+      } else if (purpose === "work") {
+        summary = `No remote-work or digital-nomad program is in our data for this country with the passports you've added.`;
+      } else if (relax && dest.multi && !entriesAllowMultiple(relax.rule)) {
+        summary = `The simpler entry options for this country are single-entry only.`;
+      } else {
+        summary = `None of the simplified entry options in our data covers this combination.`;
+      }
+      card.append(el("div", { class: "visaSummary" }, summary));
+
+      // Always default to the practical answer: get a visa via the consulate.
+      const visaPhrase = purpose === "work"
+        ? "a long-stay or work visa (or remote-worker visa where available)"
+        : "a tourist or long-stay visa";
+      card.append(calloutBox("warn", "\uD83D\uDEC2",
+        el("strong", {}, "What to do: "),
+        document.createTextNode(
+          `Apply for ${visaPhrase} before you travel. Contact the ${country.name} embassy or ` +
+          `consulate in your country for current eligibility, processing times, and required documents.`
+        )
+      ));
+
+      // Show the closest available option as context (not as the answer).
       if (relax) {
         const altP = PASSPORT_BY_CODE.get(relax.passport);
         const altLabel = visaBadgeText(relax.rule);
-        const reasons = [];
-        if (relax.rule.durationDays != null && relax.rule.durationDays < dest.days) {
-          reasons.push(`it only allows ${relax.rule.durationDays} days (you want ${dest.days})`);
-        }
-        if (dest.multi && !entriesAllowMultiple(relax.rule)) {
-          reasons.push(`it's single-entry only`);
-        }
-        const reasonTxt = reasons.length ? ` — ${reasons.join(" and ")}` : "";
-        card.append(calloutBox("warn", "\u26A0",
-          el("strong", {}, "Closest option: "),
+        const fitNote = (relax.rule.durationDays != null)
+          ? ` (up to ${relax.rule.durationDays} days)`
+          : "";
+        card.append(calloutBox("info", "\uD83D\uDCA1",
+          el("strong", {}, "Closest simpler option: "),
           document.createTextNode(
-            `Your ${altP ? altP.name : relax.passport} passport could use ${altLabel}, but it doesn't fully fit${reasonTxt}.`
+            `Your ${altP ? altP.name : relax.passport} passport could use ${altLabel}${fitNote} ` +
+            `if you adjust your plan to fit.`
           )
         ));
         if (relax.rule.notes) {
           card.append(el("div", { class: "notesText" }, relax.rule.notes));
         }
-      } else if (purpose === "work") {
-        card.append(calloutBox("warn", "\u26A0",
-          el("strong", {}, "No remote-work program on file: "),
+      }
+
+      // Tourism-as-entry alternative for the work case.
+      if (purpose === "work" && tourismMatch && tourismMatch.best) {
+        const tp = PASSPORT_BY_CODE.get(tourismMatch.best.passport);
+        const tLabel = visaBadgeText(tourismMatch.best.rule);
+        card.append(calloutBox("good", "\u2728",
+          el("strong", {}, "For entry only: "),
           document.createTextNode(
-            "Working remotely from here usually requires a separate work permit, long-stay visa, or business visa — check the consulate."
+            `Your ${tp ? tp.name : tourismMatch.best.passport} passport qualifies for ${tLabel}. ` +
+            `Local employment is not permitted on a tourist visa.`
           )
-        ));
-        if (tourismMatch && tourismMatch.best) {
-          const tp = PASSPORT_BY_CODE.get(tourismMatch.best.passport);
-          const tLabel = visaBadgeText(tourismMatch.best.rule);
-          card.append(calloutBox("info", "\u2139",
-            el("strong", {}, "For entry only: "),
-            document.createTextNode(
-              `Your ${tp ? tp.name : tourismMatch.best.passport} passport qualifies for ${tLabel}. Local employment is not permitted on a tourist visa.`
-            )
-          ));
-        }
-      } else {
-        card.append(calloutBox("error", "\u2716",
-          "None of the rules on file applies to your passports — verify directly with the consulate."
         ));
       }
     }
@@ -812,7 +936,6 @@
       showError("Couldn't load visa data: " + e.message);
       return;
     }
-    refreshPassportDatalist();
     renderPassportChips();
     addDestinationRow(); // start with one empty row
   })();
