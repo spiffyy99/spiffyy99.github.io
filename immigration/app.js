@@ -42,6 +42,13 @@
     ["CL", "Chile", "\uD83C\uDDE8\uD83C\uDDF1"],
     ["CO", "Colombia", "\uD83C\uDDE8\uD83C\uDDF4"],
     ["PE", "Peru", "\uD83C\uDDF5\uD83C\uDDEA"],
+    ["GE", "Georgia", "\uD83C\uDDEC\uD83C\uDDEA"],
+    ["MA", "Morocco", "\uD83C\uDDF2\uD83C\uDDE6"],
+    ["LK", "Sri Lanka", "\uD83C\uDDF1\uD83C\uDDF0"],
+    ["NP", "Nepal", "\uD83C\uDDF3\uD83C\uDDF5"],
+    ["KH", "Cambodia", "\uD83C\uDDF0\uD83C\uDDED"],
+    ["LA", "Laos", "\uD83C\uDDF1\uD83C\uDDE6"],
+    ["MN", "Mongolia", "\uD83C\uDDF2\uD83C\uDDF3"],
     // EU members (each individually selectable)
     ["AT", "Austria (EU)", "\uD83C\uDDE6\uD83C\uDDF9"],
     ["BE", "Belgium (EU)", "\uD83C\uDDE7\uD83C\uDDEA"],
@@ -292,11 +299,12 @@
 
   // Country list for destination pickers, excluding any country the user
   // already holds a passport for (you don't need a visa to enter your own
-  // country, so suggesting it would be confusing).
+  // country, so suggesting it would be confusing). Sorted alphabetically.
   function destinationCountryItems() {
     return COUNTRIES_DB.countries
       .filter((c) => !SELECTED_PASSPORTS.has(c.code))
-      .map((c) => ({ value: c.code, label: c.name }));
+      .map((c) => ({ value: c.code, label: c.name }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   // Keep destination rows consistent with the current passport set:
@@ -422,18 +430,28 @@
 
   // Expand a passportGroups entry from a rule into a list of country codes
   // (or a wildcard token). Returns { codes: Set, wildcard: bool, conditional: bool }.
+  // Handles nested group references (e.g., OECD_HIGH_INCOME contains "EU").
   function expandRulePassportGroups(groups) {
     const out = new Set();
     let wildcard = false;
     let hasConditional = false;
-    for (const g of groups || []) {
-      if (g === "*") { wildcard = true; continue; }
-      if (typeof g === "string" && g.startsWith("HAS_")) { hasConditional = true; continue; }
+    const visited = new Set(); // prevent infinite loops
+    
+    function expand(g) {
+      if (visited.has(g)) return; // already processed
+      visited.add(g);
+      
+      if (g === "*") { wildcard = true; return; }
+      if (typeof g === "string" && g.startsWith("HAS_")) { hasConditional = true; return; }
       if (GROUP_EXPANSIONS[g]) {
-        for (const c of GROUP_EXPANSIONS[g]) out.add(c);
-        continue;
+        for (const c of GROUP_EXPANSIONS[g]) expand(c);
+        return;
       }
       out.add(g);
+    }
+    
+    for (const g of groups || []) {
+      expand(g);
     }
     return { codes: out, wildcard, conditional: hasConditional };
   }
@@ -473,6 +491,7 @@
   // Find the best (passport, rule) pair for one purpose, applying days+entries
   // hard filters. Also returns the best alternative that would have qualified
   // if either days or entries were relaxed (used for explanatory notes).
+  // When purpose is "tourism", also consider work visas that don't require work.
   function findBestMatch(country, passports, days, wantsMultiple, purpose) {
     let best = null;
     let bestIgnoringDays = null;     // would have worked with shorter stay
@@ -481,7 +500,12 @@
 
     for (const passport of passports) {
       for (const rule of country.visaRules) {
-        if (rule.purpose !== purpose) continue;
+        // Match rules for the requested purpose. For tourism, also include
+        // work visas that have requiresWork: false (e.g., working holiday visas).
+        const purposeMatch = rule.purpose === purpose ||
+          (purpose === "tourism" && rule.purpose === "work" && rule.requiresWork === false);
+        
+        if (!purposeMatch) continue;
         if (!ruleAppliesTo(rule, passport)) continue;
         const cand = { passport, rule };
 
@@ -866,6 +890,15 @@
       // Requirements (only if any)
       const reqs = renderRequirements(rule);
       if (reqs) card.append(reqs);
+
+      // Special note if tourist is using a work visa that doesn't require work
+      if (purpose === "tourism" && rule.purpose === "work" && rule.requiresWork === false) {
+        card.append(calloutBox("info", "\u2139",
+          document.createTextNode(
+            `This is a work visa without a work requirement, so it&apos;s suitable for tourists seeking longer stays. Check local laws regarding tourism activities.`
+          )
+        ));
+      }
 
       // Heads-up callouts
       if (match.bestIgnoringDays && match.bestIgnoringDays.rule.rank < rule.rank) {
