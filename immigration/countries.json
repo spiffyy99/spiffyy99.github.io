@@ -2057,7 +2057,7 @@
           "extensionDays": null,
           "summary": "Working Holiday / Youth Mobility visa for eligible nationalities, usually up to 1 year.",
           "requirements": [
-            "Age limit applies",
+            "Age limit applies (usually 18-30)",
             "Proof of funds",
             "Health insurance",
             "Return ticket or funds"
@@ -2173,7 +2173,7 @@
           "extensionDays": null,
           "summary": "Working Holiday visa for eligible nationalities, usually up to 1 year.",
           "requirements": [
-            "Age limit applies",
+            "Age limit applies (usually 18-30)",
             "Proof of funds",
             "Health insurance",
             "Return ticket or funds"
@@ -2392,7 +2392,7 @@
           "extensionDays": null,
           "summary": "Working Holiday / Working Holiday Program for eligible nationalities, usually up to 1 year.",
           "requirements": [
-            "Age limit applies",
+            "Age limit applies (usually 18-30)",
             "Proof of funds",
             "Health insurance",
             "Return ticket or funds"
@@ -2722,7 +2722,7 @@
           "extensionDays": null,
           "summary": "Working Holiday visa for eligible nationalities, usually up to 1 year.",
           "requirements": [
-            "Age limit applies",
+            "Age limit applies (usually 18-30)",
             "Proof of funds",
             "Health insurance",
             "Return ticket or funds"
@@ -3032,7 +3032,7 @@
           "extensionDays": null,
           "summary": "Working Holiday visa for eligible nationalities, usually up to 1 year.",
           "requirements": [
-            "Age limit applies",
+            "Age limit applies (usually 18-30)",
             "Proof of funds",
             "Health insurance",
             "Return ticket or funds"
@@ -3878,6 +3878,3184 @@
           ],
           "notes": "Validity, stay length, and extendability depend on visa issued.",
           "officialUrl": "https://www.boca.gov.tw/"
+        }
+      ]
+    },
+    {
+      "name": "Austria",
+      "code": "AT",
+      "officialUrl": "https://www.bmeia.gv.at/en/travel-stay/entry-and-residence-in-austria",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.bmeia.gv.at/en/travel-stay/entry-and-residence-in-austria",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.bmeia.gv.at/en/travel-stay/entry-and-residence-in-austria",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AR",
+            "AU",
+            "CA",
+            "CL",
+            "HK",
+            "IL",
+            "JP",
+            "KR",
+            "NZ",
+            "TW"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday visa for eligible nationalities, usually up to 1 year.",
+          "requirements": [
+            "age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility, quotas, and proof-of-funds requirements vary by bilateral agreement.",
+          "officialUrl": "https://www.bmeia.gv.at/en/travel-stay/entry-and-residence-in-austria",
+          "requiresWork": true
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Belgium",
+      "code": "BE",
+      "officialUrl": "https://diplomatie.belgium.be/en/travel-belgium/visa-belgium",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://diplomatie.belgium.be/en/travel-belgium/visa-belgium",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://diplomatie.belgium.be/en/travel-belgium/visa-belgium",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AU",
+            "CA",
+            "NZ",
+            "KR",
+            "TW"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday visa for eligible nationalities, usually up to 1 year.",
+          "requirements": [
+            "Age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility and proof-of-funds requirements vary by bilateral agreement.",
+          "officialUrl": "https://diplomatie.belgium.be/en/travel-belgium/visa-belgium",
+          "requiresWork": true
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Denmark",
+      "code": "DK",
+      "officialUrl": "https://www.nyidanmark.dk/en-GB/You-want-to-apply",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.nyidanmark.dk/en-GB/You-want-to-apply",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.nyidanmark.dk/en-GB/You-want-to-apply",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AR",
+            "AU",
+            "CA",
+            "CL",
+            "JP",
+            "KR",
+            "NZ"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_visa",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday residence permit for eligible nationalities, usually up to 1 year.",
+          "requirements": [
+            "Age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility and financial requirements vary by nationality.",
+          "officialUrl": "https://www.nyidanmark.dk/en-GB/You-want-to-apply",
+          "requiresWork": true
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Finland",
+      "code": "FI",
+      "officialUrl": "https://um.fi/visa-to-visit-finland",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://um.fi/visa-to-visit-finland",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://um.fi/visa-to-visit-finland",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AU",
+            "CA",
+            "JP",
+            "NZ"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_visa",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday residence permit for eligible nationalities, usually up to 1 year.",
+          "requirements": [
+            "age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility and proof-of-funds requirements vary by agreement.",
+          "officialUrl": "https://um.fi/visa-to-visit-finland",
+          "requiresWork": true
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Ireland",
+      "code": "IE",
+      "officialUrl": "https://www.irishimmigration.ie/coming-to-visit-ireland/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free short-stay visit up to 90 days for many passports.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Ireland is not in Schengen; Irish short-stay rules are separate.",
+          "officialUrl": "https://www.irishimmigration.ie/coming-to-visit-ireland/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "short_stay_c_visa",
+          "applicationMethod": "embassy_or_online_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Short Stay 'C' visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.irishimmigration.ie/coming-to-visit-ireland/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AR",
+            "AU",
+            "CA",
+            "CL",
+            "HK",
+            "JP",
+            "KR",
+            "NZ",
+            "TW",
+            "US"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_authorisation",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday Authorisation for eligible young citizens, usually up to 1 year.",
+          "requirements": [
+            "age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility, quotas, and age limits vary by nationality.",
+          "officialUrl": "https://www.ireland.ie/en/dfa/visas-for-ireland/working-holiday-authorisation/",
+          "requiresWork": true
+        }
+      ]
+    },
+    {
+      "name": "Malta",
+      "code": "MT",
+      "officialUrl": "https://www.identitymalta.com/unit/central-visa-unit/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.identitymalta.com/unit/central-visa-unit/",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.identitymalta.com/unit/central-visa-unit/",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "nomad_residence_permit",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Nomad Residence Permit for non-EU remote workers, typically valid for 1 year and renewable.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance",
+            "Accommodation",
+            "Background checks"
+          ],
+          "notes": "Requires remote work for non-Maltese employers/clients; not a pure tourism stay option.",
+          "officialUrl": "https://nomad.residencymalta.gov.mt/nomad-eligibility/",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 42000,
+            "currency": "EUR",
+            "period": "yearly",
+            "description": "Publicized minimum gross yearly income for Malta Nomad Residence Permit."
+          }
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Cyprus",
+      "code": "CY",
+      "officialUrl": "https://www.mfa.gov.cy/mfa/mfa2016.nsf/visa_en/visa_en",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free stay up to 90 days in any 180-day period for many passports.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Cyprus is EU but not fully in Schengen for short-stay calculations in this dataset.",
+          "officialUrl": "https://www.mfa.gov.cy/mfa/mfa2016.nsf/visa_en/visa_en",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.mfa.gov.cy/mfa/mfa2016.nsf/visa_en/visa_en",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_visa",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 730,
+          "summary": "Digital Nomad Visa / residence permit for non-EU remote workers, initially around 1 year and renewable.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance",
+            "Clean criminal record",
+            "Accommodation"
+          ],
+          "notes": "Requires remote work for foreign employers/clients; not a pure tourism stay option.",
+          "officialUrl": "https://www.mfa.gov.cy/mfa/highcom/highcom_canberra.nsf/DMLvisas_en/DMLvisas_en",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 3500,
+            "currency": "EUR",
+            "period": "monthly",
+            "description": "Publicized monthly income threshold for Cyprus digital nomad permit, before dependent increases."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Romania",
+      "code": "RO",
+      "officialUrl": "https://www.mae.ro/en/node/2040",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Romania is in Schengen; short-stay limit is shared across Schengen countries.",
+          "officialUrl": "https://www.mae.ro/en/node/2040",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.mae.ro/en/node/2040",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_long_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Digital nomad long-stay visa/residence route for remote workers.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance",
+            "Clean criminal record",
+            "Accommodation"
+          ],
+          "notes": "Requires remote work for foreign employers/clients; not a pure tourism stay option.",
+          "officialUrl": "https://www.mae.ro/en/node/2040",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 3700,
+            "currency": "EUR",
+            "period": "monthly",
+            "description": "Approximate publicized threshold tied to 3x Romania's average gross salary; verify current salary basis."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bulgaria",
+      "code": "BG",
+      "officialUrl": "https://www.mfa.bg/en/services-travel/consular-services/travel-bulgaria/visa-bulgaria",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Bulgaria is in Schengen; short-stay limit is shared across Schengen countries.",
+          "officialUrl": "https://www.mfa.bg/en/services-travel/consular-services/travel-bulgaria/visa-bulgaria",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.mfa.bg/en/services-travel/consular-services/travel-bulgaria/visa-bulgaria",
+          "periodDays": 180
+        }
+      ]
+    },
+    {
+      "name": "Slovenia",
+      "code": "SI",
+      "officialUrl": "https://www.gov.si/en/topics/entry-and-residence/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.gov.si/en/topics/entry-and-residence/",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.gov.si/en/topics/entry-and-residence/",
+          "periodDays": 180
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Lithuania",
+      "code": "LT",
+      "officialUrl": "https://keliauk.urm.lt/en/entry-to-lithuania/visas",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://keliauk.urm.lt/en/entry-to-lithuania/visas",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://keliauk.urm.lt/en/entry-to-lithuania/visas",
+          "periodDays": 180
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Latvia",
+      "code": "LV",
+      "officialUrl": "https://www.mfa.gov.lv/en/visas-and-entry-requirements",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.mfa.gov.lv/en/visas-and-entry-requirements",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.mfa.gov.lv/en/visas-and-entry-requirements",
+          "periodDays": 180
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Iceland",
+      "code": "IS",
+      "officialUrl": "https://island.is/en/visa-to-iceland",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://island.is/en/visa-to-iceland",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://island.is/en/visa-to-iceland",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "long_term_visa_for_remote_work",
+          "applicationMethod": "online_or_immigration_before_travel",
+          "durationDays": 180,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Long-term visa for remote work, up to 180 days for eligible remote workers.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance",
+            "No local Icelandic employment"
+          ],
+          "notes": "Requires remote work and is not a pure tourism stay option.",
+          "officialUrl": "https://island.is/en/get-long-term-visa-for-remote-workers",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 1000000,
+            "currency": "ISK",
+            "period": "monthly",
+            "description": "Publicized monthly income threshold for Iceland long-term remote work visa; higher threshold may apply with spouse/dependents."
+          }
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Norway",
+      "code": "NO",
+      "officialUrl": "https://www.udi.no/en/want-to-apply/visit-and-holiday/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.udi.no/en/want-to-apply/visit-and-holiday/",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.udi.no/en/want-to-apply/visit-and-holiday/",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AR",
+            "AU",
+            "CA",
+            "JP",
+            "NZ"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_residence_permit",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday residence permit for eligible nationalities, usually up to 1 year.",
+          "requirements": [
+            "age limit applies (usually 18-30)",
+            "Proof of funds",
+            "Health insurance",
+            "Return ticket or funds"
+          ],
+          "notes": "Eligibility and proof-of-funds requirements vary by agreement.",
+          "officialUrl": "https://www.udi.no/en/want-to-apply/work-immigration/exchange-programmes-culture-and-organisational-work/?c=can",
+          "requiresWork": true
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Switzerland",
+      "code": "CH",
+      "officialUrl": "https://www.eda.admin.ch/eda/en/fdfa/entry-switzerland-residence/visa-requirements-application-form.html",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/accommodation/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.eda.admin.ch/eda/en/fdfa/entry-switzerland-residence/visa-requirements-application-form.html",
+          "periodDays": 180
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.eda.admin.ch/eda/en/fdfa/entry-switzerland-residence/visa-requirements-application-form.html",
+          "periodDays": 180
+        }
+      ],
+      "zone": "Schengen"
+    },
+    {
+      "name": "Costa Rica",
+      "code": "CR",
+      "officialUrl": "https://www.migracion.go.cr/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, commonly up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Onward ticket/proof of exit may be required"
+          ],
+          "notes": "Stay duration and eligibility vary by nationality group.",
+          "officialUrl": "https://www.migracion.go.cr/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://www.migracion.go.cr/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_stay_permit",
+          "applicationMethod": "online_or_immigration_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Digital nomad stay permit for remote workers, generally 1 year and renewable once.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance"
+          ],
+          "notes": "Requires foreign-source remote work; not a pure tourism stay option.",
+          "officialUrl": "https://www.visitcostarica.com/digital-nomads",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 3000,
+            "currency": "USD",
+            "period": "monthly",
+            "description": "Publicized monthly income threshold for individuals; higher threshold applies for families."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Panama",
+      "code": "PA",
+      "officialUrl": "https://www.migracion.gob.pa/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, commonly up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Proof of economic solvency/onward travel may be requested"
+          ],
+          "notes": "Some nationalities may receive up to 180 days; verify current immigration rules.",
+          "officialUrl": "https://www.migracion.gob.pa/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "HAS_VALID_US_CA_UK_SCHENGEN_AU_VISA_OR_RESIDENCE"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_exempt_with_third_country_visa",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-exempt entry may be available with a valid visa/residence from selected countries.",
+          "requirements": [
+            "Valid passport",
+            "Qualifying visa/residence permit"
+          ],
+          "notes": "Useful fallback for passports that otherwise need a Panamanian visa.",
+          "officialUrl": "https://www.migracion.gob.pa/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "stamped_or_authorized_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa/authorization required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Visa type, validity, and stay length depend on nationality and visa issued.",
+          "officialUrl": "https://www.migracion.gob.pa/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "short_stay_remote_worker_visa",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 270,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 270,
+          "summary": "Short Stay Visa as Remote Worker, usually up to 9 months and extendable once.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance",
+            "Foreign employer/client"
+          ],
+          "notes": "Requires remote work for foreign employers/clients; not a pure tourism stay option.",
+          "officialUrl": "https://www.migracion.gob.pa/",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 36000,
+            "currency": "USD",
+            "period": "yearly",
+            "description": "Publicized annual income threshold for Panama remote worker visa."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bolivia",
+      "code": "BO",
+      "officialUrl": "https://www.cancilleria.gob.bo/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "TR",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_year",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, generally up to 90 days per year.",
+          "requirements": [
+            "Valid passport",
+            "Onward travel/proof of funds may be requested"
+          ],
+          "notes": "Bolivia uses nationality groups; some passports need visa on arrival or consular visa.",
+          "officialUrl": "https://www.cancilleria.gob.bo/"
+        },
+        {
+          "rank": 4,
+          "passportGroups": [
+            "US"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa_on_arrival_or_consular",
+          "applicationMethod": "on_arrival_or_embassy_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "US passport holders generally need a tourist visa, often available on arrival or before travel.",
+          "requirements": [
+            "Valid passport",
+            "Visa fee",
+            "Supporting documents may be required"
+          ],
+          "notes": "Rules and availability can change; verify before travel.",
+          "officialUrl": "https://www.cancilleria.gob.bo/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not visa-exempt or visa-on-arrival eligible.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://www.cancilleria.gob.bo/"
+        }
+      ]
+    },
+    {
+      "name": "Paraguay",
+      "code": "PY",
+      "officialUrl": "https://www.mre.gov.py/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "TR",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, generally up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/onward travel may be requested"
+          ],
+          "notes": "Visa-exempt list should be verified with Paraguayan consular sources.",
+          "officialUrl": "https://www.mre.gov.py/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://www.mre.gov.py/"
+        }
+      ]
+    },
+    {
+      "name": "Dominican Republic",
+      "code": "DO",
+      "officialUrl": "https://mirex.gob.do/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "EU"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_card_or_visa_free",
+          "applicationMethod": "none_or_tourist_card_included",
+          "durationDays": 30,
+          "entries": "per_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Tourist-card/visa-free style entry for many passports, commonly 30 days.",
+          "requirements": [
+            "Valid passport",
+            "Tourist card/entry fee may be included in airfare",
+            "Onward travel may be requested"
+          ],
+          "notes": "Extensions are often handled via overstay/extension fees; verify current immigration practice.",
+          "officialUrl": "https://mirex.gob.do/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 60,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not eligible for tourist-card/visa-free entry.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://mirex.gob.do/"
+        }
+      ]
+    },
+    {
+      "name": "Jamaica",
+      "code": "JM",
+      "officialUrl": "https://www.pica.gov.jm/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, commonly up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Proof of onward/return travel may be requested"
+          ],
+          "notes": "Duration varies by nationality and officer decision.",
+          "officialUrl": "https://www.pica.gov.jm/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_required_or_visa_on_arrival_if_eligible",
+          "applicationMethod": "embassy_before_travel_or_on_arrival_if_eligible",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa required unless eligible for visa-on-arrival/waiver arrangements.",
+          "requirements": [
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Eligibility varies by nationality; verify with PICA or consulate.",
+          "officialUrl": "https://www.pica.gov.jm/"
+        }
+      ]
+    },
+    {
+      "name": "Barbados",
+      "code": "BB",
+      "officialUrl": "https://www.visitbarbados.org/barbados-welcome-stamp",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for many passports, commonly up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket may be requested"
+          ],
+          "notes": "Duration varies by nationality.",
+          "officialUrl": "https://www.foreign.gov.bb/visa-requirements/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "visitor_visa",
+          "applicationMethod": "embassy_or_online_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visitor visa required before travel if not visa-exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://www.foreign.gov.bb/visa-requirements/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "barbados_welcome_stamp",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Barbados Welcome Stamp — 12-month remote work visa.",
+          "requirements": [
+            "Remote work proof",
+            "Minimum income requirement",
+            "Health insurance"
+          ],
+          "notes": "Requires foreign-source remote work; not a pure tourism stay option.",
+          "officialUrl": "https://www.visitbarbados.org/barbados-welcome-stamp",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 50000,
+            "currency": "USD",
+            "period": "yearly",
+            "description": "Publicized annual income threshold for Barbados Welcome Stamp."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mauritius",
+      "code": "MU",
+      "officialUrl": "https://residency.mu/premium-visa/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_or_visa_on_arrival",
+          "applicationMethod": "on_arrival",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free/visa-on-arrival tourism access for many passports, commonly up to 90 days.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket and accommodation may be requested"
+          ],
+          "notes": "Duration varies by nationality and immigration decision.",
+          "officialUrl": "https://passport.govmu.org/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_or_entry_authorization_required",
+          "applicationMethod": "embassy_or_authority_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa or entry authorization required before travel if not exempt.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on approval.",
+          "officialUrl": "https://passport.govmu.org/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "premium_travel_visa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Premium Travel Visa — long-stay remote work / visitor option for stays up to 1 year.",
+          "requirements": [
+            "Remote income from outside Mauritius",
+            "Travel/health insurance",
+            "Accommodation details"
+          ],
+          "notes": "Requires foreign-source income/remote work or long-stay visitor basis; not a simple tourism extension.",
+          "officialUrl": "https://residency.mu/premium-visa/",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 1500,
+            "currency": "USD",
+            "period": "monthly",
+            "description": "Commonly publicized monthly income threshold; verify current official guidance."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seychelles",
+      "code": "SC",
+      "officialUrl": "https://www.govtas.com/",
+      "visaRules": [
+        {
+          "rank": 2,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "travel_authorisation",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "per_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Seychelles is generally visa-free, but visitors need Travel Authorisation before arrival.",
+          "requirements": [
+            "Apply online before travel",
+            "Valid passport",
+            "Accommodation booking",
+            "Return/onward ticket"
+          ],
+          "notes": "Stay length is granted by immigration and can often be extended.",
+          "officialUrl": "https://www.govtas.com/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "workcation_retreat_program",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Seychelles Workcation Retreat Program for remote workers and self-employed visitors.",
+          "requirements": [
+            "Remote work/business proof",
+            "Valid passport",
+            "Health/travel insurance",
+            "Accommodation"
+          ],
+          "notes": "Requires remote work/business outside Seychelles; not a pure tourism stay option.",
+          "officialUrl": "https://seychelles.govtas.com/workcation",
+          "requiresWork": true
+        }
+      ]
+    },
+    {
+      "name": "Tanzania",
+      "code": "TZ",
+      "officialUrl": "https://visa.immigration.go.tz/",
+      "visaRules": [
+        {
+          "rank": 3,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "evisa_or_visa_on_arrival",
+          "applicationMethod": "online_before_travel_or_on_arrival",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist eVisa or visa on arrival available for many nationalities.",
+          "requirements": [
+            "Valid passport",
+            "Visa fee",
+            "Return/onward ticket may be requested"
+          ],
+          "notes": "US passport holders may receive a multiple-entry visa; rules vary by nationality.",
+          "officialUrl": "https://visa.immigration.go.tz/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "referred_visa_or_consular_visa",
+          "applicationMethod": "embassy_or_online_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Some nationalities require referred visa approval before travel.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Verify whether nationality is on Tanzania's referred visa list.",
+          "officialUrl": "https://visa.immigration.go.tz/"
+        }
+      ]
+    },
+    {
+      "name": "Rwanda",
+      "code": "RW",
+      "officialUrl": "https://irembo.gov.rw/",
+      "visaRules": [
+        {
+          "rank": 4,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_on_arrival_or_evisa",
+          "applicationMethod": "on_arrival_or_online_before_travel",
+          "durationDays": 30,
+          "entries": "single",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visa on arrival/eVisa available for visitors from all countries, commonly 30 days.",
+          "requirements": [
+            "Valid passport",
+            "Visa fee",
+            "Travel details may be requested"
+          ],
+          "notes": "East Africa Tourist Visa may be useful for Kenya/Rwanda/Uganda trips.",
+          "officialUrl": "https://irembo.gov.rw/"
+        }
+      ]
+    },
+    {
+      "name": "Qatar",
+      "code": "QA",
+      "officialUrl": "https://visitqatar.com/intl-en/practical-info/visas",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_or_visa_waiver_on_arrival",
+          "applicationMethod": "on_arrival",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": 30,
+          "summary": "Visa-free/visa-waiver entry on arrival for many passports, commonly 30 or 90 days depending on nationality.",
+          "requirements": [
+            "Valid passport",
+            "Hotel/health insurance requirements may apply"
+          ],
+          "notes": "Duration varies by nationality.",
+          "officialUrl": "https://visitqatar.com/intl-en/practical-info/visas"
+        },
+        {
+          "rank": 3,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "eta_or_hayya_or_tourist_visa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "ETA/Hayya/tourist visa path may be required for non-waiver passports.",
+          "requirements": [
+            "Apply before travel if required",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Eligibility varies by nationality and residence/visa status.",
+          "officialUrl": "https://visitqatar.com/intl-en/practical-info/visas"
+        }
+      ]
+    },
+    {
+      "name": "Oman",
+      "code": "OM",
+      "officialUrl": "https://evisa.rop.gov.om/",
+      "visaRules": [
+        {
+          "rank": 3,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "MX",
+            "IL",
+            "AE",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "evisa_or_visa_free_short_stay",
+          "applicationMethod": "online_before_travel_or_none_if_eligible",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Tourist eVisa or short visa-free entry available for many passports, depending on nationality and stay length.",
+          "requirements": [
+            "Valid passport",
+            "Apply online if required",
+            "Hotel/onward travel may be requested"
+          ],
+          "notes": "Oman has both visa-free short stays and eVisa categories; verify current passport-specific treatment.",
+          "officialUrl": "https://evisa.rop.gov.om/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "online_or_embassy_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not exempt or eVisa-eligible.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://evisa.rop.gov.om/"
+        }
+      ]
+    },
+    {
+      "name": "Saudi Arabia",
+      "code": "SA",
+      "officialUrl": "https://visa.visitsaudi.com/",
+      "visaRules": [
+        {
+          "rank": 3,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BR",
+            "AR",
+            "CL",
+            "MX",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_evisa_or_visa_on_arrival",
+          "applicationMethod": "online_before_travel_or_on_arrival",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist eVisa/visa on arrival available for eligible passports, commonly with up to 90 days per visit.",
+          "requirements": [
+            "Apply online or on arrival if eligible",
+            "Valid passport",
+            "Health insurance may be included/required"
+          ],
+          "notes": "Eligibility and stay limits vary by passport and visa issued.",
+          "officialUrl": "https://visa.visitsaudi.com/"
+        },
+        {
+          "rank": 3,
+          "passportGroups": [
+            "HAS_VALID_US_UK_SCHENGEN_VISA_USED_ONCE"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa_on_arrival_conditional",
+          "applicationMethod": "on_arrival",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Conditional visa on arrival may be available with a valid used US/UK/Schengen visa.",
+          "requirements": [
+            "Valid passport",
+            "Qualifying visa used at least once may be required"
+          ],
+          "notes": "Verify current conditions before travel.",
+          "officialUrl": "https://visa.visitsaudi.com/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_online_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not eVisa/VOA eligible.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and stay length depend on visa issued.",
+          "officialUrl": "https://visa.visitsaudi.com/"
+        }
+      ]
+    },
+    {
+      "name": "United States",
+      "code": "US",
+      "officialUrl": "https://travel.state.gov/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["CA"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Canadian citizens can enter visa-free, typically up to 6 months.",
+          "requirements": ["Valid passport"],
+          "notes": "Length of stay is determined by border officer. No ESTA required.",
+          "officialUrl": "https://travel.state.gov/"
+        },
+        {
+          "rank": 2,
+          "passportGroups": ["GB","EU","NO","CH","IS","LI","AU","NZ","JP","KR","SG","TW","IL","CL"],
+          "purpose": "tourism",
+          "visaType": "visa_waiver_program_esta",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "ESTA visa waiver entry for eligible countries, up to 90 days.",
+          "requirements": ["Approved ESTA","Valid e-passport"],
+          "notes": "Strict 90-day limit.",
+          "officialUrl": "https://esta.cbp.dhs.gov/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "b1_b2_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 180,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visitor visa required if not eligible for visa waiver.",
+          "requirements": ["Visa interview","Proof of ties"],
+          "notes": "Stay length decided at border.",
+          "officialUrl": "https://travel.state.gov/"
+        }
+      ]
+    },
+    {
+      "name": "Sweden",
+      "code": "SE",
+      "officialUrl": "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden.html",
+      "zone": "Schengen",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US","CA","GB","AU","NZ","JP","KR","SG","MY","BR","AR","CL","CO","PE","UY","MX","IL","AE","HK","TW","NO","CH","IS","LI","EU"],
+          "purpose": "tourism",
+          "visaType": "visa_free_schengen",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "periodDays": 180,
+          "entries": "multiple_entry_within_90_180_limit",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+          "requirements": ["Valid passport","Proof of funds/accommodation/onward travel may be requested"],
+          "notes": "Shared 90/180 rule across all Schengen countries.",
+          "officialUrl": "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden.html"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "schengen_short_stay_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "periodDays": 180,
+          "entries": "single_double_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Schengen short-stay visa required if not visa-exempt.",
+          "requirements": ["Apply before travel","Valid passport","Travel insurance","Proof of funds/accommodation/itinerary"],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden.html"
+        }
+      ]
+    },
+    {
+      "name": "Ecuador",
+      "code": "EC",
+      "officialUrl": "https://www.cancilleria.gob.ec/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US","CA","GB","AU","NZ","JP","KR","SG","MY","BR","AR","CL","CO","PE","UY","MX","IL","AE","EU","NO","CH","IS","LI","ASEAN_EXCEPT_MYANMAR"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for most nationalities, up to 90 days within a 12-month period.",
+          "requirements": ["Valid passport", "Onward travel may be requested"],
+          "notes": "Some nationalities require a visa prior to travel. Always verify based on passport.",
+          "officialUrl": "https://www.cancilleria.gob.ec/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not visa-exempt.",
+          "requirements": ["Apply before travel", "Valid passport", "Supporting documents"],
+          "notes": "Applies to a minority of nationalities.",
+          "officialUrl": "https://www.cancilleria.gob.ec/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "rentista_remote_work_residence",
+          "applicationMethod": "embassy_or_immigration_before_travel",
+          "durationDays": 730,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Rentista / remote-work-style temporary residence route, often used by remote workers with foreign income.",
+          "requirements": [
+            "Proof of foreign income",
+            "Health insurance",
+            "Background check may be required"
+          ],
+          "notes": "Not always branded as a digital nomad visa; requirements vary and should be verified.",
+          "officialUrl": "https://www.cancilleria.gob.ec/",
+          "requiresWork": true,
+          "minimumIncome": {
+            "amount": 3,
+            "currency": "ECUADOR_BASIC_SALARY",
+            "period": "monthly",
+            "description": "Commonly publicized income threshold tied to Ecuador's basic salary; verify current value."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Canada",
+      "code": "CA",
+      "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "US citizens can usually visit Canada visa-free for up to 6 months.",
+          "requirements": ["Valid US passport or accepted travel document"],
+          "notes": "US citizens do not need an eTA or visitor visa. Final stay length is determined at entry.",
+          "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "SCHENGEN",
+            "AD",
+            "AU",
+            "BS",
+            "BB",
+            "BN",
+            "CL",
+            "HK",
+            "IL",
+            "JP",
+            "MC",
+            "NZ",
+            "PG",
+            "QA",
+            "WS",
+            "SM",
+            "SG",
+            "SB",
+            "KR",
+            "TW",
+            "AE",
+            "GB",
+            "VA"
+          ],
+          "purpose": "tourism",
+          "visaType": "eta",
+          "applicationMethod": "online_before_travel_if_flying",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visa-exempt travelers need an eTA when flying to Canada; visitor stay is usually up to 6 months.",
+          "requirements": ["Valid passport", "Approved eTA if arriving by air"],
+          "notes": "This covers Canada’s normal visa-exempt/eTA countries. Some additional passports may be conditionally eTA-eligible with a valid US visa or recent Canadian visa, but those conditional cases are intentionally not encoded here.",
+          "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eta.html"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "visitor_visa_trv",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 180,
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visitor visa required before travel if not visa-exempt or eTA-eligible.",
+          "requirements": ["Apply before travel", "Valid passport", "Proof of funds/ties/travel purpose may be required", "Biometrics may be required"],
+          "notes": "Visa validity and entries depend on the visa issued. Stay length is determined at entry.",
+          "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/visitor-visa.html"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["AU", "AT", "BE", "CL", "CR", "HR", "CZ", "DK", "EE", "FR", "DE", "GR", "HK", "IE", "IT", "JP", "KR", "LV", "LT", "LU", "NL", "NZ", "NO", "PL", "PT", "SK", "SI", "ES", "SE", "CH", "TW", "GB"],
+          "purpose": "work",
+          "visaType": "iec_working_holiday",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "International Experience Canada Working Holiday work permit for eligible young citizens.",
+          "requirements": ["age limit applies (usually 18-30)", "IEC pool/invitation process", "Proof of funds", "Health insurance"],
+          "notes": "Work is allowed but not required. Duration, quotas, and eligibility vary by country.",
+          "officialUrl": "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec.html",
+          "requiresWork": false,
+          "minimumSavingsRequired": {
+            "amount": 2500,
+            "currency": "CAD",
+            "period": "available_funds",
+            "description": "Publicized minimum funds requirement for IEC participants."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Australia",
+      "code": "AU",
+      "officialUrl": "https://immi.homeaffairs.gov.au/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["NZ"],
+          "purpose": "tourism",
+          "visaType": "scv_444",
+          "applicationMethod": "on_arrival",
+          "durationDays": 3650,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "NZ citizens can live/work indefinitely.",
+          "requirements": ["Valid NZ passport"],
+          "notes": "Special AU-NZ agreement.",
+          "officialUrl": "https://immi.homeaffairs.gov.au/",
+          "requiresWork": false
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "SCHENGEN",
+            "US",
+            "CA",
+            "GB",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "BN",
+            "HK",
+            "TW"
+          ],
+          "purpose": "tourism",
+          "visaType": "eta_or_evisitor",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "ETA or eVisitor required.",
+          "requirements": ["Online application"],
+          "notes": "",
+          "officialUrl": "https://immi.homeaffairs.gov.au/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "visitor_visa",
+          "applicationMethod": "online",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visitor visa required.",
+          "requirements": ["Apply"],
+          "notes": "",
+          "officialUrl": "https://immi.homeaffairs.gov.au/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["EU","CA","JP","KR","HK","TW","GB"],
+          "purpose": "work",
+          "visaType": "working_holiday",
+          "applicationMethod": "online",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Working Holiday Visa.",
+          "requirements": ["Age limit","Funds"],
+          "notes": "Work allowed but not required.",
+          "officialUrl": "https://immi.homeaffairs.gov.au/",
+          "requiresWork": false
+        }
+      ]
+    },
+    {
+      "name": "New Zealand",
+      "code": "NZ",
+      "officialUrl": "https://www.immigration.govt.nz/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["AU"],
+          "purpose": "tourism",
+          "visaType": "australian_resident_status",
+          "applicationMethod": "on_arrival",
+          "durationDays": 3650,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Australians can live/work indefinitely.",
+          "requirements": ["Valid passport"],
+          "notes": "Special AU-NZ agreement.",
+          "officialUrl": "https://www.immigration.govt.nz/",
+          "requiresWork": false
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "SCHENGEN",
+            "US",
+            "CA",
+            "GB",
+            "JP",
+            "KR",
+            "SG",
+            "MY",
+            "HK",
+            "TW"
+          ],
+          "purpose": "tourism",
+          "visaType": "nzeta",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "NZeTA visa waiver.",
+          "requirements": ["NZeTA"],
+          "notes": "",
+          "officialUrl": "https://www.immigration.govt.nz/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "visitor_visa",
+          "applicationMethod": "online",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa required.",
+          "requirements": ["Apply"],
+          "notes": "",
+          "officialUrl": "https://www.immigration.govt.nz/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["EU","CA","JP","KR","GB"],
+          "purpose": "work",
+          "visaType": "working_holiday",
+          "applicationMethod": "online",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday Visa.",
+          "requirements": ["Age limit","Funds"],
+          "notes": "Work allowed but not required.",
+          "officialUrl": "https://www.immigration.govt.nz/",
+          "requiresWork": false
+        }
+      ]
+    },
+    {
+      "name": "United Kingdom",
+      "code": "GB",
+      "officialUrl": "https://www.gov.uk/check-uk-visa",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": [
+            "EU",
+            "AD","AG","AR","AU","BS","BB","BZ","BR","BN","CA","CL","CR","DM","GD","GT","GY",
+            "HK","IL","JP","KI","KR","MO","MY","MV","MH","MU","MX","FM","MC","NZ","NI",
+            "PW","PA","PG","PY","PE","KN","LC","VC","WS","SM","SC","SG","SB","TW","TO",
+            "TT","TV","AE","US","UY","VA"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_or_eta",
+          "applicationMethod": "online_if_required",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free or ETA entry for up to 6 months.",
+          "requirements": ["Valid passport"],
+          "notes": "ETA rollout is ongoing depending on nationality.",
+          "officialUrl": "https://www.gov.uk/check-uk-visa"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "visitor_visa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 180,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visitor visa required.",
+          "requirements": ["Proof of funds","Application"],
+          "notes": "",
+          "officialUrl": "https://www.gov.uk/standard-visitor"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["AU","CA","NZ","JP","KR","HK","TW"],
+          "purpose": "work",
+          "visaType": "youth_mobility",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 730,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Youth Mobility Scheme (2 years).",
+          "requirements": ["Age limit","Savings"],
+          "notes": "Work allowed but not required.",
+          "officialUrl": "https://www.gov.uk/youth-mobility",
+          "requiresWork": false
+        }
+      ]
+    },
+    {
+      "name": "China",
+      "code": "CN",
+      "officialUrl": "https://www.visaforchina.cn/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["AL","AM","BA","SM"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "Visa-free 90 days.",
+          "requirements": ["Valid passport"],
+          "notes": "Permanent regime.",
+          "officialUrl": "https://www.visaforchina.cn/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["MU"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 60,
+          "entries": "multiple_entry",
+          "summary": "Visa-free 60 days.",
+          "requirements": ["Valid passport"],
+          "notes": "",
+          "officialUrl": "https://www.visaforchina.cn/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "AG","AZ","BS","BB","BY","BN","DM",
+            "EC","FJ","GE","GD","KZ","MV","MY",
+            "QA","RS","SC","SG","SR","TH","TO",
+            "AE","UZ"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 30,
+          "entries": "multiple_entry",
+          "summary": "Visa-free 30 days.",
+          "requirements": ["Valid passport"],
+          "notes": "Permanent regime.",
+          "officialUrl": "https://www.visaforchina.cn/"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "EU",
+            "AD","AR","AU","BH","BR","CA","CL","IS","JP","KR","KW",
+            "LI","MC","ME","MK","NO","NZ","OM","PE","QA","RU",
+            "SA","CH","GB","UY"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_temporary",
+          "applicationMethod": "none",
+          "durationDays": 30,
+          "entries": "multiple_entry",
+          "summary": "Temporary 30-day visa-free regime.",
+          "requirements": ["Valid passport"],
+          "notes": "Valid until end of 2026 (subject to extension).",
+          "officialUrl": "https://www.visaforchina.cn/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "summary": "Visa required.",
+          "requirements": ["Apply","Itinerary"],
+          "notes": "",
+          "officialUrl": "https://www.visaforchina.cn/"
+        }
+      ]
+    },
+    {
+      "name": "Hong Kong",
+      "code": "HK",
+      "officialUrl": "https://www.immd.gov.hk/",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["GB"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "summary": "UK citizens visa-free 180 days.",
+          "requirements": ["Valid passport"],
+          "notes": "",
+          "officialUrl": "https://www.immd.gov.hk/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "EU",
+            "IS","NO","CH",
+            "AD","AG","AR","AU","BS","BB","BZ","BR","CA","CL","CO",
+            "CR","DM","DO","EC","FJ","GD","GT","GY","IL","JM","JP",
+            "KI","KR","LI","MO","MY","MV","MU","MX","MC","NA","NR",
+            "NZ","PA","PG","PY","PE","KN","LC","VC","SG","SB","ZA",
+            "TW","TR","TT","TV","US","UY","VU","ZM","ZW"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "Visa-free 90 days.",
+          "requirements": ["Valid passport"],
+          "notes": "",
+          "officialUrl": "https://www.immd.gov.hk/"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "BH","EG","ID","JO","KW","MA","OM","PH","QA","SA","TH","AE"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 30,
+          "entries": "multiple_entry",
+          "summary": "Visa-free 30 days.",
+          "requirements": ["Valid passport"],
+          "notes": "",
+          "officialUrl": "https://www.immd.gov.hk/"
+        },
+        {
+          "rank": 3,
+          "passportGroups": [
+            "AL","DZ","AM","BD","KH","CI","ET","GE","GH","HT","IN",
+            "KZ","LA","LB","MG","ML","MN","MM","NP","NG","PK","SN",
+            "LK","TJ","TM","UA","VN"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_or_limited",
+          "applicationMethod": "varies",
+          "durationDays": 14,
+          "entries": "multiple_entry",
+          "summary": "Visa-free or restricted short stay (14 days typical).",
+          "requirements": ["Valid passport"],
+          "notes": "Some nationalities require pre-arrival registration.",
+          "officialUrl": "https://www.immd.gov.hk/"
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "entry_permit",
+          "applicationMethod": "before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "summary": "Visa/entry permit required.",
+          "requirements": ["Apply"],
+          "notes": "",
+          "officialUrl": "https://www.immd.gov.hk/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["AU","AT","CA","JP","KR","NZ","GB","FR","DE","HU","IE","NL","SE"],
+          "purpose": "work",
+          "visaType": "working_holiday",
+          "applicationMethod": "before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "summary": "Working Holiday Scheme.",
+          "requirements": ["Age limit","Funds"],
+          "notes": "Work allowed but not required.",
+          "officialUrl": "https://www.immd.gov.hk/",
+          "requiresWork": false
         }
       ]
     }
