@@ -197,7 +197,7 @@
     days.type = "number";
     days.min = "1";
     days.max = "3650";
-    days.value = initial.days != null ? String(initial.days) : "14";
+    days.value = initial.days != null ? String(initial.days) : "";
     days.dataset.role = "days";
     fDays.appendChild(lblD);
     fDays.appendChild(days);
@@ -210,7 +210,7 @@
     multi.dataset.role = "multi";
     if (initial.multi) multi.checked = true;
     lblM.appendChild(multi);
-    lblM.appendChild(document.createTextNode("Multi-entry"));
+    lblM.appendChild(document.createTextNode("Multi-entry?"));
 
     // Work checkbox
     const lblW = document.createElement("label");
@@ -220,7 +220,7 @@
     work.dataset.role = "work";
     if (initial.work) work.checked = true;
     lblW.appendChild(work);
-    lblW.appendChild(document.createTextNode("Want to work there"));
+    lblW.appendChild(document.createTextNode("Working?"));
 
     // Remove
     const rm = document.createElement("button");
