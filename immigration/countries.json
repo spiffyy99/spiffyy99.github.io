@@ -506,7 +506,7 @@
           ],
           "notes": "US and Singapore are generally not included. Quotas and age limits vary.",
           "officialUrl": "https://www.mofa.go.jp/j_info/visit/w_holiday/index.html",
-          "requiresWork": true
+          "requiresWork": false
         }
       ]
     },
@@ -763,7 +763,7 @@
           "passportGroups": [
             "*"
           ],
-          "purpose": "work",
+          "purpose": "tourism",
           "visaType": "temporary_resident_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 365,
@@ -778,13 +778,6 @@
           ],
           "notes": "No formal digital nomad visa exists; temporary residency is the common path. Not a pure tourism stay option.",
           "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036",
-          "requiresWork": true,
-          "minimumIncome": {
-            "amount": 3000,
-            "currency": "USD",
-            "period": "monthly",
-            "description": "Approximate common consular solvency threshold; exact amount varies by consulate"
-          },
           "minimumSavingsRequired": {
             "amount": 50000,
             "currency": "USD",
@@ -1223,9 +1216,9 @@
             "Insurance",
             "Main purpose must be holiday"
           ],
-          "notes": "US nationals may have extension options; quotas and rules vary.",
+          "notes": "Certain nationals may have extension options; quotas and rules vary.",
           "officialUrl": "https://whic.mofa.go.kr/",
-          "requiresWork": true
+          "requiresWork": false
         }
       ]
     },
@@ -2071,7 +2064,7 @@
           ],
           "notes": "Eligibility and age limits vary by bilateral agreement. Proof-of-funds requirements vary by bilateral agreement and should be checked on the official page.",
           "officialUrl": "https://www.auswaertiges-amt.de/en/visa-service",
-          "requiresWork": true,
+          "requiresWork": false,
           "minimumIncome": null,
           "minimumSavingsRequired": null
         }
@@ -2187,7 +2180,7 @@
           ],
           "notes": "Eligibility and age limits vary by bilateral agreement. Proof-of-funds requirements vary by bilateral agreement and should be checked on the official page.",
           "officialUrl": "https://france-visas.gouv.fr/",
-          "requiresWork": true,
+          "requiresWork": false,
           "minimumIncome": null,
           "minimumSavingsRequired": null
         }
@@ -2406,7 +2399,7 @@
           ],
           "notes": "Eligibility and application process vary by nationality. Proof-of-funds requirements vary by bilateral agreement and should be checked on the official page.",
           "officialUrl": "https://www.netherlandsworldwide.nl/visa-the-netherlands",
-          "requiresWork": true,
+          "requiresWork": false,
           "minimumIncome": null,
           "minimumSavingsRequired": null
         }
@@ -2736,7 +2729,7 @@
           ],
           "notes": "Eligibility and age limits vary by bilateral agreement. Proof-of-funds requirements vary by bilateral agreement and should be checked on the official page.",
           "officialUrl": "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/",
-          "requiresWork": true,
+          "requiresWork": false,
           "minimumIncome": null,
           "minimumSavingsRequired": null
         }
@@ -3046,7 +3039,7 @@
           ],
           "notes": "Eligibility and quotas vary by bilateral agreement. Proof-of-funds requirements vary by bilateral agreement and should be checked on the official page.",
           "officialUrl": "https://serviciosconsulares.cl/",
-          "requiresWork": true,
+          "requiresWork": false,
           "minimumIncome": null,
           "minimumSavingsRequired": null
         }
