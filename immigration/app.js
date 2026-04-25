@@ -249,6 +249,7 @@
       passportCombo.clear();
       passportCombo.setItems(passportComboItems());
       renderPassportChips();
+      syncDestinationsToPassports();
     },
   });
   passportComboMount.appendChild(passportCombo.root);
@@ -277,6 +278,7 @@
         SELECTED_PASSPORTS.delete(code);
         renderPassportChips();
         passportCombo.setItems(passportComboItems());
+        syncDestinationsToPassports();
       });
       chip.appendChild(x);
       passportChips.appendChild(chip);
@@ -287,6 +289,38 @@
   const destinationsContainer = $("destinations");
   const addDestinationBtn = $("addDestinationBtn");
   const MAX_DESTINATIONS = 10;
+
+  // Country list for destination pickers, excluding any country the user
+  // already holds a passport for (you don't need a visa to enter your own
+  // country, so suggesting it would be confusing).
+  function destinationCountryItems() {
+    return COUNTRIES_DB.countries
+      .filter((c) => !SELECTED_PASSPORTS.has(c.code))
+      .map((c) => ({ value: c.code, label: c.name }));
+  }
+
+  // Keep destination rows consistent with the current passport set:
+  //   - drop any rows whose country is now a passport-held country
+  //   - refresh remaining comboboxes so passport countries disappear from suggestions
+  //   - re-show the "add destination" button if rows were removed
+  function syncDestinationsToPassports() {
+    const cards = [...destinationsContainer.children];
+    for (const card of cards) {
+      const hidden = card.querySelector('input[data-role="country"]');
+      if (hidden && hidden.value && SELECTED_PASSPORTS.has(hidden.value)) {
+        card.remove();
+      }
+    }
+    const items = destinationCountryItems();
+    for (const card of destinationsContainer.children) {
+      if (card._countryCombo) card._countryCombo.setItems(items);
+    }
+    addDestinationBtn.hidden = destinationsContainer.children.length >= MAX_DESTINATIONS;
+    // Always keep at least one empty row visible so the form isn't blank.
+    if (destinationsContainer.children.length === 0) {
+      addDestinationRow();
+    }
+  }
 
   function makeTogglePill(role, iconHtml, labelText, initiallyOn) {
     const lbl = document.createElement("label");
@@ -319,19 +353,20 @@
     fCountry.className = "destField";
     const lblC = document.createElement("label");
     lblC.textContent = "Country";
-    const countryItems = COUNTRIES_DB.countries.map((c) => ({ value: c.code, label: c.name }));
+    const countryItems = destinationCountryItems();
     const countryCombo = createCombobox({
       items: countryItems,
       placeholder: "Type a country name\u2026",
       role: "country",
     });
-    if (initial.code) {
+    if (initial.code && !SELECTED_PASSPORTS.has(initial.code)) {
       const found = countryItems.find((it) => it.value === initial.code);
       if (found) {
         countryCombo.root.querySelector(".cb-input").value = found.label;
-        countryCombo.root.querySelector('input[type="hidden"]').value = found.value;
+        countryCombo.root.querySelector('input[data-role="country"]').value = found.value;
       }
     }
+    card._countryCombo = countryCombo;
     fCountry.append(lblC, countryCombo.root);
 
     const fDays = document.createElement("div");
@@ -534,15 +569,71 @@
   };
   const pretty = (map, key) => map[key] || (key || "").replace(/_/g, " ");
 
+  // Acronyms that should appear all-caps in formatted visa names.
+  const VISA_ACRONYMS = new Set([
+    "dtv", "eta", "voa", "esta", "etias", "etfs", "ets",
+    "k", "f", "e", "c", "d", "j", "b",
+    "uae", "us", "uk", "eu", "asean",
+  ]);
+  // Lowercase connector words inside formatted visa names.
+  const VISA_CONNECTORS = new Set(["or", "and", "of", "to", "in", "on", "at", "for", "the", "with"]);
+
+  // Smart fallback formatter for visa type slugs the LABELS map doesn't cover.
+  // Examples:
+  //   "f_1_d_workation_digital_nomad" -> "F-1-D Workation Digital Nomad"
+  //   "k_eta_or_visa_free_entry"      -> "K-ETA or Visa Free Entry"
+  //   "destination_thailand_visa_dtv" -> "Destination Thailand Visa DTV"
+  //   "tourist_visa_c3"               -> "Tourist Visa C3"
+  function prettyVisaType(visaType) {
+    if (!visaType) return "";
+    if (VISA_TYPE_LABELS[visaType]) return VISA_TYPE_LABELS[visaType];
+
+    const parts = visaType.split("_");
+    // A token is "code-like" if it's a single char/digit, OR a known short
+    // acronym. Adjacent code-like tokens get joined with hyphens & uppercased.
+    const isCodeLike = (t) =>
+      /^[a-z0-9]$/.test(t) || /^\d+$/.test(t) ||
+      (VISA_ACRONYMS.has(t) && t.length <= 4);
+
+    const out = [];
+    let i = 0;
+    while (i < parts.length) {
+      if (isCodeLike(parts[i])) {
+        let j = i;
+        while (j < parts.length && isCodeLike(parts[j])) j++;
+        if (j - i >= 2) {
+          out.push(parts.slice(i, j).map((s) => s.toUpperCase()).join("-"));
+          i = j;
+          continue;
+        }
+      }
+      const t = parts[i];
+      if (VISA_CONNECTORS.has(t)) {
+        out.push(t);
+      } else if (VISA_ACRONYMS.has(t)) {
+        out.push(t.toUpperCase());
+      } else if (/^[a-z]+\d+[a-z]*$/i.test(t)) {
+        // Model-number style tokens like "c3", "e33g", "d8".
+        out.push(t.toUpperCase());
+      } else {
+        out.push(t.charAt(0).toUpperCase() + t.slice(1));
+      }
+      i++;
+    }
+    return out.join(" ");
+  }
+
   // Map a visa type to a category used for color-coding (CSS variable name).
   function visaCategory(visaType) {
     if (!visaType) return "other";
-    if (visaType.startsWith("visa_free") || visaType === "visa_exempt_with_third_country_visa") return "free";
-    if (visaType === "visa_on_arrival") return "onarrival";
-    if (visaType.startsWith("evisa")) return "evisa";
+    const v = visaType.toLowerCase();
+    if (v.includes("visa_free") || v === "visa_exempt_with_third_country_visa") return "free";
+    if (v === "visa_on_arrival" || v.endsWith("_on_arrival")) return "onarrival";
+    if (v.startsWith("evisa") || /(^|_)(eta|esta|etias)(_|$)/.test(v)) return "evisa";
     if (
-      visaType === "tourist_visa" || visaType === "visitor_visa" ||
-      visaType === "schengen_short_stay_visa"
+      v === "tourist_visa" || v === "visitor_visa" ||
+      v === "schengen_short_stay_visa" ||
+      v.startsWith("tourist_visa_") || v.startsWith("visitor_visa_")
     ) return "tourist";
     // All work / digital-nomad / temporary-residence / DTV / E33G / D8 / DE Rantau / Remotely from Georgia
     return "work";
@@ -566,16 +657,32 @@
   // Compact display label for the badge (concise, not the long official name).
   function visaBadgeText(rule) {
     const cat = visaCategory(rule.visaType);
+    const v = rule.visaType;
     if (cat === "free") {
-      return rule.visaType === "visa_free_schengen" ? "Visa Free (Schengen)"
-           : rule.visaType === "visa_exempt_with_third_country_visa" ? "Visa Exempt"
-           : "Visa Free";
+      if (v === "visa_free") return "Visa Free";
+      if (v === "visa_free_schengen") return "Visa Free (Schengen)";
+      if (v === "visa_exempt_with_third_country_visa") return "Visa Exempt";
+      // Combined types like "k_eta_or_visa_free_entry" -> "K-ETA or Visa Free Entry"
+      return prettyVisaType(v);
     }
     if (cat === "onarrival") return "Visa on Arrival";
-    if (cat === "evisa") return "eVisa";
-    if (cat === "tourist") return rule.visaType === "schengen_short_stay_visa" ? "Schengen Visa" : "Tourist Visa";
-    // For work/long-stay, show the friendly name.
-    return pretty(VISA_TYPE_LABELS, rule.visaType);
+    if (cat === "evisa") {
+      if (v === "evisa") return "eVisa";
+      return prettyVisaType(v);
+    }
+    if (cat === "tourist") {
+      if (v === "tourist_visa") return "Tourist Visa";
+      if (v === "visitor_visa") return "Visitor Visa";
+      if (v === "schengen_short_stay_visa") return "Schengen Visa";
+      return prettyVisaType(v);
+    }
+    // Work / long-stay: smart formatter (uses VISA_TYPE_LABELS first).
+    return prettyVisaType(v);
+  }
+
+  // Resolve the best official URL to surface on a card.
+  function officialUrlFor(rule, country) {
+    return (rule && rule.officialUrl) || (country && country.officialUrl) || null;
   }
 
   // -------- Rendering ----------
@@ -865,6 +972,35 @@
           )
         ));
       }
+
+      // Remote-work-as-stay alternative for the tourism case: when the user
+      // wants a long stay that no tourism rule covers, surface a working
+      // visa that DOES cover the duration — but flag that it requires
+      // qualifying remote employment / proof of work.
+      if (purpose === "tourism" && results.work && results.work.best) {
+        const w = results.work.best;
+        const wp = PASSPORT_BY_CODE.get(w.passport);
+        const wLabel = visaBadgeText(w.rule);
+        const wDays = w.rule.durationDays != null ? `up to ${w.rule.durationDays} days` : "extended stays";
+        card.append(calloutBox("info", "\uD83D\uDCBC",
+          el("strong", {}, "If you'll be working remotely: "),
+          document.createTextNode(
+            `Your ${wp ? wp.name : w.passport} passport qualifies for ${wLabel} (${wDays}). ` +
+            `These visas typically require proof of remote employment or qualifying activity — see requirements before applying.`
+          )
+        ));
+      }
+    }
+
+    // Per-card link to the official government source.
+    const url = officialUrlFor(match.best ? match.best.rule : null, country);
+    if (url) {
+      card.append(el("a", {
+        class: "officialLink",
+        href: url,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }, `Official ${country.name} visa info \u2197`));
     }
 
     return card;
@@ -919,9 +1055,9 @@
       const country = COUNTRIES_DB.countries.find((c) => c.code === dest.code);
       if (!country) continue;
       const tourism = findBestMatch(country, passports, dest.days, dest.multi, "tourism");
-      const work = dest.work
-        ? findBestMatch(country, passports, dest.days, dest.multi, "work")
-        : { best: null, bestIgnoringDays: null, bestIgnoringEntries: null, bestIgnoringBoth: null };
+      // Always compute work too — even for tourism, we may surface a remote-work
+      // visa as an alternative when the requested stay exceeds tourism limits.
+      const work = findBestMatch(country, passports, dest.days, dest.multi, "work");
       resultsList.appendChild(renderResultCard(dest, country, { tourism, work }));
     }
     resultsSection.style.display = "block";
