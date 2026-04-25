@@ -234,7 +234,7 @@
     days.min = "1";
     days.max = "3650";
     days.value = initial.days != null ? String(initial.days) : "";
-    days.placeholder = "14";
+    days.placeholder = "";
     days.dataset.role = "days";
     fDays.append(lblD, days);
 
@@ -244,8 +244,8 @@
     const optsRow = document.createElement("div");
     optsRow.className = "destOptionsRow";
     optsRow.append(
-      makeTogglePill("multi", "\u21BB", "Multi-entry", !!initial.multi),
-      makeTogglePill("work", "\uD83D\uDCBC", "Want to work there", !!initial.work),
+      makeTogglePill("multi", "\u21BB", "Multi-entry?", !!initial.multi),
+      makeTogglePill("work", "\uD83D\uDCBC", "Working?", !!initial.work),
     );
 
     // Remove (top-right corner of card)
