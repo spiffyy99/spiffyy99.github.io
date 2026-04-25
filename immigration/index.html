@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Visa &amp; Entry Briefing</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div class="header-left">
+          <h1>Vibe Visa &amp; Entry Briefing</h1>
+          <p class="subtitle">Quick visa outline based on the passports you hold and where you're headed</p>
+        </div>
+        <div class="header-right">
+          <button id="themeToggle" class="theme-toggle" type="button" title="Toggle dark mode">
+            <span id="themeIcon">&#9790;</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="card">
+        <form id="visaForm" class="form">
+          <div class="sectionTitle">Your passports</div>
+          <div class="hint">Add every passport you hold. We'll automatically pick the best one for each destination.</div>
+          <div id="passportChips" class="chips"></div>
+          <div class="row" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="passportSelect" style="flex:1 1 220px; min-width:0;"></select>
+            <button type="button" id="addPassportBtn" class="btn secondary">+ Add passport</button>
+          </div>
+
+          <div class="sectionTitle">Destinations</div>
+          <div class="hint">Up to 10. The current visa data covers a small set of countries; we'll add more over time.</div>
+          <div id="destinations"></div>
+          <div class="row">
+            <button type="button" id="addDestinationBtn" class="btn secondary">+ Add destination</button>
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button type="submit" class="btn primary">Generate visa briefing</button>
+          </div>
+
+          <div id="errorBox" class="errorBox" role="alert" style="display:none;"></div>
+        </form>
+      </section>
+
+      <section id="resultsSection" class="card" aria-live="polite" style="display:none;">
+        <div class="sectionTitle">Visa briefing</div>
+        <div id="resultsList" class="resultsList"></div>
+        <div class="hint" id="resultsFooter" style="margin-top:14px;">
+          Information is for general guidance only. Always verify with the official consulate or government site before travel.
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js?v=20260425a"></script>
+  </body>
+</html>
