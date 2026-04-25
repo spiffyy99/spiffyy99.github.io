@@ -1089,7 +1089,7 @@
       if (purpose === "tourism" && rule.purpose === "work" && rule.requiresWork === false) {
         card.append(calloutBox("info", "\u2139",
           document.createTextNode(
-            `This is a work visa without a work requirement, so it&apos;s suitable for tourists seeking longer stays. Check local laws regarding tourism activities.`
+            `This is a work visa without a work requirement, so it is suitable for tourists seeking longer stays. Check local laws regarding tourism activities.`
           )
         ));
       }

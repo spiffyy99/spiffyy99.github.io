@@ -303,6 +303,7 @@ input[type="checkbox"]{ accent-color: var(--primary); }
   -webkit-appearance: none;
   min-width: 42px;
   text-align: center;
+  width: auto;
 }
 .daysUnitSelect:focus{ background: var(--surface); }
 .daysUnitWrap:focus-within{
