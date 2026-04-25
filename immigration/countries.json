@@ -507,6 +507,233 @@
           "notes": "Targeted at IT/digital sector professionals. Spouse and children can be included."
         }
       ]
+    },
+    {
+      "name": "South Korea",
+      "code": "KR",
+      "visaRules": [
+        {
+          "rank": 2,
+          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "purpose": "tourism",
+          "visaType": "k_eta",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "summary": "K-ETA required for visa-free entry up to 90 days.",
+          "requirements": ["Online K-ETA approval"],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 90,
+          "entries": "single",
+          "summary": "Visa required before travel.",
+          "requirements": ["Apply before travel"],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "Philippines",
+      "code": "PH",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 30,
+          "entries": "per_entry",
+          "extendable": true,
+          "extensionDays": 29,
+          "summary": "Visa-free entry up to 30 days.",
+          "requirements": ["Return ticket required"],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 59,
+          "entries": "single",
+          "summary": "Tourist visa required.",
+          "requirements": ["Apply before travel"],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "Singapore",
+      "code": "SG",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "Visa-free entry up to 90 days.",
+          "requirements": ["Valid passport"],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "visa_required",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 30,
+          "entries": "single",
+          "summary": "Visa required before travel.",
+          "requirements": ["Apply before travel"],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "Colombia",
+      "code": "CO",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 90,
+          "summary": "Visa-free 90 days, extendable once.",
+          "requirements": [],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "single",
+          "summary": "Visa required.",
+          "requirements": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "Brazil",
+      "code": "BR",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["CA", "EU"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "Visa-free entry.",
+          "requirements": [],
+          "notes": ""
+        },
+        {
+          "rank": 3,
+          "passportGroups": ["US"],
+          "purpose": "tourism",
+          "visaType": "evisa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "eVisa required for US citizens.",
+          "requirements": [],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 90,
+          "entries": "single",
+          "summary": "Visa required.",
+          "requirements": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "Argentina",
+      "code": "AR",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US", "CA", "GB", "EU"],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "summary": "Visa-free entry up to 90 days.",
+          "requirements": [],
+          "notes": ""
+        },
+        {
+          "rank": 5,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 90,
+          "entries": "single",
+          "summary": "Visa required.",
+          "requirements": [],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "name": "United Arab Emirates",
+      "code": "AE",
+      "visaRules": [
+        {
+          "rank": 1,
+          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "purpose": "tourism",
+          "visaType": "visa_free_or_visa_on_arrival",
+          "applicationMethod": "on_arrival",
+          "durationDays": 30,
+          "entries": "multiple_entry",
+          "summary": "Visa-free/VOA depending on passport.",
+          "requirements": [],
+          "notes": ""
+        },
+        {
+          "rank": 3,
+          "passportGroups": ["*"],
+          "purpose": "tourism",
+          "visaType": "evisa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 30,
+          "entries": "single",
+          "summary": "eVisa required.",
+          "requirements": [],
+          "notes": ""
+        }
+      ]
     }
   ]
 }
