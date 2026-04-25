@@ -1433,8 +1433,10 @@
 
   // -------- Discovery Mode: Run Discovery --------
   // Returns an alphabetically sorted list of countries that match the user's
-  // filters. Each result describes the single best visa option the user
-  // qualifies for, given their passports and intended stay length.
+  // filters. Each result includes the full match objects so the standard
+  // `renderResultCard` (used by specific mode) can be reused for rendering —
+  // giving discovery results the same rich detail (fact tiles, requirements,
+  // notes, official link, callouts) as the specific-destination view.
   //
   // Tourism mode (default):
   //   - Always include countries where the user can enter visa-free for the
@@ -1459,126 +1461,51 @@
     const userHasSchengen = passports.some(p => schengenCodes.has(p));
 
     for (const country of COUNTRIES_DB.countries) {
-      // Skip user's passport countries
       if (passports.includes(country.code)) continue;
-      // Skip Schengen countries if user has Schengen passport
       if (userHasSchengen && schengenCodes.has(country.code)) continue;
-      // Skip if not in selected regions
       if (regions.length > 0 && !regionCodeSet.has(country.code)) continue;
 
-      let bestOption = null;
-      let resultCategory = null;
-      let note = null;
+      // Compute both purposes once so the rendered card can show the
+      // tourism-vs-work alternatives just like specific mode does.
+      const tourismMatch = findBestMatch(country, passports, days, false, "tourism");
+      const workMatch = findBestMatch(country, passports, days, false, "work");
+
+      let qualifies = false;
 
       if (purpose === "work") {
-        // Working: find any work visa that covers the requested stay.
-        const workMatch = findBestMatch(country, passports, days, false, "work");
-        if (workMatch.best) {
-          bestOption = workMatch.best;
-          resultCategory = "work";
-        }
-      } else {
-        // Tourism: findBestMatch already considers tourism rules + work rules
-        // with requiresWork:false, picking the highest-ranked option that
-        // covers the full requested stay.
-        const tourismMatch = findBestMatch(country, passports, days, false, "tourism");
+        // Working: include any country with a viable work visa.
+        qualifies = !!workMatch.best;
+      } else if (tourismMatch.best) {
+        const rule = tourismMatch.best.rule;
+        const cat = visaCategory(rule.visaType);
+        const isWorkFallback = rule.purpose === "work" && rule.requiresWork === false;
 
-        if (tourismMatch.best) {
-          const rule = tourismMatch.best.rule;
-          const cat = visaCategory(rule.visaType);
-          const isWorkFallback = rule.purpose === "work" && rule.requiresWork === false;
-
-          if (isWorkFallback) {
-            // Long-stay fallback: e.g. working-holiday or digital-nomad visa
-            // that doesn't actually require employment.
-            bestOption = tourismMatch.best;
-            resultCategory = "work_fallback";
-            note = "Visa-free period too short — this longer visa doesn't require working";
-          } else if (cat === "free") {
-            bestOption = tourismMatch.best;
-            resultCategory = "visa_free";
-          } else if (cat === "evisa" && includeEvisa) {
-            bestOption = tourismMatch.best;
-            resultCategory = "evisa";
-          } else if (cat === "onarrival" && includeVoa) {
-            bestOption = tourismMatch.best;
-            resultCategory = "voa";
-          }
-          // Plain tourist/visitor visas are intentionally skipped — see header.
+        if (isWorkFallback || cat === "free") {
+          qualifies = true;
+        } else if (cat === "evisa" && includeEvisa) {
+          qualifies = true;
+        } else if (cat === "onarrival" && includeVoa) {
+          qualifies = true;
         }
+        // Plain tourist/visitor visas are intentionally skipped.
       }
 
-      if (bestOption) {
-        results.push({
-          country,
-          match: bestOption,
-          resultCategory,
-          note,
-          region: COUNTRY_TO_REGION[country.code] || "other",
-        });
+      if (qualifies) {
+        // Synthesise a `dest` shaped like a specific-mode destination row so
+        // we can feed it straight to `renderResultCard`.
+        const dest = {
+          code: country.code,
+          days,
+          multi: false,
+          work: purpose === "work",
+        };
+        results.push({ country, dest, tourismMatch, workMatch });
       }
     }
 
     // Sort alphabetically by country name (per spec).
     results.sort((a, b) => a.country.name.localeCompare(b.country.name));
     return results;
-  }
-
-  // -------- Discovery Mode: Render Discovery Card --------
-  function renderDiscoveryCard(result) {
-    const { country, match, note, region } = result;
-    const rule = match.rule;
-    const cat = visaCategory(rule.visaType);
-
-    const card = document.createElement("div");
-    card.className = "discoveryCard";
-    card.style.setProperty("--card-accent", CATEGORY_VAR[cat]);
-
-    // Country info (left side)
-    const countryDiv = document.createElement("div");
-    countryDiv.className = "dc-country";
-
-    const nameDiv = document.createElement("div");
-    nameDiv.className = "dc-name";
-    nameDiv.innerHTML = `<span class="dc-flag">${flagFromCode(country.code)}</span>${country.name}`;
-
-    const regionDiv = document.createElement("div");
-    regionDiv.className = "dc-region";
-    regionDiv.textContent = REGION_LABELS[region] || "";
-
-    countryDiv.append(nameDiv, regionDiv);
-
-    // Visa info (right side)
-    const visaDiv = document.createElement("div");
-    visaDiv.className = "dc-visa";
-
-    const visaTypeDiv = document.createElement("div");
-    visaTypeDiv.className = "dc-visa-type";
-    visaTypeDiv.style.color = CATEGORY_VAR[cat];
-    const icon = document.createElement("span");
-    icon.className = "dc-vt-icon";
-    icon.textContent = CATEGORY_ICON[cat] || "";
-    visaTypeDiv.append(icon, document.createTextNode(" " + visaBadgeText(rule)));
-
-    const durationDiv = document.createElement("div");
-    durationDiv.className = "dc-duration";
-    if (rule.durationDays != null) {
-      durationDiv.textContent = `Up to ${rule.durationDays} day${rule.durationDays === 1 ? "" : "s"}`;
-    } else {
-      durationDiv.textContent = "Extended stay";
-    }
-
-    visaDiv.append(visaTypeDiv, durationDiv);
-
-    if (note) {
-      const noteDiv = document.createElement("div");
-      noteDiv.className = "dc-note";
-      noteDiv.textContent = note;
-      visaDiv.append(noteDiv);
-    }
-
-    card.append(countryDiv, visaDiv);
-    return card;
   }
 
   // -------- Discovery Mode: Render Empty State --------
