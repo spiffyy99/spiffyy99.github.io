@@ -1,0 +1,382 @@
+{
+    "lastUpdated": "2026-04",
+    "ruleRanking": "Lower rank is better. If user has multiple passports, pick the matching rule with the lowest rank.",
+    "countries": [
+      {
+        "name": "Thailand",
+        "code": "TH",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 60,
+            "entries": "per_entry",
+            "extendable": true,
+            "extensionDays": 30,
+            "summary": "Visa-free tourism entry for 60 days, typically extendable once by 30 days.",
+            "requirements": ["Valid passport", "Onward travel may be requested"],
+            "notes": "Frequent back-to-back entries may be scrutinized."
+          },
+          {
+            "rank": 4,
+            "passportGroups": ["IN", "CN"],
+            "purpose": "tourism",
+            "visaType": "visa_on_arrival",
+            "applicationMethod": "on_arrival",
+            "durationDays": 15,
+            "entries": "single",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa on arrival for short tourism stays.",
+            "requirements": ["Valid passport", "Onward travel", "Arrival documents/payment"],
+            "notes": "Check current VOA eligibility before travel."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "tourist_visa",
+            "applicationMethod": "embassy_or_evisa_before_travel",
+            "durationDays": 60,
+            "entries": "single_or_multiple",
+            "extendable": true,
+            "extensionDays": 30,
+            "summary": "Tourist visa required before travel; typical tourist visa stay is 60 days.",
+            "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
+            "notes": "Exact eligibility and entry count depend on nationality and consulate."
+          }
+        ]
+      },
+      {
+        "name": "Vietnam",
+        "code": "VN",
+        "visaRules": [
+          {
+            "rank": 3,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG", "*"],
+            "purpose": "tourism",
+            "visaType": "evisa",
+            "applicationMethod": "online_before_travel",
+            "durationDays": 90,
+            "entries": "single_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Vietnam eVisa is available for up to 90 days, single or multiple entry.",
+            "requirements": ["Online application", "Valid passport", "Photo/document upload", "Approved eVisa before arrival"],
+            "notes": "Use the official eVisa portal."
+          }
+        ]
+      },
+      {
+        "name": "Indonesia",
+        "code": "ID",
+        "visaRules": [
+          {
+            "rank": 4,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_on_arrival",
+            "applicationMethod": "on_arrival_or_online_before_travel",
+            "durationDays": 30,
+            "entries": "single",
+            "extendable": true,
+            "extensionDays": 30,
+            "summary": "Visa on arrival/e-VOA for 30 days, extendable once by 30 days.",
+            "requirements": ["Passport valid 6+ months", "Onward/return ticket", "Arrival declaration where required"],
+            "notes": "Common for Bali/Indonesia tourism."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "tourist_visa",
+            "applicationMethod": "online_or_embassy_before_travel",
+            "durationDays": 60,
+            "entries": "single",
+            "extendable": true,
+            "extensionDays": null,
+            "summary": "Tourist visa required before travel if not eligible for VOA/e-VOA.",
+            "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
+            "notes": "Stay length and extension depend on visa type granted."
+          }
+        ]
+      },
+      {
+        "name": "Japan",
+        "code": "JP",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 90,
+            "entries": "multiple_entry",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free tourism stay up to 90 days.",
+            "requirements": ["Valid passport", "No paid local work"],
+            "notes": "Longer stays, work, or study require a proper visa/status."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "tourist_visa",
+            "applicationMethod": "embassy_or_consulate_before_travel",
+            "durationDays": 90,
+            "entries": "single_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Temporary visitor visa required before travel for non-exempt passports.",
+            "requirements": ["Apply before travel", "Valid passport", "Itinerary/supporting documents may be required"],
+            "notes": "Exact validity and entries depend on nationality and visa granted."
+          }
+        ]
+      },
+      {
+        "name": "Portugal",
+        "code": "PT",
+        "zone": "Schengen",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free_schengen",
+            "applicationMethod": "none",
+            "durationDays": 90,
+            "periodDays": 180,
+            "entries": "multiple_entry_within_90_180_limit",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+            "requirements": ["Valid passport", "Proof of funds/onward travel may be requested"],
+            "notes": "Limit is shared across all Schengen countries."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "schengen_short_stay_visa",
+            "applicationMethod": "embassy_or_consulate_before_travel",
+            "durationDays": 90,
+            "periodDays": 180,
+            "entries": "single_double_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Schengen short-stay visa required before travel; permits up to 90 days in any 180-day period if granted.",
+            "requirements": ["Apply before travel", "Valid passport", "Travel insurance", "Proof of funds/accommodation/itinerary"],
+            "notes": "Validity and entries depend on visa issued."
+          }
+        ]
+      },
+      {
+        "name": "Spain",
+        "code": "ES",
+        "zone": "Schengen",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free_schengen",
+            "applicationMethod": "none",
+            "durationDays": 90,
+            "periodDays": 180,
+            "entries": "multiple_entry_within_90_180_limit",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
+            "requirements": ["Valid passport", "Proof of funds/onward travel may be requested"],
+            "notes": "Limit is shared across all Schengen countries."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "schengen_short_stay_visa",
+            "applicationMethod": "embassy_or_consulate_before_travel",
+            "durationDays": 90,
+            "periodDays": 180,
+            "entries": "single_double_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Schengen short-stay visa required before travel; permits up to 90 days in any 180-day period if granted.",
+            "requirements": ["Apply before travel", "Valid passport", "Travel insurance", "Proof of funds/accommodation/itinerary"],
+            "notes": "Validity and entries depend on visa issued."
+          }
+        ]
+      },
+      {
+        "name": "Mexico",
+        "code": "MX",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 180,
+            "entries": "per_entry",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free visitor stay up to 180 days, but the exact days are granted by the immigration officer.",
+            "requirements": ["Valid passport", "Visitor permit/formality at entry", "Purpose must be tourism/business/transit"],
+            "notes": "180 days is the maximum, not guaranteed."
+          },
+          {
+            "rank": 1,
+            "passportGroups": ["HAS_VALID_US_CA_UK_JP_SCHENGEN_VISA_OR_RESIDENCE"],
+            "purpose": "tourism",
+            "visaType": "visa_exempt_with_third_country_visa",
+            "applicationMethod": "none",
+            "durationDays": 180,
+            "entries": "per_entry",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-exempt if holding a valid visa/residence permit from the US, Canada, UK, Japan, or Schengen.",
+            "requirements": ["Valid passport", "Valid qualifying visa/residence document"],
+            "notes": "Useful fallback for passports that otherwise need a Mexican visa."
+          },
+          {
+            "rank": 5,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "visitor_visa",
+            "applicationMethod": "embassy_or_consulate_before_travel",
+            "durationDays": 180,
+            "entries": "single_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visitor visa required before travel unless exempt.",
+            "requirements": ["Apply before travel", "Valid passport", "Financial/supporting documents may be required"],
+            "notes": "Final stay length is still set by immigration on entry."
+          }
+        ]
+      },
+      {
+        "name": "Georgia",
+        "code": "GE",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 365,
+            "entries": "multiple_entry",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free stay up to 365 days.",
+            "requirements": ["Valid passport", "Health/accident insurance may be required"],
+            "notes": "Popular long-stay destination."
+          },
+          {
+            "rank": 3,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "evisa_or_tourist_visa",
+            "applicationMethod": "online_or_embassy_before_travel",
+            "durationDays": 30,
+            "entries": "single_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Non-exempt passports may need an eVisa or tourist visa before travel.",
+            "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
+            "notes": "Exact eligibility and duration depend on nationality."
+          }
+        ]
+      },
+      {
+        "name": "Turkey",
+        "code": "TR",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 90,
+            "periodDays": 180,
+            "entries": "multiple_entry_within_90_180_limit",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "Visa-free tourism stay up to 90 days within a 180-day period for many passports.",
+            "requirements": ["Valid passport"],
+            "notes": "Some nationalities may require eVisa instead."
+          },
+          {
+            "rank": 3,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "evisa_or_tourist_visa",
+            "applicationMethod": "online_or_embassy_before_travel",
+            "durationDays": 30,
+            "periodDays": 180,
+            "entries": "single_or_multiple",
+            "extendable": false,
+            "extensionDays": null,
+            "summary": "eVisa or tourist visa may be required before travel.",
+            "requirements": ["Apply before travel if required", "Valid passport"],
+            "notes": "Duration and entry count vary by nationality."
+          }
+        ]
+      },
+      {
+        "name": "Malaysia",
+        "code": "MY",
+        "visaRules": [
+          {
+            "rank": 1,
+            "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 90,
+            "entries": "multiple_entry",
+            "extendable": true,
+            "extensionDays": null,
+            "summary": "Visa-free tourism stay up to 90 days for many passports.",
+            "requirements": ["Valid passport", "Return/onward ticket may be requested"],
+            "notes": "Extensions may be possible but should not be assumed."
+          },
+          {
+            "rank": 1,
+            "passportGroups": ["ASEAN_EXCEPT_MYANMAR"],
+            "purpose": "tourism",
+            "visaType": "visa_free",
+            "applicationMethod": "none",
+            "durationDays": 30,
+            "entries": "multiple_entry",
+            "extendable": true,
+            "extensionDays": null,
+            "summary": "Many ASEAN nationals can enter visa-free for short social visits.",
+            "requirements": ["Valid passport", "Return/onward ticket may be requested"],
+            "notes": "Rules vary by ASEAN nationality."
+          },
+          {
+            "rank": 3,
+            "passportGroups": ["*"],
+            "purpose": "tourism",
+            "visaType": "evisa_or_visitor_visa",
+            "applicationMethod": "online_or_embassy_before_travel",
+            "durationDays": 30,
+            "entries": "single_or_multiple",
+            "extendable": true,
+            "extensionDays": null,
+            "summary": "Tourist eVisa or visitor visa may be required for non-exempt passports.",
+            "requirements": ["Apply before travel if required", "Valid passport"],
+            "notes": "Exact eligibility depends on nationality."
+          }
+        ]
+      }
+    ]
+  }
