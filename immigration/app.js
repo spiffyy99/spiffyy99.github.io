@@ -102,26 +102,27 @@
     return COUNTRIES_DB;
   }
 
-  // -------- Passport selection ----------
+  // -------- Passport selection (type-ahead, no button) ----------
   const passportChips = $("passportChips");
-  const passportSelect = $("passportSelect");
-  const addPassportBtn = $("addPassportBtn");
+  const passportInput = $("passportInput");
+  const passportDatalist = $("passportDatalist");
   const SELECTED_PASSPORTS = new Set();
 
-  function populatePassportSelect() {
-    passportSelect.innerHTML = "";
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select a passport…";
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    passportSelect.appendChild(placeholder);
-    for (const [code, name, flag] of PASSPORTS) {
+  // Build an index for matching typed input -> code. Names are unique in our
+  // catalog; we also accept the bare ISO-2 code typed directly (e.g. "US").
+  const NAME_TO_CODE = new Map();
+  for (const [c, n] of PASSPORTS) {
+    NAME_TO_CODE.set(n.toLowerCase(), c);
+    NAME_TO_CODE.set(c.toLowerCase(), c);
+  }
+
+  function refreshPassportDatalist() {
+    passportDatalist.innerHTML = "";
+    for (const [code, name] of PASSPORTS) {
       if (SELECTED_PASSPORTS.has(code)) continue;
       const opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = `${flag}  ${name}`;
-      passportSelect.appendChild(opt);
+      opt.value = name;
+      passportDatalist.appendChild(opt);
     }
   }
 
@@ -129,8 +130,7 @@
     passportChips.innerHTML = "";
     if (SELECTED_PASSPORTS.size === 0) {
       const empty = document.createElement("div");
-      empty.className = "hint";
-      empty.style.margin = "0";
+      empty.className = "chips-empty";
       empty.textContent = "No passports added yet.";
       passportChips.appendChild(empty);
       return;
@@ -149,46 +149,82 @@
       x.addEventListener("click", () => {
         SELECTED_PASSPORTS.delete(code);
         renderPassportChips();
-        populatePassportSelect();
-        // Re-render destination country selects so available list stays fresh.
+        refreshPassportDatalist();
       });
       chip.appendChild(x);
       passportChips.appendChild(chip);
     }
   }
 
-  addPassportBtn.addEventListener("click", () => {
-    const v = passportSelect.value;
-    if (!v) return;
-    SELECTED_PASSPORTS.add(v);
+  function tryAddPassportFromInput() {
+    const raw = passportInput.value.trim();
+    if (!raw) return false;
+    const code = NAME_TO_CODE.get(raw.toLowerCase());
+    if (!code || SELECTED_PASSPORTS.has(code)) return false;
+    SELECTED_PASSPORTS.add(code);
+    passportInput.value = "";
     renderPassportChips();
-    populatePassportSelect();
+    refreshPassportDatalist();
+    return true;
+  }
+
+  // The `input` event fires both on typing and on selecting from the datalist.
+  // When it matches an exact catalog entry, instantly add the chip.
+  passportInput.addEventListener("input", tryAddPassportFromInput);
+  // Pressing Enter committed a typed value -> try to match it.
+  passportInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      tryAddPassportFromInput();
+    }
   });
+  passportInput.addEventListener("blur", tryAddPassportFromInput);
 
   // -------- Destination rows ----------
   const destinationsContainer = $("destinations");
   const addDestinationBtn = $("addDestinationBtn");
   const MAX_DESTINATIONS = 10;
 
-  function buildDestinationRow(initial = {}) {
-    const row = document.createElement("div");
-    row.className = "destinationRow";
+  function makeTogglePill(role, iconHtml, labelText, initiallyOn) {
+    const lbl = document.createElement("label");
+    lbl.className = "togglePill" + (initiallyOn ? " is-on" : "");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.dataset.role = role;
+    if (initiallyOn) cb.checked = true;
+    cb.addEventListener("change", () => {
+      lbl.classList.toggle("is-on", cb.checked);
+    });
+    const icon = document.createElement("span");
+    icon.className = "pill-icon";
+    icon.textContent = iconHtml;
+    const txt = document.createElement("span");
+    txt.textContent = labelText;
+    lbl.append(cb, icon, txt);
+    return lbl;
+  }
 
-    // Country select
+  function buildDestinationRow(initial = {}) {
+    const card = document.createElement("div");
+    card.className = "destinationCard";
+
+    // Top row: country (wide) + days (narrow)
+    const topRow = document.createElement("div");
+    topRow.className = "destTopRow";
+
     const fCountry = document.createElement("div");
-    fCountry.className = "destField destField--country";
+    fCountry.className = "destField";
     const lblC = document.createElement("label");
     lblC.textContent = "Country";
     const sel = document.createElement("select");
     sel.dataset.role = "country";
-    sel.innerHTML = `<option value="" disabled ${initial.code ? "" : "selected"}>Select…</option>` +
-      (COUNTRIES_DB.countries
+    sel.innerHTML =
+      `<option value="" disabled ${initial.code ? "" : "selected"}>Select a country&hellip;</option>` +
+      COUNTRIES_DB.countries
         .map((c) => `<option value="${c.code}" ${initial.code === c.code ? "selected" : ""}>${c.name}</option>`)
-        .join(""));
-    fCountry.appendChild(lblC);
-    fCountry.appendChild(sel);
+        .join("");
+    fCountry.append(lblC, sel);
 
-    // Days
     const fDays = document.createElement("div");
     fDays.className = "destField";
     const lblD = document.createElement("label");
@@ -198,43 +234,34 @@
     days.min = "1";
     days.max = "3650";
     days.value = initial.days != null ? String(initial.days) : "";
+    days.placeholder = "14";
     days.dataset.role = "days";
-    fDays.appendChild(lblD);
-    fDays.appendChild(days);
+    fDays.append(lblD, days);
 
-    // Multi-entry checkbox
-    const lblM = document.createElement("label");
-    lblM.className = "destCheckbox";
-    const multi = document.createElement("input");
-    multi.type = "checkbox";
-    multi.dataset.role = "multi";
-    if (initial.multi) multi.checked = true;
-    lblM.appendChild(multi);
-    lblM.appendChild(document.createTextNode("Multi-entry?"));
+    topRow.append(fCountry, fDays);
 
-    // Work checkbox
-    const lblW = document.createElement("label");
-    lblW.className = "destCheckbox";
-    const work = document.createElement("input");
-    work.type = "checkbox";
-    work.dataset.role = "work";
-    if (initial.work) work.checked = true;
-    lblW.appendChild(work);
-    lblW.appendChild(document.createTextNode("Working?"));
+    // Options row: pill toggles
+    const optsRow = document.createElement("div");
+    optsRow.className = "destOptionsRow";
+    optsRow.append(
+      makeTogglePill("multi", "\u21BB", "Multi-entry", !!initial.multi),
+      makeTogglePill("work", "\uD83D\uDCBC", "Want to work there", !!initial.work),
+    );
 
-    // Remove
+    // Remove (top-right corner of card)
     const rm = document.createElement("button");
     rm.type = "button";
     rm.className = "removeDestBtn";
-    rm.title = "Remove";
+    rm.title = "Remove this destination";
+    rm.setAttribute("aria-label", "Remove this destination");
     rm.textContent = "\u00D7";
     rm.addEventListener("click", () => {
-      row.remove();
+      card.remove();
       addDestinationBtn.hidden = false;
     });
 
-    row.append(fCountry, fDays, lblM, lblW, rm);
-    return row;
+    card.append(rm, topRow, optsRow);
+    return card;
   }
 
   function addDestinationRow(initial) {
@@ -373,12 +400,74 @@
   const ENTRIES_LABELS = {
     single: "Single entry",
     multiple_entry: "Multiple entry",
-    per_entry: "Per entry (multi-entry, fresh allowance each time)",
-    single_or_multiple: "Single or multiple entry",
-    single_double_or_multiple: "Single, double, or multiple entry",
-    multiple_entry_within_90_180_limit: "Multiple entry (within 90/180 limit)",
+    per_entry: "Multi-entry (fresh allowance each time)",
+    single_or_multiple: "Single or multiple",
+    single_double_or_multiple: "Single, double, or multiple",
+    multiple_entry_within_90_180_limit: "Multi-entry (within 90/180)",
+  };
+  // Compact label variants used in fact tiles where space is tight.
+  const ENTRIES_SHORT = {
+    single: "Single",
+    multiple_entry: "Multi",
+    per_entry: "Multi (per-entry)",
+    single_or_multiple: "Single or multi",
+    single_double_or_multiple: "Single / double / multi",
+    multiple_entry_within_90_180_limit: "Multi (90/180)",
+  };
+  const METHOD_SHORT = {
+    none: "Nothing in advance",
+    on_arrival: "On arrival",
+    online_before_travel: "Online, before travel",
+    on_arrival_or_online_before_travel: "On arrival or online",
+    online_or_embassy_before_travel: "Online or embassy",
+    embassy_or_evisa_before_travel: "Embassy or eVisa",
+    embassy_or_consulate_before_travel: "Embassy / consulate",
   };
   const pretty = (map, key) => map[key] || (key || "").replace(/_/g, " ");
+
+  // Map a visa type to a category used for color-coding (CSS variable name).
+  function visaCategory(visaType) {
+    if (!visaType) return "other";
+    if (visaType.startsWith("visa_free") || visaType === "visa_exempt_with_third_country_visa") return "free";
+    if (visaType === "visa_on_arrival") return "onarrival";
+    if (visaType.startsWith("evisa")) return "evisa";
+    if (
+      visaType === "tourist_visa" || visaType === "visitor_visa" ||
+      visaType === "schengen_short_stay_visa"
+    ) return "tourist";
+    // All work / digital-nomad / temporary-residence / DTV / E33G / D8 / DE Rantau / Remotely from Georgia
+    return "work";
+  }
+  const CATEGORY_ICON = {
+    free: "\u2713",        // ✓
+    onarrival: "\u2708",   // ✈
+    evisa: "\uD83D\uDCBB", // 💻
+    tourist: "\uD83D\uDCDC", // 📜
+    work: "\uD83D\uDCBC",  // 💼
+    other: "\u2756",       // ❖
+  };
+  const CATEGORY_VAR = {
+    free: "var(--visa-free)",
+    onarrival: "var(--visa-onarrival)",
+    evisa: "var(--visa-evisa)",
+    tourist: "var(--visa-tourist)",
+    work: "var(--visa-work)",
+    other: "var(--visa-other)",
+  };
+  // Compact display label for the badge (concise, not the long official name).
+  function visaBadgeText(rule) {
+    const cat = visaCategory(rule.visaType);
+    if (cat === "free") {
+      return rule.visaType === "visa_free_schengen" ? "Visa Free (Schengen)"
+           : rule.visaType === "visa_exempt_with_third_country_visa" ? "Visa Exempt"
+           : "Visa Free";
+    }
+    if (cat === "onarrival") return "Visa on Arrival";
+    if (cat === "evisa") return "eVisa";
+    if (cat === "tourist") return rule.visaType === "schengen_short_stay_visa" ? "Schengen Visa" : "Tourist Visa";
+    // For work/long-stay, show the friendly name.
+    return pretty(VISA_TYPE_LABELS, rule.visaType);
+  }
 
   // -------- Rendering ----------
 
@@ -396,48 +485,128 @@
     return e;
   }
 
-  function renderRuleDetails(rule, country) {
-    const dl = el("dl", { class: "kvList" });
-    dl.append(el("dt", {}, "Visa type"), el("dd", {}, pretty(VISA_TYPE_LABELS, rule.visaType)));
-    dl.append(el("dt", {}, "How to apply"), el("dd", {}, pretty(METHOD_LABELS, rule.applicationMethod)));
+  function tile(label, valueText, iconText) {
+    const t = el("div", { class: "factTile" });
+    t.append(el("div", { class: "ft-label" }, label));
+    const v = el("div", { class: "ft-value" });
+    if (iconText) {
+      const ic = el("span", { class: "ft-icon" });
+      ic.textContent = iconText;
+      v.append(ic);
+    }
+    v.append(document.createTextNode(valueText));
+    t.append(v);
+    return t;
+  }
 
-    let durTxt = "Not specified";
+  function renderFactGrid(rule, country) {
+    const grid = el("div", { class: "factGrid" });
+
+    // Allowed stay
+    let stayTxt = "Not specified";
     if (rule.durationDays != null) {
-      durTxt = `Up to ${rule.durationDays} days`;
-      if (rule.periodDays) durTxt += ` per ${rule.periodDays}-day period`;
-      if (rule.extendable) {
-        durTxt += rule.extensionDays ? ` (extendable by ${rule.extensionDays} days)` : " (may be extendable)";
-      }
+      stayTxt = `${rule.durationDays} days`;
+      if (rule.periodDays) stayTxt += ` / ${rule.periodDays}d`;
     }
-    dl.append(el("dt", {}, "Allowed stay"), el("dd", {}, durTxt));
+    grid.append(tile("Allowed stay", stayTxt, "\uD83D\uDCC5"));
 
-    dl.append(el("dt", {}, "Entries"), el("dd", {}, pretty(ENTRIES_LABELS, rule.entries)));
+    // How to apply
+    grid.append(tile("How to apply", pretty(METHOD_SHORT, rule.applicationMethod), "\uD83D\uDCDD"));
 
+    // Entries
+    grid.append(tile("Entries", pretty(ENTRIES_SHORT, rule.entries), "\u21BB"));
+
+    // Extension info
+    if (rule.extendable) {
+      const extTxt = rule.extensionDays ? `+${rule.extensionDays} days` : "Possible";
+      grid.append(tile("Extension", extTxt, "\u2795"));
+    }
+
+    // Zone (Schengen etc.)
     if (country.zone) {
-      dl.append(el("dt", {}, "Zone"), el("dd", {}, country.zone));
+      grid.append(tile("Zone", country.zone, "\uD83C\uDF10"));
     }
 
-    return dl;
+    return grid;
+  }
+
+  function renderStayBar(userDays, rule) {
+    if (rule.durationDays == null) return null;
+    const allowed = rule.durationDays;
+    const userPct = Math.min(100, Math.round((userDays / allowed) * 100));
+    const wrap = el("div", { class: "stayBar" + (userDays > allowed ? " over" : "") });
+    const meta = el("div", { class: "sb-meta" });
+    meta.append(
+      el("span", {}, `Your stay: ${userDays}d`),
+      el("span", {}, `Allowed: ${allowed}d`)
+    );
+    const track = el("div", { class: "sb-track" });
+    const fill = el("div", { class: "sb-fill" });
+    fill.style.width = userPct + "%";
+    track.append(fill);
+    wrap.append(meta, track);
+    return wrap;
   }
 
   function renderRequirements(rule) {
     if (!rule.requirements || !rule.requirements.length) return null;
+    const block = el("div", { class: "requirementsBlock" });
+    block.append(el("div", { class: "rb-title" }, "Requirements"));
     const ul = el("ul", { class: "requirements" });
     for (const r of rule.requirements) ul.append(el("li", {}, r));
-    return ul;
+    block.append(ul);
+    return block;
+  }
+
+  function renderPlanChips(dest) {
+    const chips = el("div", { class: "planChips" });
+    chips.append(
+      el("span", { class: "planChip" },
+        el("span", { class: "pc-icon" }, "\uD83D\uDCC5"),
+        document.createTextNode(`${dest.days} day${dest.days === 1 ? "" : "s"}`)),
+      el("span", { class: "planChip" },
+        el("span", { class: "pc-icon" }, "\u21BB"),
+        document.createTextNode(dest.multi ? "Multi-entry" : "Single entry"))
+    );
+    if (dest.work) {
+      chips.append(
+        el("span", { class: "planChip" },
+          el("span", { class: "pc-icon" }, "\uD83D\uDCBC"),
+          document.createTextNode("Remote work"))
+      );
+    }
+    return chips;
+  }
+
+  function renderVisaBadge(rule) {
+    const cat = visaCategory(rule.visaType);
+    const badge = el("span", { class: "visaBadge" });
+    badge.style.setProperty("--card-accent", CATEGORY_VAR[cat]);
+    badge.append(
+      el("span", { class: "vb-icon" }, CATEGORY_ICON[cat] || ""),
+      document.createTextNode(visaBadgeText(rule))
+    );
+    return badge;
+  }
+
+  function calloutBox(type, iconText, ...children) {
+    const c = el("div", { class: "callout " + type });
+    c.append(el("span", { class: "c-icon" }, iconText));
+    const inner = el("div", {});
+    for (const ch of children) inner.append(typeof ch === "string" ? document.createTextNode(ch) : ch);
+    c.append(inner);
+    return c;
   }
 
   function renderResultCard(dest, country, results) {
     const card = el("div", { class: "resultCard" });
 
+    // Header: flag + country + plan chips on the right
     const header = el("div", { class: "resultHeader" });
     header.append(
       el("span", { class: "flag" }, flagFromCode(country.code)),
       el("span", { class: "country" }, country.name),
-      el("span", { class: "stayPlan" },
-        `Plan: ${dest.days} day${dest.days === 1 ? "" : "s"}, ${dest.multi ? "multi-entry" : "single entry"}` +
-        (dest.work ? ", with remote work" : "")
-      )
+      renderPlanChips(dest)
     );
     card.append(header);
 
@@ -446,139 +615,131 @@
     const tourismMatch = results.tourism;
 
     if (match.best) {
+      const rule = match.best.rule;
+      const cat = visaCategory(rule.visaType);
+
+      // Color-theme the whole card by visa category (left bar uses --card-accent).
+      card.style.setProperty("--card-accent", CATEGORY_VAR[cat]);
+
+      // Recommendation row: which passport + visa badge
       const p = PASSPORT_BY_CODE.get(match.best.passport);
       const recommend = el("div", { class: "recommend" });
       recommend.append(
-        el("span", { class: "badge" }, "Use this passport"),
+        el("span", { class: "rec-label" }, "Use"),
         el("span", { class: "passport-pill" },
           el("span", { class: "chip-flag" }, p ? p.flag : ""),
           document.createTextNode(p ? p.name : match.best.passport)
-        )
+        ),
+        el("span", { class: "rec-label" }, "for"),
+        renderVisaBadge(rule)
       );
       card.append(recommend);
 
-      const summary = el("div", { class: "visaSummary" }, match.best.rule.summary || "");
-      card.append(summary);
-
-      card.append(renderRuleDetails(match.best.rule, country));
-      const reqs = renderRequirements(match.best.rule);
-      if (reqs) {
-        card.append(el("div", { class: "sectionTitle", style: "margin:10px 0 4px; font-size:13px;" }, "Requirements"));
-        card.append(reqs);
+      // Summary text (one short paragraph)
+      if (rule.summary) {
+        card.append(el("div", { class: "visaSummary" }, rule.summary));
       }
 
-      // Explanatory: stay shorter would have been simpler.
-      if (match.bestIgnoringDays && match.bestIgnoringDays.rule.rank < match.best.rule.rank) {
+      // Visual: stay vs allowed bar
+      const sb = renderStayBar(dest.days, rule);
+      if (sb) card.append(sb);
+
+      // Visual: fact tiles (allowed stay, how to apply, entries, etc.)
+      card.append(renderFactGrid(rule, country));
+
+      // Requirements (only if any)
+      const reqs = renderRequirements(rule);
+      if (reqs) card.append(reqs);
+
+      // Heads-up callouts
+      if (match.bestIgnoringDays && match.bestIgnoringDays.rule.rank < rule.rank) {
         const alt = match.bestIgnoringDays;
         const altP = PASSPORT_BY_CODE.get(alt.passport);
-        const altLabel = pretty(VISA_TYPE_LABELS, alt.rule.visaType);
-        card.append(
-          el("div", { class: "callout info" },
-            el("strong", {}, `Heads up: `),
-            document.createTextNode(
-              `If you shortened your stay to ${alt.rule.durationDays} day${alt.rule.durationDays === 1 ? "" : "s"} or less, ` +
-              `you could enter on your ${altP ? altP.name : alt.passport} passport as ${altLabel} instead — ` +
-              `no advance application needed in many cases.`
-            )
+        const altLabel = visaBadgeText(alt.rule);
+        card.append(calloutBox("info", "\uD83D\uDCA1",
+          el("strong", {}, "Tip: "),
+          document.createTextNode(
+            `Trim your stay to ${alt.rule.durationDays} day${alt.rule.durationDays === 1 ? "" : "s"} ` +
+            `and your ${altP ? altP.name : alt.passport} passport could enter as ${altLabel} ` +
+            `— often with no advance application.`
           )
-        );
+        ));
       }
-
-      // Explanatory: dropping multi-entry would have been simpler.
-      if (dest.multi && match.bestIgnoringEntries && match.bestIgnoringEntries.rule.rank < match.best.rule.rank) {
+      if (dest.multi && match.bestIgnoringEntries && match.bestIgnoringEntries.rule.rank < rule.rank) {
         const alt = match.bestIgnoringEntries;
         const altP = PASSPORT_BY_CODE.get(alt.passport);
-        const altLabel = pretty(VISA_TYPE_LABELS, alt.rule.visaType);
-        card.append(
-          el("div", { class: "callout info" },
-            el("strong", {}, `Heads up: `),
-            document.createTextNode(
-              `If you only need single entry, your ${altP ? altP.name : alt.passport} passport qualifies for ` +
-              `${altLabel} (a simpler option).`
-            )
+        const altLabel = visaBadgeText(alt.rule);
+        card.append(calloutBox("info", "\uD83D\uDCA1",
+          el("strong", {}, "Tip: "),
+          document.createTextNode(
+            `If single entry is enough, your ${altP ? altP.name : alt.passport} passport qualifies for ${altLabel} — simpler.`
           )
-        );
+        ));
       }
 
-      if (match.best.rule.notes) {
-        card.append(el("div", { class: "notesText" }, "Note: " + match.best.rule.notes));
+      if (rule.notes) {
+        card.append(el("div", { class: "notesText" }, rule.notes));
       }
 
-      // Work-specific extras: also show tourism rule for entry context if different.
       if (purpose === "work" && tourismMatch && tourismMatch.best) {
         const tp = PASSPORT_BY_CODE.get(tourismMatch.best.passport);
-        const tLabel = pretty(VISA_TYPE_LABELS, tourismMatch.best.rule.visaType);
-        card.append(
-          el("div", { class: "callout good" },
-            el("strong", {}, "Tourism alternative: "),
-            document.createTextNode(
-              `If you'd rather skip the work visa, your ${tp ? tp.name : tourismMatch.best.passport} passport ` +
-              `qualifies for ${tLabel} (${tourismMatch.best.rule.durationDays || "?"} days). ` +
-              `Note that local work is not permitted on a tourist visa.`
-            )
+        const tLabel = visaBadgeText(tourismMatch.best.rule);
+        card.append(calloutBox("good", "\u2728",
+          el("strong", {}, "Tourism alternative: "),
+          document.createTextNode(
+            `Skipping the work visa? Your ${tp ? tp.name : tourismMatch.best.passport} passport qualifies for ` +
+            `${tLabel} (${tourismMatch.best.rule.durationDays || "?"} days). Local work is not permitted on a tourist visa.`
           )
-        );
+        ));
       }
     } else {
-      // No match for the requested purpose — explain why and what would work.
+      // No match for requested purpose
       card.classList.add("no-match");
-      let msg = `No ${purpose === "work" ? "remote-work / digital-nomad" : "tourism"} option in our data fits your plan with the passports you've added.`;
+      const msg = `No ${purpose === "work" ? "remote-work or digital-nomad" : "tourism"} option in our data fits your plan with the passports you've added.`;
       card.append(el("div", { class: "visaSummary" }, msg));
 
-      // Best rule that exists if we relax days
       const relax = match.bestIgnoringDays || match.bestIgnoringEntries || match.bestIgnoringBoth;
       if (relax) {
         const altP = PASSPORT_BY_CODE.get(relax.passport);
-        const altLabel = pretty(VISA_TYPE_LABELS, relax.rule.visaType);
+        const altLabel = visaBadgeText(relax.rule);
         const reasons = [];
         if (relax.rule.durationDays != null && relax.rule.durationDays < dest.days) {
-          reasons.push(`it only allows up to ${relax.rule.durationDays} days (you want ${dest.days})`);
+          reasons.push(`it only allows ${relax.rule.durationDays} days (you want ${dest.days})`);
         }
         if (dest.multi && !entriesAllowMultiple(relax.rule)) {
-          reasons.push(`it's single entry only`);
+          reasons.push(`it's single-entry only`);
         }
-        const reasonTxt = reasons.length ? ` because ${reasons.join(" and ")}` : "";
-        card.append(
-          el("div", { class: "callout warn" },
-            el("strong", {}, "Closest option: "),
-            document.createTextNode(
-              `Your ${altP ? altP.name : relax.passport} passport could use ${altLabel}, ` +
-              `but it doesn't fully fit your plan${reasonTxt}.`
-            )
+        const reasonTxt = reasons.length ? ` — ${reasons.join(" and ")}` : "";
+        card.append(calloutBox("warn", "\u26A0",
+          el("strong", {}, "Closest option: "),
+          document.createTextNode(
+            `Your ${altP ? altP.name : relax.passport} passport could use ${altLabel}, but it doesn't fully fit${reasonTxt}.`
           )
-        );
+        ));
         if (relax.rule.notes) {
-          card.append(el("div", { class: "notesText" }, "Note: " + relax.rule.notes));
+          card.append(el("div", { class: "notesText" }, relax.rule.notes));
         }
       } else if (purpose === "work") {
-        card.append(
-          el("div", { class: "callout warn" },
-            el("strong", {}, "No remote-work program on file: "),
-            document.createTextNode(
-              "Working remotely from this country usually requires a separate work permit, " +
-              "long-stay visa, or business visa — research the consulate's specific options."
-            )
+        card.append(calloutBox("warn", "\u26A0",
+          el("strong", {}, "No remote-work program on file: "),
+          document.createTextNode(
+            "Working remotely from here usually requires a separate work permit, long-stay visa, or business visa — check the consulate."
           )
-        );
+        ));
         if (tourismMatch && tourismMatch.best) {
           const tp = PASSPORT_BY_CODE.get(tourismMatch.best.passport);
-          const tLabel = pretty(VISA_TYPE_LABELS, tourismMatch.best.rule.visaType);
-          card.append(
-            el("div", { class: "callout info" },
-              el("strong", {}, "For entry only: "),
-              document.createTextNode(
-                `Your ${tp ? tp.name : tourismMatch.best.passport} passport qualifies for ${tLabel}. ` +
-                `Local employment is not permitted on a tourist visa.`
-              )
+          const tLabel = visaBadgeText(tourismMatch.best.rule);
+          card.append(calloutBox("info", "\u2139",
+            el("strong", {}, "For entry only: "),
+            document.createTextNode(
+              `Your ${tp ? tp.name : tourismMatch.best.passport} passport qualifies for ${tLabel}. Local employment is not permitted on a tourist visa.`
             )
-          );
+          ));
         }
       } else {
-        card.append(
-          el("div", { class: "callout error" },
-            "None of the rules on file applies to your passports — verify directly with the consulate."
-          )
-        );
+        card.append(calloutBox("error", "\u2716",
+          "None of the rules on file applies to your passports — verify directly with the consulate."
+        ));
       }
     }
 
@@ -651,7 +812,7 @@
       showError("Couldn't load visa data: " + e.message);
       return;
     }
-    populatePassportSelect();
+    refreshPassportDatalist();
     renderPassportChips();
     addDestinationRow(); // start with one empty row
   })();
