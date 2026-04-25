@@ -1,18 +1,88 @@
 {
   "lastUpdated": "2026-04",
-  "ruleRanking": "Lower rank is better. If user has multiple passports, pick the matching rule with the lowest rank. Within the same rank, prefer rules with longer durationDays.",
+  "ruleRanking": "Lower rank is better. If user has multiple passports, pick the matching rule with the lowest rank. Within the same rank, prefer longer durationDays, then fewer application steps, then multiple-entry over single-entry.",
   "passportGroups": {
-    "EU": ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE"],
-    "ASEAN_EXCEPT_MYANMAR": ["BN","KH","ID","LA","MY","PH","SG","TH","VN"]
+    "EU": [
+      "AT",
+      "BE",
+      "BG",
+      "HR",
+      "CY",
+      "CZ",
+      "DK",
+      "EE",
+      "FI",
+      "FR",
+      "DE",
+      "GR",
+      "HU",
+      "IE",
+      "IT",
+      "LV",
+      "LT",
+      "LU",
+      "MT",
+      "NL",
+      "PL",
+      "PT",
+      "RO",
+      "SK",
+      "SI",
+      "ES",
+      "SE"
+    ],
+    "ASEAN_EXCEPT_MYANMAR": [
+      "BN",
+      "KH",
+      "ID",
+      "LA",
+      "MY",
+      "PH",
+      "SG",
+      "TH",
+      "VN"
+    ]
   },
   "countries": [
     {
       "name": "Thailand",
       "code": "TH",
+      "officialUrl": "https://newyork.thaiembassy.org/en/page/visa-types-and-requirements",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "HK",
+            "MO",
+            "TW",
+            "AE",
+            "QA",
+            "BH",
+            "KW",
+            "OM",
+            "SA",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "PE",
+            "ZA",
+            "IL",
+            "TR",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -21,12 +91,19 @@
           "extendable": true,
           "extensionDays": 30,
           "summary": "Visa-free tourism entry for 60 days, typically extendable once by 30 days.",
-          "requirements": ["Valid passport", "Onward travel may be requested"],
-          "notes": "Frequent back-to-back entries may be scrutinized."
+          "requirements": [
+            "Valid passport",
+            "Onward travel may be requested"
+          ],
+          "notes": "Frequent back-to-back entries may be scrutinized.",
+          "officialUrl": "https://newyork.thaiembassy.org/en/page/visa-types-and-requirements"
         },
         {
           "rank": 4,
-          "passportGroups": ["IN", "CN"],
+          "passportGroups": [
+            "IN",
+            "CN"
+          ],
           "purpose": "tourism",
           "visaType": "visa_on_arrival",
           "applicationMethod": "on_arrival",
@@ -35,12 +112,19 @@
           "extendable": false,
           "extensionDays": null,
           "summary": "Visa on arrival for short tourism stays.",
-          "requirements": ["Valid passport", "Onward travel", "Arrival documents/payment"],
-          "notes": "Check current VOA eligibility before travel."
+          "requirements": [
+            "Valid passport",
+            "Onward travel",
+            "Arrival documents/payment"
+          ],
+          "notes": "Check current VOA eligibility before travel.",
+          "officialUrl": "https://newyork.thaiembassy.org/en/page/visa-types-and-requirements"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "tourist_visa",
           "applicationMethod": "embassy_or_evisa_before_travel",
@@ -49,12 +133,19 @@
           "extendable": true,
           "extensionDays": 30,
           "summary": "Tourist visa required before travel; typical tourist visa stay is 60 days.",
-          "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
-          "notes": "Exact eligibility and entry count depend on nationality and consulate."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Exact eligibility and entry count depend on nationality and consulate.",
+          "officialUrl": "https://newyork.thaiembassy.org/en/page/visa-types-and-requirements"
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "destination_thailand_visa_dtv",
           "applicationMethod": "online_or_embassy_before_travel",
@@ -63,18 +154,53 @@
           "extendable": true,
           "extensionDays": 180,
           "summary": "Destination Thailand Visa (DTV) — 180 days per entry, multi-entry, 5-year validity, for remote workers and digital nomads.",
-          "requirements": ["Apply before travel", "Valid passport", "Proof of remote work / freelance / Thai soft-power activity", "Funds ~500,000 THB", "Age 20+"],
-          "notes": "Launched 2024. Allows remote work for foreign employers; does not permit local employment."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Proof of remote work / freelance / Thai soft-power activity",
+            "Funds ~500,000 THB",
+            "Age 20+"
+          ],
+          "notes": "Allows remote work for foreign employers; does not permit local employment.",
+          "officialUrl": "https://newyork.thaiembassy.org/en/page/visa-types-and-requirements"
         }
       ]
     },
     {
       "name": "Vietnam",
       "code": "VN",
+      "officialUrl": "https://evisa.gov.vn/",
       "visaRules": [
         {
+          "rank": 1,
+          "passportGroups": [
+            "EU",
+            "GB",
+            "NO",
+            "JP",
+            "KR",
+            "RU"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 45,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free tourism entry for selected passports, commonly up to 45 days.",
+          "requirements": [
+            "Valid passport",
+            "Onward travel may be requested"
+          ],
+          "notes": "Visa-exempt list changes; use official source before travel.",
+          "officialUrl": "https://evisa.gov.vn/"
+        },
+        {
           "rank": 3,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG", "*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "evisa",
           "applicationMethod": "online_before_travel",
@@ -82,67 +208,143 @@
           "entries": "single_or_multiple",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Vietnam eVisa is available for up to 90 days, single or multiple entry.",
-          "requirements": ["Online application", "Valid passport", "Photo/document upload", "Approved eVisa before arrival"],
-          "notes": "Use the official eVisa portal."
+          "summary": "Vietnam eVisa is available for citizens of all countries and territories for up to 90 days, single or multiple entry.",
+          "requirements": [
+            "Online application",
+            "Valid passport",
+            "Photo/document upload",
+            "Approved eVisa before arrival"
+          ],
+          "notes": "Use the official eVisa portal.",
+          "officialUrl": "https://evisa.gov.vn/"
         }
       ]
     },
     {
       "name": "Indonesia",
       "code": "ID",
+      "officialUrl": "https://evisa.imigrasi.go.id/",
       "visaRules": [
         {
           "rank": 4,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "HK",
+            "TW",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "TR",
+            "AE",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "IN",
+            "CN"
+          ],
           "purpose": "tourism",
-          "visaType": "visa_on_arrival",
+          "visaType": "visa_on_arrival_or_evoa",
           "applicationMethod": "on_arrival_or_online_before_travel",
           "durationDays": 30,
           "entries": "single",
           "extendable": true,
           "extensionDays": 30,
           "summary": "Visa on arrival/e-VOA for 30 days, extendable once by 30 days.",
-          "requirements": ["Passport valid 6+ months", "Onward/return ticket", "Arrival declaration where required"],
-          "notes": "Common for Bali/Indonesia tourism."
+          "requirements": [
+            "Passport valid 6+ months",
+            "Onward/return ticket"
+          ],
+          "notes": "Common for Bali/Indonesia tourism.",
+          "officialUrl": "https://evisa.imigrasi.go.id/"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
-          "visaType": "tourist_visa",
+          "visaType": "visitor_visa",
           "applicationMethod": "online_or_embassy_before_travel",
           "durationDays": 60,
           "entries": "single",
           "extendable": true,
           "extensionDays": null,
-          "summary": "Tourist visa required before travel if not eligible for VOA/e-VOA.",
-          "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
-          "notes": "Stay length and extension depend on visa type granted."
+          "summary": "Visitor/tourist visa required before travel if not eligible for VOA/e-VOA.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Stay length and extension depend on visa type granted.",
+          "officialUrl": "https://evisa.imigrasi.go.id/"
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "remote_worker_visa_e33g",
-          "applicationMethod": "online_or_embassy_before_travel",
+          "applicationMethod": "online_before_travel",
           "durationDays": 365,
           "entries": "multiple_entry",
-          "extendable": true,
-          "extensionDays": 365,
-          "summary": "Remote Worker Visa (E33G) — 1 year, multi-entry, for employees of foreign companies working remotely.",
-          "requirements": ["Apply before travel", "Valid passport (18+ months validity)", "Employment contract with foreign company", "Income ~USD 60,000+/year", "Bank statements"],
-          "notes": "Does not allow local employment with Indonesian companies."
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Remote Worker Visa (E33G) — up to 1 year for employees of overseas companies working remotely from Indonesia.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Proof of overseas employment/assignment",
+            "Sufficient funds"
+          ],
+          "notes": "Does not allow local Indonesian employment.",
+          "officialUrl": "https://evisa.imigrasi.go.id/"
         }
       ]
     },
     {
       "name": "Japan",
       "code": "JP",
+      "officialUrl": "https://www.mofa.go.jp/j_info/visit/visa/index.html",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "ASEAN_EXCEPT_MYANMAR",
+            "KR",
+            "MX",
+            "AR",
+            "CL",
+            "UY",
+            "IL",
+            "TR",
+            "AE",
+            "HK",
+            "MO",
+            "TW",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -150,37 +352,103 @@
           "entries": "multiple_entry",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Visa-free tourism stay up to 90 days.",
-          "requirements": ["Valid passport", "No paid local work"],
-          "notes": "Longer stays, work, or study require a proper visa/status."
+          "summary": "Visa-free tourism stay up to 90 days for visa-exempt passports.",
+          "requirements": [
+            "Valid passport",
+            "No paid local work"
+          ],
+          "notes": "Some exempt passports may receive shorter stays; verify nationality-specific rules.",
+          "officialUrl": "https://www.mofa.go.jp/j_info/visit/visa/index.html"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
-          "visaType": "tourist_visa",
+          "visaType": "temporary_visitor_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
           "entries": "single_or_multiple",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Temporary visitor visa required before travel for non-exempt passports.",
-          "requirements": ["Apply before travel", "Valid passport", "Itinerary/supporting documents may be required"],
-          "notes": "Exact validity and entries depend on nationality and visa granted."
+          "summary": "Temporary Visitor visa required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Itinerary/supporting documents may be required"
+          ],
+          "notes": "Exact validity and entries depend on nationality and visa granted.",
+          "officialUrl": "https://www.mofa.go.jp/j_info/visit/visa/index.html"
         },
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG", "NZ"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "ASEAN_EXCEPT_MYANMAR",
+            "KR",
+            "EU",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "TW",
+            "HK"
+          ],
           "purpose": "work",
-          "visaType": "digital_nomad_visa",
+          "visaType": "digital_nomad_designated_activities",
           "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 180,
           "entries": "single",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Designated Activities (Digital Nomad) — 6 months, single entry, for remote workers from listed countries.",
-          "requirements": ["Apply before travel", "Annual income ~JPY 10M+ (~USD 65,000+)", "Private health insurance", "Employed by or contracted with a foreign entity"],
-          "notes": "Launched 2024. Cannot be extended or renewed; family members allowed under same conditions."
+          "summary": "Designated Activities (Digital Nomad) — 6 months, non-extendable, for remote workers from treaty/exempt countries.",
+          "requirements": [
+            "Apply before travel",
+            "Annual income ~JPY 10M+",
+            "Private health insurance",
+            "Remote work for foreign employer/clients"
+          ],
+          "notes": "Spouse/children may qualify. Cannot be extended.",
+          "officialUrl": "https://www.mofa.go.jp/ca/fna/pagewe_000001_00046.html"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "AU",
+            "NZ",
+            "CA",
+            "KR",
+            "EU",
+            "GB",
+            "NO",
+            "AR",
+            "CL",
+            "IS",
+            "UY",
+            "HK",
+            "TW"
+          ],
+          "purpose": "work",
+          "visaType": "working_holiday_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "single",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday visa — usually up to 1 year for young citizens of partner countries/regions.",
+          "requirements": [
+            "Age limits vary by agreement, usually 18–30",
+            "Sufficient funds",
+            "Medical insurance",
+            "Main purpose must be holiday"
+          ],
+          "notes": "US and Singapore are generally not included. Quotas and age limits vary.",
+          "officialUrl": "https://www.mofa.go.jp/j_info/visit/w_holiday/index.html"
         }
       ]
     },
@@ -188,40 +456,74 @@
       "name": "Portugal",
       "code": "PT",
       "zone": "Schengen",
+      "officialUrl": "https://vistos.mne.gov.pt/en/",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "UY",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free_schengen",
           "applicationMethod": "none",
           "durationDays": 90,
-          "periodDays": 180,
           "entries": "multiple_entry_within_90_180_limit",
           "extendable": false,
           "extensionDays": null,
           "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
-          "requirements": ["Valid passport", "Proof of funds/onward travel may be requested"],
-          "notes": "Limit is shared across all Schengen countries."
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://vistos.mne.gov.pt/en/",
+          "periodDays": 180
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "schengen_short_stay_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
-          "periodDays": 180,
           "entries": "single_double_or_multiple",
           "extendable": false,
           "extensionDays": null,
           "summary": "Schengen short-stay visa required before travel; permits up to 90 days in any 180-day period if granted.",
-          "requirements": ["Apply before travel", "Valid passport", "Travel insurance", "Proof of funds/accommodation/itinerary"],
-          "notes": "Validity and entries depend on visa issued."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://vistos.mne.gov.pt/en/",
+          "periodDays": 180
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "d8_digital_nomad_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
@@ -229,9 +531,16 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": 730,
-          "summary": "D8 Digital Nomad Visa — 1 year, renewable for further 2-year periods (path to residency), multi-entry.",
-          "requirements": ["Apply before travel", "Income ~EUR 3,480+/month (4x Portuguese minimum wage)", "Proof of remote work or freelance contracts", "Health insurance", "Clean criminal record"],
-          "notes": "Two variants: temporary stay (1 year) or residence (renewable, leads to permanent residency)."
+          "summary": "D8 Digital Nomad Visa — temporary stay/residence route for remote workers and freelancers.",
+          "requirements": [
+            "Apply before travel",
+            "Proof of remote work/freelance income",
+            "Income threshold applies",
+            "Health insurance",
+            "Clean criminal record"
+          ],
+          "notes": "Requirements and renewal paths vary; verify with consulate.",
+          "officialUrl": "https://vistos.mne.gov.pt/en/"
         }
       ]
     },
@@ -239,40 +548,74 @@
       "name": "Spain",
       "code": "ES",
       "zone": "Schengen",
+      "officialUrl": "https://www.exteriores.gob.es/Consulados/londres/en/ServiciosConsulares/Paginas/Consular/Visados-Schengen.aspx",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "UY",
+            "IL",
+            "AE",
+            "HK",
+            "MO",
+            "TW"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free_schengen",
           "applicationMethod": "none",
           "durationDays": 90,
-          "periodDays": 180,
           "entries": "multiple_entry_within_90_180_limit",
           "extendable": false,
           "extensionDays": null,
           "summary": "Visa-free Schengen stay up to 90 days in any 180-day period.",
-          "requirements": ["Valid passport", "Proof of funds/onward travel may be requested"],
-          "notes": "Limit is shared across all Schengen countries."
+          "requirements": [
+            "Valid passport",
+            "Proof of funds/onward travel may be requested"
+          ],
+          "notes": "Limit is shared across all Schengen countries.",
+          "officialUrl": "https://www.exteriores.gob.es/Consulados/londres/en/ServiciosConsulares/Paginas/Consular/Visados-Schengen.aspx",
+          "periodDays": 180
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "schengen_short_stay_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
-          "periodDays": 180,
           "entries": "single_double_or_multiple",
           "extendable": false,
           "extensionDays": null,
           "summary": "Schengen short-stay visa required before travel; permits up to 90 days in any 180-day period if granted.",
-          "requirements": ["Apply before travel", "Valid passport", "Travel insurance", "Proof of funds/accommodation/itinerary"],
-          "notes": "Validity and entries depend on visa issued."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Travel insurance",
+            "Proof of funds/accommodation/itinerary"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.exteriores.gob.es/Consulados/londres/en/ServiciosConsulares/Paginas/Consular/Visados-Schengen.aspx",
+          "periodDays": 180
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "digital_nomad_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
@@ -280,19 +623,45 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": 1825,
-          "summary": "Digital Nomad Visa — 1 year initial visa, renewable as residence permit up to 5 years total, multi-entry.",
-          "requirements": ["Apply before travel (or in-country)", "Income ~EUR 2,762+/month (200% of Spanish minimum wage)", "Proof of remote employment with non-Spanish company (3+ months)", "Health insurance", "Clean criminal record"],
-          "notes": "Up to 20% of income may come from Spanish clients. Tax incentives may apply (Beckham Law)."
+          "summary": "Digital Nomad Visa — remote work residence path, initially around 1 year and renewable in Spain.",
+          "requirements": [
+            "Apply before travel or in-country if eligible",
+            "Proof of remote work",
+            "Income threshold applies",
+            "Health insurance",
+            "Clean criminal record"
+          ],
+          "notes": "Requirements and renewal paths vary; verify with consulate.",
+          "officialUrl": "https://www.exteriores.gob.es/Consulados/londres/en/ServiciosConsulares/Paginas/Consular/Visados-Schengen.aspx"
         }
       ]
     },
     {
       "name": "Mexico",
       "code": "MX",
+      "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "IL",
+            "HK"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -300,13 +669,20 @@
           "entries": "per_entry",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Visa-free visitor stay up to 180 days, but the exact days are granted by the immigration officer.",
-          "requirements": ["Valid passport", "Visitor permit/formality at entry", "Purpose must be tourism/business/transit"],
-          "notes": "180 days is the maximum, not guaranteed."
+          "summary": "Visa-free visitor stay up to 180 days, but exact days are granted by the immigration officer.",
+          "requirements": [
+            "Valid passport",
+            "Visitor formality at entry",
+            "Purpose must be tourism/business/transit"
+          ],
+          "notes": "180 days is the maximum, not guaranteed.",
+          "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036"
         },
         {
           "rank": 1,
-          "passportGroups": ["HAS_VALID_US_CA_UK_JP_SCHENGEN_VISA_OR_RESIDENCE"],
+          "passportGroups": [
+            "HAS_VALID_US_CA_UK_JP_SCHENGEN_VISA_OR_RESIDENCE"
+          ],
           "purpose": "tourism",
           "visaType": "visa_exempt_with_third_country_visa",
           "applicationMethod": "none",
@@ -315,12 +691,18 @@
           "extendable": false,
           "extensionDays": null,
           "summary": "Visa-exempt if holding a valid visa/residence permit from the US, Canada, UK, Japan, or Schengen.",
-          "requirements": ["Valid passport", "Valid qualifying visa/residence document"],
-          "notes": "Useful fallback for passports that otherwise need a Mexican visa."
+          "requirements": [
+            "Valid passport",
+            "Valid qualifying visa/residence document"
+          ],
+          "notes": "Useful fallback for passports that otherwise need a Mexican visa.",
+          "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "visitor_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
@@ -329,12 +711,19 @@
           "extendable": false,
           "extensionDays": null,
           "summary": "Visitor visa required before travel unless exempt.",
-          "requirements": ["Apply before travel", "Valid passport", "Financial/supporting documents may be required"],
-          "notes": "Final stay length is still set by immigration on entry."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Financial/supporting documents may be required"
+          ],
+          "notes": "Final stay length is still set by immigration on entry.",
+          "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036"
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "temporary_resident_visa",
           "applicationMethod": "embassy_or_consulate_before_travel",
@@ -342,19 +731,48 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": 1095,
-          "summary": "Temporary Resident Visa — 1 year initially, renewable up to 4 years total, multi-entry. Commonly used by remote workers.",
-          "requirements": ["Apply before travel at consulate", "Monthly income ~USD 3,000+ (or savings ~USD 50,000+) for ~6 months", "Valid passport", "Proof of solvency"],
-          "notes": "No formal digital nomad visa exists; temporary residency is the common path. Allows remote work for foreign employers."
+          "summary": "Temporary Resident Visa — 1 year initially, renewable up to 4 years total. Commonly used by remote workers.",
+          "requirements": [
+            "Apply before travel at consulate",
+            "Proof of economic solvency",
+            "Valid passport"
+          ],
+          "notes": "No formal digital nomad visa exists; temporary residency is the common path.",
+          "officialUrl": "https://www.gob.mx/sre/acciones-y-programas/visas-para-extranjeros-8036"
         }
       ]
     },
     {
       "name": "Georgia",
       "code": "GE",
+      "officialUrl": "https://www.evisa.gov.ge/GeoVisa/",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "TR",
+            "AE",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -362,13 +780,19 @@
           "entries": "multiple_entry",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Visa-free stay up to 365 days.",
-          "requirements": ["Valid passport", "Health/accident insurance may be required"],
-          "notes": "Popular long-stay destination."
+          "summary": "Visa-free stay up to 365 days for many passports.",
+          "requirements": [
+            "Valid passport",
+            "Health/accident insurance may be required"
+          ],
+          "notes": "Popular long-stay destination.",
+          "officialUrl": "https://www.evisa.gov.ge/GeoVisa/"
         },
         {
           "rank": 3,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "evisa_or_tourist_visa",
           "applicationMethod": "online_or_embassy_before_travel",
@@ -377,62 +801,134 @@
           "extendable": false,
           "extensionDays": null,
           "summary": "Non-exempt passports may need an eVisa or tourist visa before travel.",
-          "requirements": ["Apply before travel", "Valid passport", "Supporting documents may be required"],
-          "notes": "Exact eligibility and duration depend on nationality."
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Exact eligibility and duration depend on nationality.",
+          "officialUrl": "https://www.evisa.gov.ge/GeoVisa/"
         },
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG", "NZ"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "TR",
+            "AE",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
           "purpose": "work",
-          "visaType": "remotely_from_georgia",
-          "applicationMethod": "online_before_travel",
+          "visaType": "long_stay_remote_work_possible_under_visa_free_entry",
+          "applicationMethod": "none_or_online_registration",
           "durationDays": 365,
           "entries": "multiple_entry",
           "extendable": false,
           "extensionDays": null,
-          "summary": "Remotely from Georgia — up to 360 days for remote workers/freelancers from 95+ countries, leveraging the standard 1-year visa-free entry.",
-          "requirements": ["Online registration", "Income ~USD 2,000+/month (or USD 24,000+/year)", "Proof of remote employment or business ownership", "Health insurance for 6+ months"],
-          "notes": "In practice, citizens of visa-free nations get the same 1-year stay automatically; the program adds documentation/legitimacy."
+          "summary": "Many visa-free nationals can work remotely while staying up to 365 days, subject to Georgian law and tax considerations.",
+          "requirements": [
+            "Valid passport",
+            "Proof of remote income may be useful",
+            "Health insurance recommended"
+          ],
+          "notes": "Georgia's COVID-era remote worker program is no longer the main path; the 365-day visa-free regime is the practical basis.",
+          "officialUrl": "https://www.evisa.gov.ge/GeoVisa/"
         }
       ]
     },
     {
       "name": "Turkey",
       "code": "TR",
+      "officialUrl": "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "MX",
+            "IL",
+            "AE",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
           "durationDays": 90,
-          "periodDays": 180,
           "entries": "multiple_entry_within_90_180_limit",
           "extendable": false,
           "extensionDays": null,
           "summary": "Visa-free tourism stay up to 90 days within a 180-day period for many passports.",
-          "requirements": ["Valid passport"],
-          "notes": "Some nationalities may require eVisa instead."
+          "requirements": [
+            "Valid passport"
+          ],
+          "notes": "Some nationalities may require eVisa instead.",
+          "officialUrl": "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa",
+          "periodDays": 180
         },
         {
           "rank": 3,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "evisa_or_tourist_visa",
           "applicationMethod": "online_or_embassy_before_travel",
           "durationDays": 30,
-          "periodDays": 180,
           "entries": "single_or_multiple",
           "extendable": false,
           "extensionDays": null,
           "summary": "eVisa or tourist visa may be required before travel.",
-          "requirements": ["Apply before travel if required", "Valid passport"],
-          "notes": "Duration and entry count vary by nationality."
+          "requirements": [
+            "Apply before travel if required",
+            "Valid passport"
+          ],
+          "notes": "Duration and entry count vary by nationality.",
+          "officialUrl": "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa",
+          "periodDays": 180
         },
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG", "NZ"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ"
+          ],
           "purpose": "work",
           "visaType": "digital_nomad_visa",
           "applicationMethod": "online_or_embassy_before_travel",
@@ -440,19 +936,50 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": 365,
-          "summary": "Turkey Digital Nomad Visa — 1 year, multi-entry, renewable.",
-          "requirements": ["Online application for Digital Nomad Identification Certificate first", "Income ~USD 3,000+/month (or USD 36,000+/year)", "University degree", "Age 21–55", "Proof of remote work for non-Turkish employer/clients"],
-          "notes": "Launched 2024. Eligible nationalities are limited; check current list."
+          "summary": "Turkey Digital Nomad Visa — around 1 year, for eligible remote workers from listed countries.",
+          "requirements": [
+            "Digital Nomad Identification Certificate",
+            "Income threshold applies",
+            "Proof of remote work",
+            "Age and education criteria may apply"
+          ],
+          "notes": "Eligible nationalities are limited; verify current list.",
+          "officialUrl": "https://digitalnomads.goturkiye.com/"
         }
       ]
     },
     {
       "name": "Malaysia",
       "code": "MY",
+      "officialUrl": "https://malaysiavisa.imi.gov.my/evisa/evisa.jsp",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "HK",
+            "TW",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "CO",
+            "TR",
+            "AE",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -460,13 +987,19 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": null,
-          "summary": "Visa-free tourism stay up to 90 days for many passports.",
-          "requirements": ["Valid passport", "Return/onward ticket may be requested"],
-          "notes": "Extensions may be possible but should not be assumed."
+          "summary": "Visa-free tourism/social visit stay up to 90 days for many passports.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket may be requested"
+          ],
+          "notes": "Extensions may be possible but should not be assumed.",
+          "officialUrl": "https://malaysiavisa.imi.gov.my/evisa/evisa.jsp"
         },
         {
           "rank": 1,
-          "passportGroups": ["ASEAN_EXCEPT_MYANMAR"],
+          "passportGroups": [
+            "ASEAN_EXCEPT_MYANMAR"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -475,12 +1008,18 @@
           "extendable": true,
           "extensionDays": null,
           "summary": "Many ASEAN nationals can enter visa-free for short social visits.",
-          "requirements": ["Valid passport", "Return/onward ticket may be requested"],
-          "notes": "Rules vary by ASEAN nationality."
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket may be requested"
+          ],
+          "notes": "Rules vary by ASEAN nationality.",
+          "officialUrl": "https://malaysiavisa.imi.gov.my/evisa/evisa.jsp"
         },
         {
           "rank": 3,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "evisa_or_visitor_visa",
           "applicationMethod": "online_or_embassy_before_travel",
@@ -489,12 +1028,18 @@
           "extendable": true,
           "extensionDays": null,
           "summary": "Tourist eVisa or visitor visa may be required for non-exempt passports.",
-          "requirements": ["Apply before travel if required", "Valid passport"],
-          "notes": "Exact eligibility depends on nationality."
+          "requirements": [
+            "Apply before travel if required",
+            "Valid passport"
+          ],
+          "notes": "Exact eligibility depends on nationality.",
+          "officialUrl": "https://malaysiavisa.imi.gov.my/evisa/evisa.jsp"
         },
         {
           "rank": 1,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "work",
           "visaType": "de_rantau_nomad_pass",
           "applicationMethod": "online_before_travel",
@@ -503,49 +1048,215 @@
           "extendable": true,
           "extensionDays": 365,
           "summary": "DE Rantau Nomad Pass — 1 year, multi-entry, renewable for another year, for digital nomads in IT/digital roles.",
-          "requirements": ["Online application via MDEC", "Annual income ~USD 24,000+ (IT/digital projects)", "Proof of employment or contracts (3+ months)", "Health insurance"],
-          "notes": "Targeted at IT/digital sector professionals. Spouse and children can be included."
+          "requirements": [
+            "Online application via MDEC",
+            "Income threshold applies",
+            "Proof of employment/contracts",
+            "Health insurance"
+          ],
+          "notes": "Targeted at IT/digital sector professionals.",
+          "officialUrl": "https://mdec.my/derantau"
         }
       ]
     },
     {
       "name": "South Korea",
       "code": "KR",
+      "officialUrl": "https://www.k-eta.go.kr/portal/apply/index.do",
       "visaRules": [
         {
-          "rank": 2,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "rank": 1,
+          "passportGroups": [
+            "CA"
+          ],
           "purpose": "tourism",
-          "visaType": "k_eta",
+          "visaType": "k_eta_or_visa_free_entry",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free entry up to 180 days for eligible passports such as Canada; K-ETA may be required unless exempted.",
+          "requirements": [
+            "Valid passport",
+            "K-ETA if required"
+          ],
+          "notes": "K-ETA exemptions can change.",
+          "officialUrl": "https://www.k-eta.go.kr/portal/apply/index.do"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "US",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "ASEAN_EXCEPT_MYANMAR",
+            "HK",
+            "MO",
+            "TW",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "UY",
+            "TR",
+            "AE",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
+          "purpose": "tourism",
+          "visaType": "k_eta_or_visa_free_entry",
           "applicationMethod": "online_before_travel",
           "durationDays": 90,
           "entries": "multiple_entry",
           "extendable": false,
-          "summary": "K-ETA required for visa-free entry up to 90 days.",
-          "requirements": ["Online K-ETA approval"],
-          "notes": ""
+          "extensionDays": null,
+          "summary": "Visa-free entry up to 90 days for many passports; K-ETA may be required unless exempted.",
+          "requirements": [
+            "Valid passport",
+            "K-ETA if required"
+          ],
+          "notes": "Includes Japan and many additional visa-waiver countries; verify K-ETA status before travel.",
+          "officialUrl": "https://www.k-eta.go.kr/portal/apply/index.do"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
-          "visaType": "tourist_visa",
-          "applicationMethod": "embassy_before_travel",
+          "visaType": "tourist_visa_c3",
+          "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
-          "entries": "single",
-          "summary": "Visa required before travel.",
-          "requirements": ["Apply before travel"],
-          "notes": ""
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Short-term general tourist visa required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Exact validity and entries depend on visa issued.",
+          "officialUrl": "https://www.k-eta.go.kr/portal/apply/index.do"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "f_1_d_workation_digital_nomad",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "F-1-D Workation/Digital Nomad visa — 1 year, extendable once, for remote workers employed overseas.",
+          "requirements": [
+            "Apply before travel",
+            "Proof of overseas employment/business",
+            "Income threshold applies",
+            "Medical insurance",
+            "Criminal record may be required"
+          ],
+          "notes": "Pilot program extended until further notice.",
+          "officialUrl": "https://www.mofa.go.kr/us-losangeles-en/brd/m_26385/list.do"
+        },
+        {
+          "rank": 2,
+          "passportGroups": [
+            "AR",
+            "AU",
+            "EU",
+            "CA",
+            "CL",
+            "HK",
+            "IL",
+            "JP",
+            "NZ",
+            "TW",
+            "GB",
+            "US"
+          ],
+          "purpose": "work",
+          "visaType": "h_1_working_holiday",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday visa — generally up to 1 year for young citizens of partner countries/regions.",
+          "requirements": [
+            "Age limits vary, often 18–30",
+            "Proof of funds",
+            "Insurance",
+            "Main purpose must be holiday"
+          ],
+          "notes": "US nationals may have extension options; quotas and rules vary.",
+          "officialUrl": "https://whic.mofa.go.kr/"
         }
       ]
     },
     {
       "name": "Philippines",
       "code": "PH",
+      "officialUrl": "https://evisa.gov.ph/",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU", "SG"],
+          "passportGroups": [
+            "BR",
+            "IL"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free",
+          "applicationMethod": "none",
+          "durationDays": 59,
+          "entries": "per_entry",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visa-free entry up to 59 days for selected passports under bilateral arrangements.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket"
+          ],
+          "notes": "Extension rules vary.",
+          "officialUrl": "https://evisa.gov.ph/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "HK",
+            "TW",
+            "MX",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "AE",
+            "IL",
+            "TR",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -553,61 +1264,308 @@
           "entries": "per_entry",
           "extendable": true,
           "extensionDays": 29,
-          "summary": "Visa-free entry up to 30 days.",
-          "requirements": ["Return ticket required"],
-          "notes": ""
+          "summary": "Visa-free entry up to 30 days for nationals of many countries.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket"
+          ],
+          "notes": "Can often be extended after arrival.",
+          "officialUrl": "https://evisa.gov.ph/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "IN"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_limited",
+          "applicationMethod": "none",
+          "durationDays": 14,
+          "entries": "single",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Indian nationals may enter visa-free for short tourism stays under specific conditions.",
+          "requirements": [
+            "Valid passport",
+            "Return/onward ticket"
+          ],
+          "notes": "Indian nationals with certain valid visas/residence permits may qualify for longer stays.",
+          "officialUrl": "https://evisa.gov.ph/"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
-          "visaType": "tourist_visa",
-          "applicationMethod": "embassy_before_travel",
+          "visaType": "temporary_visitor_visa_9a",
+          "applicationMethod": "online_or_embassy_before_travel",
           "durationDays": 59,
-          "entries": "single",
-          "summary": "Tourist visa required.",
-          "requirements": ["Apply before travel"],
-          "notes": ""
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Temporary Visitor Visa (9a) required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Initial stay commonly up to 59 days, depending on visa issued.",
+          "officialUrl": "https://evisa.gov.ph/"
         }
       ]
     },
     {
       "name": "Singapore",
       "code": "SG",
+      "officialUrl": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements",
       "visaRules": [
         {
+          "rank": 5,
+          "passportGroups": [
+            "AF",
+            "DZ",
+            "AM",
+            "AZ",
+            "BD",
+            "BY",
+            "CN",
+            "EG",
+            "GE",
+            "IN",
+            "IR",
+            "IQ",
+            "JO",
+            "KZ",
+            "KG",
+            "LB",
+            "LY",
+            "ML",
+            "MA",
+            "MD",
+            "NG",
+            "KP",
+            "PK",
+            "PS",
+            "RU",
+            "SA",
+            "SO",
+            "SD",
+            "SY",
+            "TJ",
+            "TN",
+            "TM",
+            "UA",
+            "UZ",
+            "YE"
+          ],
+          "purpose": "tourism",
+          "visaType": "entry_visa",
+          "applicationMethod": "online_or_local_contact_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Entry visa required before travel for listed visa-required passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "SG Arrival Card",
+            "Sufficient funds/onward travel may be requested"
+          ],
+          "notes": "Visa does not guarantee entry; final permission is granted at checkpoint.",
+          "officialUrl": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements"
+        },
+        {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
-          "durationDays": 90,
-          "entries": "multiple_entry",
-          "summary": "Visa-free entry up to 90 days.",
-          "requirements": ["Valid passport"],
-          "notes": ""
-        },
-        {
-          "rank": 5,
-          "passportGroups": ["*"],
-          "purpose": "tourism",
-          "visaType": "visa_required",
-          "applicationMethod": "embassy_before_travel",
           "durationDays": 30,
-          "entries": "single",
-          "summary": "Visa required before travel.",
-          "requirements": ["Apply before travel"],
-          "notes": ""
+          "entries": "per_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "No entry visa required for passports not on Singapore's visa-required list; length of stay is granted by immigration.",
+          "requirements": [
+            "Valid passport with 6+ months validity",
+            "SG Arrival Card",
+            "Onward/return ticket may be requested"
+          ],
+          "notes": "Many common passports receive 30 or 90 days depending on nationality and officer decision.",
+          "officialUrl": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements"
         }
       ]
     },
     {
       "name": "Colombia",
       "code": "CO",
+      "officialUrl": "https://www.cancilleria.gov.co/tramites_servicios/visa",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "PE",
+            "UY",
+            "IL",
+            "TR",
+            "AE",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_free_entry_permit",
+          "applicationMethod": "none",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 90,
+          "summary": "Visa-free entry permit up to 90 days, extendable to a maximum of 180 days per calendar year.",
+          "requirements": [
+            "Valid passport",
+            "Check-Mig form may be required",
+            "Onward travel may be requested"
+          ],
+          "notes": "Total stay cannot usually exceed 180 days per calendar year.",
+          "officialUrl": "https://www.cancilleria.gov.co/tramites_servicios/visa"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "visitor_visa_v",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visitor visa required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply online before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.cancilleria.gov.co/tramites_servicios/visa"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "AR",
+            "CL",
+            "PE",
+            "UY",
+            "IL",
+            "TR",
+            "AE",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_visa_v",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 730,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visitor Visa for Digital Nomads — up to 2 years for remote workers, entrepreneurs, or freelancers with foreign clients.",
+          "requirements": [
+            "Apply online",
+            "Passport from visa-exempt country",
+            "Proof of remote work/entrepreneurship",
+            "Income threshold applies",
+            "Health insurance"
+          ],
+          "notes": "Eligibility is linked to being visa-exempt for short stays.",
+          "officialUrl": "https://www.cancilleria.gov.co/tramites_servicios/visa"
+        }
+      ]
+    },
+    {
+      "name": "Brazil",
+      "code": "BR",
+      "officialUrl": "https://brazil.vfsevisa.com/",
+      "visaRules": [
+        {
+          "rank": 3,
+          "passportGroups": [
+            "US",
+            "CA",
+            "AU"
+          ],
+          "purpose": "tourism",
+          "visaType": "evisa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 90,
+          "summary": "eVisa required for US, Canadian, and Australian passport holders for tourism/business visits.",
+          "requirements": [
+            "Apply online before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Brazil reinstated eVisa requirements for US/Canada/Australia from April 2025.",
+          "officialUrl": "https://brazil.vfsevisa.com/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "GB",
+            "EU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "AR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "IL",
+            "TR",
+            "AE",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
@@ -615,123 +1573,292 @@
           "entries": "multiple_entry",
           "extendable": true,
           "extensionDays": 90,
-          "summary": "Visa-free 90 days, extendable once.",
-          "requirements": [],
-          "notes": ""
+          "summary": "Visa-free tourism stay commonly up to 90 days for many passports.",
+          "requirements": [
+            "Valid passport"
+          ],
+          "notes": "Rules vary by nationality; extensions may be possible.",
+          "officialUrl": "https://www.gov.br/mre/pt-br/assuntos/portal-consular/vistos"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
-          "visaType": "tourist_visa",
-          "applicationMethod": "online_before_travel",
+          "visaType": "visitor_visa_vivis",
+          "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
-          "entries": "single",
-          "summary": "Visa required.",
-          "requirements": [],
-          "notes": ""
-        }
-      ]
-    },
-    {
-      "name": "Brazil",
-      "code": "BR",
-      "visaRules": [
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Visitor visa required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://www.gov.br/mre/pt-br/assuntos/portal-consular/vistos"
+        },
         {
           "rank": 1,
-          "passportGroups": ["CA", "EU"],
-          "purpose": "tourism",
-          "visaType": "visa_free",
-          "applicationMethod": "none",
-          "durationDays": 90,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_temporary_visa",
+          "applicationMethod": "embassy_or_consulate_before_travel",
+          "durationDays": 365,
           "entries": "multiple_entry",
-          "summary": "Visa-free entry.",
-          "requirements": [],
-          "notes": ""
-        },
-        {
-          "rank": 3,
-          "passportGroups": ["US"],
-          "purpose": "tourism",
-          "visaType": "evisa",
-          "applicationMethod": "online_before_travel",
-          "durationDays": 90,
-          "entries": "multiple_entry",
-          "summary": "eVisa required for US citizens.",
-          "requirements": [],
-          "notes": ""
-        },
-        {
-          "rank": 5,
-          "passportGroups": ["*"],
-          "purpose": "tourism",
-          "visaType": "tourist_visa",
-          "applicationMethod": "embassy_before_travel",
-          "durationDays": 90,
-          "entries": "single",
-          "summary": "Visa required.",
-          "requirements": [],
-          "notes": ""
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Digital Nomad temporary visa/residence authorization — typically 1 year, renewable, for remote workers.",
+          "requirements": [
+            "Proof of remote work",
+            "Income/savings threshold applies",
+            "Health insurance",
+            "Criminal background check may be required"
+          ],
+          "notes": "Requirements and processing vary by consulate.",
+          "officialUrl": "https://www.gov.br/mre/pt-br/assuntos/portal-consular/vistos"
         }
       ]
     },
     {
       "name": "Argentina",
       "code": "AR",
+      "officialUrl": "https://cancilleria.gob.ar/en/services/visas",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU"],
+          "passportGroups": [
+            "US",
+            "CA",
+            "GB",
+            "EU",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "MX",
+            "BR",
+            "CL",
+            "CO",
+            "PE",
+            "UY",
+            "IL",
+            "TR",
+            "AE",
+            "NO",
+            "CH",
+            "IS",
+            "LI"
+          ],
           "purpose": "tourism",
           "visaType": "visa_free",
           "applicationMethod": "none",
           "durationDays": 90,
           "entries": "multiple_entry",
-          "summary": "Visa-free entry up to 90 days.",
-          "requirements": [],
-          "notes": ""
+          "extendable": true,
+          "extensionDays": 90,
+          "summary": "Visa-free entry up to 90 days for many passports.",
+          "requirements": [
+            "Valid passport"
+          ],
+          "notes": "Extensions may be possible in-country.",
+          "officialUrl": "https://cancilleria.gob.ar/en/services/visas"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "CN_WITH_VALID_US_VISA"
+          ],
+          "purpose": "tourism",
+          "visaType": "ave_electronic_authorization",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Electronic Travel Authorization may be available for eligible Chinese passport holders with a valid US visa.",
+          "requirements": [
+            "Valid passport",
+            "Valid qualifying visa",
+            "Online authorization"
+          ],
+          "notes": "Eligibility and terms may change.",
+          "officialUrl": "https://cancilleria.gob.ar/en/services/visas"
         },
         {
           "rank": 5,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "*"
+          ],
           "purpose": "tourism",
           "visaType": "tourist_visa",
-          "applicationMethod": "embassy_before_travel",
+          "applicationMethod": "embassy_or_consulate_before_travel",
           "durationDays": 90,
-          "entries": "single",
-          "summary": "Visa required.",
-          "requirements": [],
-          "notes": ""
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel for non-exempt passports.",
+          "requirements": [
+            "Apply before travel",
+            "Valid passport",
+            "Supporting documents may be required"
+          ],
+          "notes": "Validity and entries depend on visa issued.",
+          "officialUrl": "https://cancilleria.gob.ar/en/services/visas"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "digital_nomad_visa",
+          "applicationMethod": "online_or_embassy_before_travel",
+          "durationDays": 180,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 180,
+          "summary": "Digital Nomad Visa — temporary stay for remote workers, commonly 180 days with possible extension.",
+          "requirements": [
+            "Proof of remote work",
+            "Valid passport",
+            "Income/supporting documents may be required"
+          ],
+          "notes": "Program details and availability should be verified before relying on it.",
+          "officialUrl": "https://cancilleria.gob.ar/en/services/visas"
         }
       ]
     },
     {
       "name": "United Arab Emirates",
       "code": "AE",
+      "officialUrl": "https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen",
       "visaRules": [
         {
           "rank": 1,
-          "passportGroups": ["US", "CA", "GB", "EU", "AU"],
+          "passportGroups": [
+            "EU",
+            "GB",
+            "AU",
+            "NZ",
+            "JP",
+            "KR",
+            "ASEAN_EXCEPT_MYANMAR",
+            "AR",
+            "BR",
+            "CL",
+            "MX",
+            "UY",
+            "IL",
+            "NO",
+            "CH",
+            "IS",
+            "LI",
+            "HK"
+          ],
           "purpose": "tourism",
-          "visaType": "visa_free_or_visa_on_arrival",
+          "visaType": "visa_on_arrival_or_visa_free",
+          "applicationMethod": "on_arrival",
+          "durationDays": 90,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Visa-free/visa-on-arrival access commonly up to 90 days within 180 days for many passports.",
+          "requirements": [
+            "Valid passport"
+          ],
+          "notes": "Duration varies by nationality.",
+          "officialUrl": "https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen",
+          "periodDays": 180
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "US",
+            "CA",
+            "CN"
+          ],
+          "purpose": "tourism",
+          "visaType": "visa_on_arrival",
           "applicationMethod": "on_arrival",
           "durationDays": 30,
-          "entries": "multiple_entry",
-          "summary": "Visa-free/VOA depending on passport.",
-          "requirements": [],
-          "notes": ""
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": 30,
+          "summary": "Visa on arrival commonly up to 30 days for selected passports.",
+          "requirements": [
+            "Valid passport"
+          ],
+          "notes": "Extension rules vary.",
+          "officialUrl": "https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen"
         },
         {
           "rank": 3,
-          "passportGroups": ["*"],
+          "passportGroups": [
+            "IN_WITH_VALID_US_UK_EU_RESIDENCE_OR_VISA"
+          ],
           "purpose": "tourism",
-          "visaType": "evisa",
-          "applicationMethod": "online_before_travel",
-          "durationDays": 30,
+          "visaType": "visa_on_arrival_conditional",
+          "applicationMethod": "on_arrival",
+          "durationDays": 14,
           "entries": "single",
-          "summary": "eVisa required.",
-          "requirements": [],
-          "notes": ""
+          "extendable": true,
+          "extensionDays": 14,
+          "summary": "Conditional visa on arrival for Indian passport holders with qualifying visas/residence permits.",
+          "requirements": [
+            "Valid Indian passport",
+            "Qualifying US/UK/EU visa or residence permit"
+          ],
+          "notes": "Check UAE official eligibility before travel.",
+          "officialUrl": "https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen"
+        },
+        {
+          "rank": 5,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "tourism",
+          "visaType": "tourist_visa",
+          "applicationMethod": "airline_hotel_or_sponsor_before_travel",
+          "durationDays": 30,
+          "entries": "single_or_multiple",
+          "extendable": true,
+          "extensionDays": null,
+          "summary": "Tourist visa required before travel if not eligible for visa on arrival.",
+          "requirements": [
+            "Apply via airline, hotel, travel agency, or sponsor",
+            "Valid passport"
+          ],
+          "notes": "Validity and extensions depend on visa type.",
+          "officialUrl": "https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen"
+        },
+        {
+          "rank": 1,
+          "passportGroups": [
+            "*"
+          ],
+          "purpose": "work",
+          "visaType": "virtual_work_residence_visa",
+          "applicationMethod": "online_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": true,
+          "extensionDays": 365,
+          "summary": "Virtual Work Residence Visa — around 1 year for remote workers employed outside the UAE.",
+          "requirements": [
+            "Proof of remote employment/business",
+            "Income threshold applies",
+            "Health insurance",
+            "Valid passport"
+          ],
+          "notes": "Requirements vary by emirate/platform.",
+          "officialUrl": "https://gdrfad.gov.ae/en/services/1ea66cd6-4497-11f0-0320-0050569629e8"
         }
       ]
     }
