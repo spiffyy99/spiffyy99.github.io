@@ -439,23 +439,43 @@
 
   // Country list for destination pickers, excluding any country the user
   // already holds a passport for (you don't need a visa to enter your own
-  // country, so suggesting it would be confusing). Sorted alphabetically.
+  // country, so suggesting it would be confusing). Also excludes Schengen
+  // countries if the user holds a Schengen passport (freedom of movement).
+  // Sorted alphabetically.
   function destinationCountryItems() {
+    const schengenCodes = new Set(GROUP_EXPANSIONS["SCHENGEN"] || []);
+    const userHasSchengen = [...SELECTED_PASSPORTS].some(p => schengenCodes.has(p));
+    
     return COUNTRIES_DB.countries
-      .filter((c) => !SELECTED_PASSPORTS.has(c.code))
+      .filter((c) => {
+        if (SELECTED_PASSPORTS.has(c.code)) return false;
+        if (userHasSchengen && schengenCodes.has(c.code)) return false;
+        return true;
+      })
       .map((c) => ({ value: c.code, label: c.name }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   // Keep destination rows consistent with the current passport set:
   //   - drop any rows whose country is now a passport-held country
-  //   - refresh remaining comboboxes so passport countries disappear from suggestions
+  //   - drop Schengen destinations if user now holds a Schengen passport
+  //   - refresh remaining comboboxes so excluded countries disappear from suggestions
   //   - re-show the "add destination" button if rows were removed
   function syncDestinationsToPassports() {
+    const schengenCodes = new Set(GROUP_EXPANSIONS["SCHENGEN"] || []);
+    const userHasSchengen = [...SELECTED_PASSPORTS].some(p => schengenCodes.has(p));
+
     const cards = [...destinationsContainer.children];
     for (const card of cards) {
       const hidden = card.querySelector('input[data-role="country"]');
-      if (hidden && hidden.value && SELECTED_PASSPORTS.has(hidden.value)) {
+      if (!hidden || !hidden.value) continue;
+      // Remove if user holds this passport
+      if (SELECTED_PASSPORTS.has(hidden.value)) {
+        card.remove();
+        continue;
+      }
+      // Remove Schengen destinations if user has a Schengen passport
+      if (userHasSchengen && schengenCodes.has(hidden.value)) {
         card.remove();
       }
     }
