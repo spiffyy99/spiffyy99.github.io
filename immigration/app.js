@@ -671,11 +671,19 @@
     return entriesAllowMultiple(rule);
   }
 
-  // Compare two candidates (lower is better). Lower rank wins; on tie, longer
-  // durationDays wins; on tie, multi-entry wins.
-  function candidateBetter(a, b) {
+  // Compare two candidates (lower is better). Lower rank wins; on tie, prefer
+  // rules matching the user's purpose exactly (tourism > work fallback); on tie,
+  // longer durationDays wins; on tie, multi-entry wins.
+  function candidateBetter(a, b, userPurpose) {
     if (b == null) return true;
     if (a.rule.rank !== b.rule.rank) return a.rule.rank < b.rule.rank;
+    // When user wants tourism, prefer actual tourism rules over work-visa fallbacks
+    if (userPurpose === "tourism") {
+      const aIsTourism = a.rule.purpose === "tourism";
+      const bIsTourism = b.rule.purpose === "tourism";
+      if (aIsTourism && !bIsTourism) return true;
+      if (!aIsTourism && bIsTourism) return false;
+    }
     const ad = a.rule.durationDays || 0;
     const bd = b.rule.durationDays || 0;
     if (ad !== bd) return ad > bd;
@@ -703,19 +711,19 @@
         if (!ruleAppliesTo(rule, passport)) continue;
         const cand = { passport, rule };
 
-        if (candidateBetter(cand, bestIgnoringBoth)) bestIgnoringBoth = cand;
+        if (candidateBetter(cand, bestIgnoringBoth, purpose)) bestIgnoringBoth = cand;
 
         const daysOK = ruleSatisfiesDays(rule, days);
         const entriesOK = ruleSatisfiesEntries(rule, wantsMultiple);
 
         if (daysOK && entriesOK) {
-          if (candidateBetter(cand, best)) best = cand;
+          if (candidateBetter(cand, best, purpose)) best = cand;
         }
         if (entriesOK && !daysOK) {
-          if (candidateBetter(cand, bestIgnoringDays)) bestIgnoringDays = cand;
+          if (candidateBetter(cand, bestIgnoringDays, purpose)) bestIgnoringDays = cand;
         }
         if (daysOK && !entriesOK) {
-          if (candidateBetter(cand, bestIgnoringEntries)) bestIgnoringEntries = cand;
+          if (candidateBetter(cand, bestIgnoringEntries, purpose)) bestIgnoringEntries = cand;
         }
       }
     }
