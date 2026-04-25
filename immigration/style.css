@@ -265,8 +265,49 @@ input[type="checkbox"]{ accent-color: var(--primary); }
 
 .destinationCard .destTopRow{
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: 1fr 150px;
   gap: 10px;
+}
+
+.daysUnitWrap{
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--input-bg);
+}
+.daysNumInput{
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 8px 6px 8px 10px;
+  font-size: 14px;
+  color: var(--fg);
+  outline: none;
+  -moz-appearance: textfield;
+}
+.daysNumInput::-webkit-outer-spin-button,
+.daysNumInput::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+.daysUnitSelect{
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface-2, var(--surface));
+  color: var(--fg-muted, var(--fg));
+  font-size: 13px;
+  padding: 0 6px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 42px;
+  text-align: center;
+}
+.daysUnitSelect:focus{ background: var(--surface); }
+.daysUnitWrap:focus-within{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 @media (max-width: 520px){
   .destinationCard .destTopRow{ grid-template-columns: 1fr; }

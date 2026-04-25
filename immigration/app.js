@@ -520,15 +520,69 @@
     const fDays = document.createElement("div");
     fDays.className = "destField";
     const lblD = document.createElement("label");
-    lblD.textContent = "Days";
+    lblD.textContent = "Stay Duration";
+
+    const daysWrap = document.createElement("div");
+    daysWrap.className = "daysUnitWrap";
+
+    const daysNum = document.createElement("input");
+    daysNum.type = "number";
+    daysNum.min = "1";
+    daysNum.max = "3650";
+    daysNum.placeholder = "";
+    daysNum.className = "daysNumInput";
+
+    const unitSel = document.createElement("select");
+    unitSel.className = "daysUnitSelect";
+    unitSel.setAttribute("aria-label", "Unit");
+    const optDays = document.createElement("option");
+    optDays.value = "days";
+    optDays.textContent = "days";
+    const optMonths = document.createElement("option");
+    optMonths.value = "months";
+    optMonths.textContent = "mo";
+    unitSel.append(optDays, optMonths);
+
+    // Hidden input that always holds the computed days value for later reading
     const days = document.createElement("input");
-    days.type = "number";
-    days.min = "1";
-    days.max = "3650";
-    days.value = initial.days != null ? String(initial.days) : "";
-    days.placeholder = "";
+    days.type = "hidden";
     days.dataset.role = "days";
-    fDays.append(lblD, days);
+
+    // Initialise from initial.days (always stored as days internally)
+    if (initial.days != null) {
+      daysNum.value = String(initial.days);
+      unitSel.value = "days";
+      days.value = String(initial.days);
+    }
+
+    function syncDays() {
+      const n = parseFloat(daysNum.value);
+      if (!Number.isFinite(n) || n < 1) { days.value = ""; return; }
+      days.value = unitSel.value === "months"
+        ? String(Math.round(n * 30.44))
+        : String(Math.round(n));
+    }
+
+    daysNum.addEventListener("input", syncDays);
+    unitSel.addEventListener("change", () => {
+      // Convert displayed number when switching units so displayed value stays coherent
+      const n = parseFloat(daysNum.value);
+      if (Number.isFinite(n) && n >= 1) {
+        if (unitSel.value === "months") {
+          daysNum.value = String(parseFloat((n / 30.44).toFixed(1)));
+          daysNum.max = "120";
+        } else {
+          daysNum.value = String(Math.round(n * 30.44));
+          daysNum.max = "3650";
+        }
+      } else {
+        daysNum.max = unitSel.value === "months" ? "120" : "3650";
+      }
+      syncDays();
+    });
+
+    daysWrap.append(daysNum, unitSel, days);
+    fDays.append(lblD, daysWrap);
 
     topRow.append(fCountry, fDays);
 
