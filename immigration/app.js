@@ -219,6 +219,48 @@
   ];
   const PASSPORT_BY_CODE = new Map(PASSPORTS.map(([c, n, f]) => [c, { code: c, name: n, flag: f }]));
 
+  // -------- Region mappings for discovery mode --------
+  // Note: SCHENGEN codes will be populated from GROUP_EXPANSIONS after data load
+  const REGION_MAPPINGS = {
+    europe_schengen: [], // populated dynamically from GROUP_EXPANSIONS["SCHENGEN"]
+    europe_other: ["AL", "AD", "AM", "AZ", "BY", "BA", "GE", "IS", "XK", "LI", "MC", "ME", "MK", "NO", "MD", "SM", "RS", "CH", "VA", "GB", "IE", "UA", "RU", "TR"],
+    east_asia: ["CN", "HK", "JP", "KR", "MN", "TW", "MO", "KP"],
+    southeast_asia: ["BN", "KH", "ID", "LA", "MY", "MM", "PH", "SG", "TH", "TL", "VN"],
+    south_asia: ["AF", "BD", "BT", "IN", "MV", "NP", "PK", "LK"],
+    middle_east: ["AE", "BH", "IL", "IQ", "IR", "JO", "KW", "LB", "OM", "PS", "QA", "SA", "SY", "YE"],
+    africa: ["DZ", "AO", "BJ", "BW", "BF", "BI", "CV", "CM", "CF", "TD", "KM", "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "SZ", "ET", "GA", "GM", "GH", "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", "ZA", "SS", "SD", "TZ", "TG", "TN", "UG", "ZM", "ZW"],
+    north_america: ["CA", "MX", "US"],
+    central_caribbean: ["AG", "BS", "BB", "BZ", "CR", "CU", "DM", "DO", "SV", "GD", "GT", "HT", "HN", "JM", "KN", "LC", "VC", "NI", "PA", "TT"],
+    south_america: ["AR", "BO", "BR", "CL", "CO", "EC", "GY", "PE", "PY", "SR", "UY", "VE"],
+    oceania: ["AU", "FJ", "KI", "MH", "FM", "NR", "NZ", "PW", "PG", "WS", "SB", "TO", "TV", "VU"],
+  };
+
+  const REGION_LABELS = {
+    europe_schengen: "Europe (Schengen)",
+    europe_other: "Europe (Other)",
+    east_asia: "East Asia",
+    southeast_asia: "Southeast Asia",
+    south_asia: "South Asia",
+    middle_east: "Middle East",
+    africa: "Africa",
+    north_america: "North America",
+    central_caribbean: "Central America & Caribbean",
+    south_america: "South America",
+    oceania: "Oceania",
+  };
+
+  // Build reverse lookup: country code -> region key
+  function buildCountryToRegion() {
+    const map = {};
+    for (const [region, codes] of Object.entries(REGION_MAPPINGS)) {
+      for (const code of codes) {
+        map[code] = region;
+      }
+    }
+    return map;
+  }
+  let COUNTRY_TO_REGION = {};
+
   // -------- Theme toggle (persisted) --------
   const themeToggle = $("themeToggle");
   const themeIcon = $("themeIcon");
@@ -246,6 +288,9 @@
     const data = await res.json();
     COUNTRIES_DB = data;
     GROUP_EXPANSIONS = data.passportGroups || {};
+    // Populate Schengen region from the loaded group expansions
+    REGION_MAPPINGS.europe_schengen = GROUP_EXPANSIONS["SCHENGEN"] || [];
+    COUNTRY_TO_REGION = buildCountryToRegion();
     return COUNTRIES_DB;
   }
 
@@ -430,6 +475,124 @@
       chip.appendChild(x);
       passportChips.appendChild(chip);
     }
+  }
+
+  // -------- Mode Toggle (Specific vs Discovery) --------
+  let currentMode = "specific"; // "specific" or "discover"
+  const specificSection = $("specificModeSection");
+  const discoverySection = $("discoveryModeSection");
+  const visaTypeFilters = $("visaTypeFilters");
+  const modeBtns = document.querySelectorAll(".modeBtn");
+  const submitBtn = $("submitBtn");
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+      if (mode === currentMode) return;
+      currentMode = mode;
+      modeBtns.forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+      
+      if (mode === "specific") {
+        specificSection.style.display = "";
+        discoverySection.style.display = "none";
+        submitBtn.textContent = "Generate results";
+      } else {
+        specificSection.style.display = "none";
+        discoverySection.style.display = "";
+        submitBtn.textContent = "Find destinations";
+      }
+    });
+  });
+
+  // -------- Discovery Mode: Purpose Toggle --------
+  let discoveryPurpose = "tourism"; // "tourism" or "work"
+  const purposeBtns = document.querySelectorAll(".toggleBtn[data-purpose]");
+  
+  purposeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const purpose = btn.dataset.purpose;
+      if (purpose === discoveryPurpose) return;
+      discoveryPurpose = purpose;
+      purposeBtns.forEach(b => b.classList.toggle("active", b.dataset.purpose === purpose));
+      // Show/hide visa type filters (only for tourism)
+      visaTypeFilters.style.display = purpose === "tourism" ? "" : "none";
+    });
+  });
+
+  // -------- Discovery Mode: Duration Input --------
+  const discoveryDurationMount = $("discoveryDurationMount");
+  let discoveryDaysValue = ""; // will hold days as string
+
+  function buildDiscoveryDuration() {
+    const wrap = document.createElement("div");
+    wrap.className = "daysUnitWrap";
+
+    const daysNum = document.createElement("input");
+    daysNum.type = "number";
+    daysNum.min = "1";
+    daysNum.max = "3650";
+    daysNum.placeholder = "e.g. 30";
+    daysNum.className = "daysNumInput";
+
+    const unitSel = document.createElement("select");
+    unitSel.className = "daysUnitSelect";
+    unitSel.setAttribute("aria-label", "Unit");
+    const optDays = document.createElement("option");
+    optDays.value = "days";
+    optDays.textContent = "days";
+    const optMonths = document.createElement("option");
+    optMonths.value = "months";
+    optMonths.textContent = "mo";
+    unitSel.append(optDays, optMonths);
+
+    function syncDays() {
+      const n = parseFloat(daysNum.value);
+      if (!Number.isFinite(n) || n < 1) { discoveryDaysValue = ""; return; }
+      discoveryDaysValue = unitSel.value === "months"
+        ? String(Math.round(n * 30.44))
+        : String(Math.round(n));
+    }
+
+    daysNum.addEventListener("input", syncDays);
+    unitSel.addEventListener("change", () => {
+      const n = parseFloat(daysNum.value);
+      if (Number.isFinite(n) && n >= 1) {
+        if (unitSel.value === "months") {
+          daysNum.value = String(parseFloat((n / 30.44).toFixed(1)));
+          daysNum.max = "120";
+        } else {
+          daysNum.value = String(Math.round(n * 30.44));
+          daysNum.max = "3650";
+        }
+      } else {
+        daysNum.max = unitSel.value === "months" ? "120" : "3650";
+      }
+      syncDays();
+    });
+
+    wrap.append(daysNum, unitSel);
+    discoveryDurationMount.appendChild(wrap);
+  }
+
+  // -------- Discovery Mode: Get Selected Regions --------
+  function getSelectedRegions() {
+    const checks = document.querySelectorAll("#regionCheckboxes input:checked");
+    return Array.from(checks).map(c => c.value);
+  }
+
+  // -------- Discovery Mode: Get Countries in Selected Regions --------
+  function getCountriesInRegions(regions) {
+    if (regions.length === 0) {
+      // If no regions selected, include all countries
+      return COUNTRIES_DB.countries.map(c => c.code);
+    }
+    const codes = new Set();
+    for (const region of regions) {
+      for (const code of (REGION_MAPPINGS[region] || [])) {
+        codes.add(code);
+      }
+    }
+    return Array.from(codes);
   }
 
   // -------- Destination rows ----------
@@ -1259,6 +1422,178 @@
     }
 
     return card;
+  }
+
+  // -------- Discovery Mode: Run Discovery --------
+  function runDiscovery(passports, days, purpose, regions, includeEvisa, includeVoa) {
+    const results = [];
+    const regionCodes = getCountriesInRegions(regions);
+    const regionCodeSet = new Set(regionCodes);
+    
+    // Filter out user's own passport countries and Schengen if applicable
+    const schengenCodes = new Set(GROUP_EXPANSIONS["SCHENGEN"] || []);
+    const userHasSchengen = passports.some(p => schengenCodes.has(p));
+    
+    for (const country of COUNTRIES_DB.countries) {
+      // Skip user's passport countries
+      if (passports.includes(country.code)) continue;
+      // Skip Schengen countries if user has Schengen passport
+      if (userHasSchengen && schengenCodes.has(country.code)) continue;
+      // Skip if not in selected regions
+      if (regions.length > 0 && !regionCodeSet.has(country.code)) continue;
+      
+      let bestOption = null;
+      let visaCategory = null;
+      let note = null;
+      
+      if (purpose === "work") {
+        // Working: find any work visa
+        const workMatch = findBestMatch(country, passports, days, false, "work");
+        if (workMatch.best) {
+          bestOption = workMatch.best;
+          visaCategory = "work";
+        }
+      } else {
+        // Tourism: find visa-free first, then optionally eVisa/VOA
+        const tourismMatch = findBestMatch(country, passports, days, false, "tourism");
+        
+        if (tourismMatch.best) {
+          const rule = tourismMatch.best.rule;
+          const vType = rule.visaType;
+          
+          // Check if this matches our filters
+          const isVisaFree = vType === "visa_free" || vType === "freedom_of_movement";
+          const isEvisa = vType === "evisa";
+          const isVoa = vType === "visa_on_arrival";
+          const isWorkFallback = rule.purpose === "work" && rule.requiresWork === false;
+          
+          if (isVisaFree || isWorkFallback) {
+            bestOption = tourismMatch.best;
+            visaCategory = isWorkFallback ? "work_fallback" : "visa_free";
+            if (isWorkFallback) {
+              note = "Work visa available without work requirement";
+            }
+          } else if (isEvisa && includeEvisa) {
+            bestOption = tourismMatch.best;
+            visaCategory = "evisa";
+          } else if (isVoa && includeVoa) {
+            bestOption = tourismMatch.best;
+            visaCategory = "voa";
+          }
+        }
+        
+        // If no direct match, check if there's a work visa fallback for longer stays
+        if (!bestOption) {
+          // Check if there's a shorter visa-free option that user exceeded
+          const anyTourism = findBestMatch(country, passports, 1, false, "tourism");
+          if (anyTourism.best) {
+            const rule = anyTourism.best.rule;
+            const vType = rule.visaType;
+            const isVisaFree = vType === "visa_free" || vType === "freedom_of_movement";
+            const durationOK = rule.durationDays == null || rule.durationDays >= days;
+            
+            // If visa-free exists but duration too short, look for work fallback
+            if (isVisaFree && !durationOK) {
+              const workMatch = findBestMatch(country, passports, days, false, "work");
+              if (workMatch.best && workMatch.best.rule.requiresWork === false) {
+                bestOption = workMatch.best;
+                visaCategory = "work_fallback";
+                note = `Visa-free only ${rule.durationDays} days; work visa extends stay`;
+              }
+            }
+          }
+        }
+      }
+      
+      if (bestOption) {
+        results.push({
+          country,
+          match: bestOption,
+          visaCategory,
+          note,
+          region: COUNTRY_TO_REGION[country.code] || "other",
+        });
+      }
+    }
+    
+    // Sort alphabetically by country name
+    results.sort((a, b) => a.country.name.localeCompare(b.country.name));
+    return results;
+  }
+
+  // -------- Discovery Mode: Render Discovery Card --------
+  function renderDiscoveryCard(result) {
+    const { country, match, visaCategory, note, region } = result;
+    const rule = match.rule;
+    
+    const card = document.createElement("div");
+    card.className = "discoveryCard";
+    
+    // Country info
+    const countryDiv = document.createElement("div");
+    countryDiv.className = "dc-country";
+    
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "dc-name";
+    nameDiv.textContent = country.name;
+    
+    const regionDiv = document.createElement("div");
+    regionDiv.className = "dc-region";
+    regionDiv.textContent = REGION_LABELS[region] || region;
+    
+    countryDiv.append(nameDiv, regionDiv);
+    
+    // Visa info
+    const visaDiv = document.createElement("div");
+    visaDiv.className = "dc-visa";
+    
+    const visaTypeDiv = document.createElement("div");
+    visaTypeDiv.className = "dc-visa-type";
+    visaTypeDiv.textContent = visaBadgeText(rule);
+    visaTypeDiv.style.color = `var(--visa-${visaCategoryColor(rule)})`;
+    
+    const durationDiv = document.createElement("div");
+    durationDiv.className = "dc-duration";
+    if (rule.durationDays != null) {
+      durationDiv.textContent = `Up to ${rule.durationDays} days`;
+    } else {
+      durationDiv.textContent = "Extended stay";
+    }
+    
+    visaDiv.append(visaTypeDiv, durationDiv);
+    
+    if (note) {
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "dc-note";
+      noteDiv.textContent = note;
+      visaDiv.append(noteDiv);
+    }
+    
+    card.append(countryDiv, visaDiv);
+    return card;
+  }
+
+  // Helper for visa category color mapping
+  function visaCategoryColor(rule) {
+    const vt = rule.visaType;
+    if (vt === "visa_free" || vt === "freedom_of_movement") return "free";
+    if (vt === "visa_on_arrival") return "onarrival";
+    if (vt === "evisa") return "evisa";
+    if (rule.purpose === "work") return "work";
+    if (vt === "tourist_visa") return "tourist";
+    return "other";
+  }
+
+  // -------- Discovery Mode: Render Empty State --------
+  function renderDiscoveryEmpty() {
+    const empty = document.createElement("div");
+    empty.className = "discoveryEmpty";
+    empty.innerHTML = `
+      <div class="de-icon">&#127758;</div>
+      <div class="de-title">No destinations found</div>
+      <div class="de-hint">Try adjusting your filters, duration, or selecting different regions.</div>
+    `;
+    return empty;
   }
 
   // -------- Form submit ----------

@@ -24,19 +24,81 @@
 
       <section class="card">
         <form id="visaForm" class="form">
+          <!-- Mode Toggle -->
+          <div class="modeToggle">
+            <button type="button" class="modeBtn active" data-mode="specific">I know where I want to go</button>
+            <button type="button" class="modeBtn" data-mode="discover">Help me find destinations</button>
+          </div>
+
           <div class="sectionTitle">Your passports</div>
           <div class="hint">Type to search, then click to add. Add as many as you hold.</div>
           <div id="passportChips" class="chips"></div>
           <div class="row" id="passportComboMount"></div>
 
-          <div class="sectionTitle">Destinations</div>
-          <div id="destinations"></div>
-          <div class="row">
-            <button type="button" id="addDestinationBtn" class="btn secondary">+ Add destination</button>
+          <!-- Specific Mode: Destinations -->
+          <div id="specificModeSection">
+            <div class="sectionTitle">Destinations</div>
+            <div id="destinations"></div>
+            <div class="row">
+              <button type="button" id="addDestinationBtn" class="btn secondary">+ Add destination</button>
+            </div>
+          </div>
+
+          <!-- Discovery Mode: Filters -->
+          <div id="discoveryModeSection" style="display:none;">
+            <div class="sectionTitle">What are you looking for?</div>
+            
+            <div class="discoveryRow">
+              <div class="discoveryField">
+                <label>Purpose of travel</label>
+                <div class="toggleGroup">
+                  <button type="button" class="toggleBtn active" data-purpose="tourism">Tourism / Leisure</button>
+                  <button type="button" class="toggleBtn" data-purpose="work">Working</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="discoveryRow">
+              <div class="discoveryField">
+                <label>How long do you want to stay?</label>
+                <div id="discoveryDurationMount"></div>
+              </div>
+            </div>
+
+            <div class="discoveryRow">
+              <div class="discoveryField">
+                <label>Which regions interest you?</label>
+                <div class="hint">Select one or more regions to filter destinations.</div>
+                <div class="regionGrid" id="regionCheckboxes">
+                  <label class="regionCheck"><input type="checkbox" value="europe_schengen"> Europe (Schengen)</label>
+                  <label class="regionCheck"><input type="checkbox" value="europe_other"> Europe (Other)</label>
+                  <label class="regionCheck"><input type="checkbox" value="east_asia"> East Asia</label>
+                  <label class="regionCheck"><input type="checkbox" value="southeast_asia"> Southeast Asia</label>
+                  <label class="regionCheck"><input type="checkbox" value="south_asia"> South Asia</label>
+                  <label class="regionCheck"><input type="checkbox" value="middle_east"> Middle East</label>
+                  <label class="regionCheck"><input type="checkbox" value="africa"> Africa</label>
+                  <label class="regionCheck"><input type="checkbox" value="north_america"> North America</label>
+                  <label class="regionCheck"><input type="checkbox" value="central_caribbean"> Central America &amp; Caribbean</label>
+                  <label class="regionCheck"><input type="checkbox" value="south_america"> South America</label>
+                  <label class="regionCheck"><input type="checkbox" value="oceania"> Oceania</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="discoveryRow" id="visaTypeFilters">
+              <div class="discoveryField">
+                <label>Visa types to include</label>
+                <div class="hint">By default, only visa-free countries are shown.</div>
+                <div class="visaTypeChecks">
+                  <label class="visaTypeCheck"><input type="checkbox" id="includeEvisa"> Include eVisa countries</label>
+                  <label class="visaTypeCheck"><input type="checkbox" id="includeVoa"> Include Visa on Arrival</label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="row" style="margin-top:18px;">
-            <button type="submit" class="btn primary">Generate results</button>
+            <button type="submit" class="btn primary" id="submitBtn">Generate results</button>
           </div>
 
           <div id="errorBox" class="errorBox" role="alert" style="display:none;"></div>

@@ -578,6 +578,233 @@ input[type="checkbox"]{ accent-color: var(--primary); }
   font-weight: 700;
 }
 
+/* ========== Discovery Mode ========== */
+
+/* Mode Toggle */
+.modeToggle{
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--secondary);
+}
+.modeBtn{
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.modeBtn:hover{ background: var(--border-soft); }
+.modeBtn.active{
+  background: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .modeBtn.active{
+  background: var(--primary);
+  color: var(--bg);
+}
+
+/* Discovery Sections */
+.discoveryRow{
+  margin-bottom: 20px;
+}
+.discoveryField label{
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.discoveryField .hint{
+  margin-top: -2px;
+  margin-bottom: 8px;
+}
+
+/* Toggle Group (Tourism / Work) */
+.toggleGroup{
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content;
+}
+.toggleBtn{
+  padding: 10px 20px;
+  border: none;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.toggleBtn:not(:last-child){ border-right: 1px solid var(--border); }
+.toggleBtn:hover{ background: var(--secondary); }
+.toggleBtn.active{
+  background: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .toggleBtn.active{
+  color: var(--bg);
+}
+
+/* Region Checkboxes Grid */
+.regionGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 16px;
+}
+.regionCheck{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.regionCheck:hover{
+  background: var(--border-soft);
+}
+.regionCheck:has(input:checked){
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  border-color: var(--primary);
+}
+.regionCheck input{
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Visa Type Checkboxes */
+.visaTypeChecks{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.visaTypeCheck{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.visaTypeCheck input{
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Discovery Duration Mount */
+#discoveryDurationMount{
+  max-width: 200px;
+}
+#discoveryDurationMount .daysUnitWrap{
+  border: 1px solid var(--border);
+}
+
+/* Discovery Results - Country List */
+.discoveryResultsList{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.discoveryCard{
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+.discoveryCard:hover{
+  border-color: var(--border);
+}
+.discoveryCard .dc-country{
+  flex: 1;
+  min-width: 0;
+}
+.discoveryCard .dc-name{
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.discoveryCard .dc-region{
+  font-size: 12px;
+  color: var(--muted);
+}
+.discoveryCard .dc-visa{
+  text-align: right;
+}
+.discoveryCard .dc-visa-type{
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.discoveryCard .dc-duration{
+  font-size: 13px;
+  color: var(--muted);
+}
+.discoveryCard .dc-note{
+  font-size: 12px;
+  color: var(--info-text);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Discovery empty state */
+.discoveryEmpty{
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.discoveryEmpty .de-icon{
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.discoveryEmpty .de-title{
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.discoveryEmpty .de-hint{
+  font-size: 14px;
+}
+
+@media (max-width: 600px){
+  .modeToggle{
+    flex-direction: column;
+  }
+  .modeBtn{
+    padding: 14px 16px;
+  }
+  .toggleGroup{
+    width: 100%;
+  }
+  .toggleBtn{
+    flex: 1;
+  }
+  .regionGrid{
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Callouts */
 .callout{
   margin-top: 12px;
