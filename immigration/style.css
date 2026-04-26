@@ -715,77 +715,11 @@ input[type="checkbox"]{ accent-color: var(--primary); }
   border: 1px solid var(--border);
 }
 
-/* Discovery Results - Country List */
+/* Discovery Results - shared header above reused result cards */
 .discoverySummary{
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 12px;
-}
-.discoveryResultsList{
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.discoveryCard{
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--border-soft);
-  border-left: 4px solid var(--card-accent, var(--border));
-  border-radius: 10px;
-  transition: border-color 0.15s, transform 0.12s;
-}
-.discoveryCard:hover{
-  border-color: var(--border);
-  transform: translateY(-1px);
-}
-.discoveryCard .dc-country{
-  flex: 1;
-  min-width: 0;
-}
-.discoveryCard .dc-name{
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.discoveryCard .dc-flag{
-  font-size: 20px;
-  line-height: 1;
-}
-.discoveryCard .dc-region{
-  font-size: 12px;
-  color: var(--muted);
-}
-.discoveryCard .dc-visa{
-  text-align: right;
-  flex-shrink: 0;
-  max-width: 50%;
-}
-.discoveryCard .dc-visa-type{
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 2px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.discoveryCard .dc-vt-icon{
-  font-size: 13px;
-}
-.discoveryCard .dc-duration{
-  font-size: 13px;
-  color: var(--muted);
-}
-.discoveryCard .dc-note{
-  font-size: 12px;
-  color: var(--info-text, var(--muted));
-  margin-top: 6px;
-  font-style: italic;
 }
 
 /* Discovery empty state */

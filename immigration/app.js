@@ -1578,10 +1578,6 @@
       if (matches.length === 0) {
         resultsList.appendChild(renderDiscoveryEmpty());
       } else {
-        const wrap = document.createElement("div");
-        wrap.className = "discoveryResultsList";
-        for (const m of matches) wrap.appendChild(renderDiscoveryCard(m));
-
         // A small summary header so the user knows what they're looking at.
         const header = document.createElement("div");
         header.className = "discoverySummary";
@@ -1592,9 +1588,14 @@
         header.textContent =
           `${matches.length} destination${matches.length === 1 ? "" : "s"} ` +
           `match for ${purposeLabel}, ${days} day${days === 1 ? "" : "s"} in ${regionLabel}.`;
-
         resultsList.appendChild(header);
-        resultsList.appendChild(wrap);
+
+        // Reuse the rich specific-mode card for full visa detail.
+        for (const m of matches) {
+          resultsList.appendChild(
+            renderResultCard(m.dest, m.country, { tourism: m.tourismMatch, work: m.workMatch })
+          );
+        }
       }
       resultsSection.style.display = "block";
       resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
