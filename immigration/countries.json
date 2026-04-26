@@ -289,6 +289,27 @@
           ],
           "notes": "Use the official eVisa portal.",
           "officialUrl": "https://evisa.gov.vn/"
+        },
+        {
+          "rank": 1,
+          "passportGroups": ["AU", "NZ"],
+          "purpose": "work",
+          "visaType": "working_holiday",
+          "applicationMethod": "embassy_before_travel",
+          "durationDays": 365,
+          "entries": "multiple_entry",
+          "extendable": false,
+          "extensionDays": null,
+          "summary": "Working Holiday Visa available to Australian and New Zealand citizens for up to 12 months.",
+          "requirements": [
+            "Age typically 18–30",
+            "Valid passport",
+            "Proof of funds",
+            "Return ticket or sufficient funds"
+          ],
+          "notes": "Vietnam’s Working Holiday program is limited to bilateral agreements with Australia and New Zealand only. Work is allowed but not required.",
+          "officialUrl": "https://evisa.gov.vn/",
+          "requiresWork": false
         }
       ]
     },
@@ -7104,7 +7125,7 @@
           "durationDays": 365,
           "entries": "multiple_entry",
           "summary": "Working Holiday Scheme.",
-          "requirements": ["Age limit","Funds"],
+          "requirements": ["Age limit applies (usually 18-30)","Funds"],
           "notes": "Work allowed but not required.",
           "officialUrl": "https://www.immd.gov.hk/",
           "requiresWork": false
