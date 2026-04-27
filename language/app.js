@@ -238,10 +238,11 @@
   function generateValuesFor(item, settings) {
     const values = {};
     const entries = Object.entries(item.variables);
+    const derivedTypes = new Set(['derivedAdd', 'derived', 'topicMarker']);
 
     // 1) Generate non-derived
     for (const [name, def] of entries) {
-      if (def.type === 'derivedAdd') continue;
+      if (derivedTypes.has(def.type)) continue;
       values[name] = generateValue(def, settings);
     }
 
@@ -260,16 +261,55 @@
       }
     }
 
-    // 3) Resolve derived values
+    // 3a) Resolve numeric derived values (derivedAdd + derived/op)
     for (const [name, def] of entries) {
-      if (def.type !== 'derivedAdd') continue;
+      if (def.type === 'derivedAdd') {
+        const source = values[def.source];
+        const sourceRaw = source ? Number(source.raw) : 0;
+        const newRaw = sourceRaw + (def.amount || 0);
+        values[name] = {
+          kind: 'number',
+          raw: newRaw,
+          system: def.system || (source && source.system) || 'sino',
+        };
+      } else if (def.type === 'derived') {
+        const sources = def.sources || [];
+        const a = Number((values[sources[0]] || {}).raw || 0);
+        const b = Number((values[sources[1]] || {}).raw || 0);
+        let raw = 0;
+        switch (def.op) {
+          case 'add': raw = a + b; break;
+          case 'sub': raw = a - b; break;
+          case 'mul': raw = a * b; break;
+          case 'div': raw = b !== 0 ? a / b : 0; break;
+          default: raw = 0;
+        }
+        values[name] = {
+          kind: 'number',
+          raw,
+          system: def.system || 'sino',
+        };
+      }
+    }
+
+    // 3b) Resolve topic markers (run after all numeric values exist)
+    for (const [name, def] of entries) {
+      if (def.type !== 'topicMarker') continue;
       const source = values[def.source];
-      const sourceRaw = source ? Number(source.raw) : 0;
-      const newRaw = sourceRaw + (def.amount || 0);
+      let koStr = '';
+      if (source) {
+        if (source.kind === 'choice') koStr = source.koAlternatives[0] || '';
+        else if (source.kind === 'number') koStr = renderNumber(source.raw, source.system);
+      }
+      const lastChar = koStr[koStr.length - 1] || '';
+      const code = lastChar.charCodeAt(0) - 0xAC00;
+      const hasFinal = code >= 0 && code < 11172 && code % 28 !== 0;
+      const correct = hasFinal ? '은' : '는';
+      const other = hasFinal ? '는' : '은';
       values[name] = {
-        kind: 'number',
-        raw: newRaw,
-        system: def.system || (source && source.system) || 'sino',
+        kind: 'choice',
+        en: correct,
+        koAlternatives: [correct, other, ''],
       };
     }
 

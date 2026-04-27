@@ -31,7 +31,16 @@ Number systems:
 
 Variable inheritance: when a number variable has no `system`, it inherits the
 `system` from a sibling `choice` value that defines one (e.g. `durations.unit`).
-`derivedAdd` (e.g. `hotel_stays.days = nights + 1`) is resolved after primaries.
+
+Derived variable types (resolved after primary values):
+- `derivedAdd { source, amount }` — source + constant.
+- `derived { op, sources: [a, b], system }` — `op` is `add`, `sub`, `mul`, or
+  `div` over two other variables. Used by the math category.
+- `topicMarker { source }` — produces a choice value whose primary Korean is
+  the correct subject/topic particle (`은` if the source's last syllable ends
+  in a consonant, `는` if vowel). The cross-product expansion also accepts the
+  other particle and the no-particle form, so users aren't graded on this
+  detail.
 
 Number variables (`int` / `number`) support an optional `"pad": N` field that
 zero-pads the raw question-side rendering (used so `3:04 pm` doesn't show as

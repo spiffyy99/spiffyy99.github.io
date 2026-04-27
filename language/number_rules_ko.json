@@ -843,6 +843,80 @@
             "answer": "{nights|ko} 박 {days|ko} 일"
           }
         ]
+      },
+      {
+        "id": "math",
+        "label": "Math",
+        "subcategories": [
+          {
+            "id": "addition",
+            "label": "Addition",
+            "variables": {
+              "a": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+              "b": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+              "c": { "type": "derived", "op": "add", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "add_eq",
+                "question": "{a} + {b} = {c}",
+                "answer": "{a} 더하기 {b}{particle} {c}"
+              }
+            ]
+          },
+          {
+            "id": "subtraction",
+            "label": "Subtraction",
+            "variables": {
+              "a": { "type": "int", "min": 10, "max": 99, "system": "sino" },
+              "b": { "type": "int", "min": 1, "max": 9, "system": "sino" },
+              "c": { "type": "derived", "op": "sub", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "sub_eq",
+                "question": "{a} - {b} = {c}",
+                "answer": "{a} 빼기 {b}{particle} {c}"
+              }
+            ]
+          },
+          {
+            "id": "multiplication",
+            "label": "Multiplication",
+            "variables": {
+              "a": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "b": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "c": { "type": "derived", "op": "mul", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "mul_eq",
+                "question": "{a} × {b} = {c}",
+                "answer": "{a} 곱하기 {b}{particle} {c}"
+              }
+            ]
+          },
+          {
+            "id": "division",
+            "label": "Division",
+            "variables": {
+              "divisor": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "quotient": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "dividend": { "type": "derived", "op": "mul", "sources": ["divisor", "quotient"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "divisor" }
+            },
+            "templates": [
+              {
+                "id": "div_eq",
+                "question": "{dividend} ÷ {divisor} = {quotient}",
+                "answer": "{dividend} 나누기 {divisor}{particle} {quotient}"
+              }
+            ]
+          }
+        ]
       }
     ]
   }
