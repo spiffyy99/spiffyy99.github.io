@@ -190,14 +190,14 @@
       const min = def.min ?? 0;
       const step = def.step ?? 1;
       const raw = randInt(min, max, step);
-      return { kind: 'number', raw, system: def.system };
+      return { kind: 'number', raw, system: def.system, pad: def.pad };
     }
     if (def.type === 'number') {
       const max = effectiveMax(def, settings);
       const min = def.min ?? 0;
       const allowDec = def.decimal && settings.allowDecimals;
       const raw = randomNumberValue(min, max, allowDec);
-      return { kind: 'number', raw, system: def.system };
+      return { kind: 'number', raw, system: def.system, pad: def.pad };
     }
     if (def.type === 'digits') {
       const raw = randomDigits(def.length);
@@ -280,7 +280,11 @@
 
   function renderRawValue(v) {
     if (v.kind === 'choice') return v.en !== undefined ? v.en : '';
-    if (v.kind === 'number') return String(v.raw);
+    if (v.kind === 'number') {
+      let s = String(v.raw);
+      if (v.pad && s.length < v.pad) s = s.padStart(v.pad, '0');
+      return s;
+    }
     return '';
   }
 
@@ -298,28 +302,33 @@
   }
 
   function parseExpr(expr) {
-    // Handles: var, var.field, var|ko
-    let pipeKo = false;
+    // Handles: var, var.field, var|ko, var|sino, var|native, var|digit
+    let mode = null;
     let s = expr;
-    if (s.includes('|')) {
-      const [base, mod] = s.split('|');
-      s = base;
-      if (mod === 'ko') pipeKo = true;
+    const pipeIdx = s.indexOf('|');
+    if (pipeIdx >= 0) {
+      mode = s.slice(pipeIdx + 1);
+      s = s.slice(0, pipeIdx);
     }
     if (s.includes('.')) {
       const [varName, field] = s.split('.');
-      return { varName, field, pipeKo };
+      return { varName, field, mode };
     }
-    return { varName: s, field: undefined, pipeKo };
+    return { varName: s, field: undefined, mode };
+  }
+
+  function isSystemMode(mode) {
+    return mode === 'sino' || mode === 'native' || mode === 'digit';
   }
 
   // For question side: render English/raw forms.
   function renderQuestionTemplate(tpl, values) {
     return tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
-      const { varName, field, pipeKo } = parseExpr(expr);
+      const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
       if (!v) return '';
-      if (pipeKo) return renderKoForValue(v);
+      if (mode === 'ko') return renderKoForValue(v);
+      if (isSystemMode(mode) && v.kind === 'number') return renderNumber(v.raw, mode);
       if (!field) return renderRawValue(v);
       if (v.kind === 'choice') {
         if (field === 'en') return v.en !== undefined ? v.en : '';
@@ -337,10 +346,14 @@
   // Choice variables default to the picked first alternative; koOverride can replace.
   function renderAnswerTemplate(tpl, values, koOverride = {}) {
     return tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
-      const { varName, field, pipeKo } = parseExpr(expr);
+      const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
       if (!v) return '';
-      if (pipeKo || !field) {
+      // Per-reference system override (e.g. {age|sino})
+      if (isSystemMode(mode) && v.kind === 'number') {
+        return renderNumber(v.raw, mode);
+      }
+      if (mode === 'ko' || !field) {
         if (v.kind === 'choice') {
           return koOverride[varName] !== undefined
             ? koOverride[varName]

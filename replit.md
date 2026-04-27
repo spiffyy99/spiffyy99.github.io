@@ -33,16 +33,24 @@ Variable inheritance: when a number variable has no `system`, it inherits the
 `system` from a sibling `choice` value that defines one (e.g. `durations.unit`).
 `derivedAdd` (e.g. `hotel_stays.days = nights + 1`) is resolved after primaries.
 
+Number variables (`int` / `number`) support an optional `"pad": N` field that
+zero-pads the raw question-side rendering (used so `3:04 pm` doesn't show as
+`3:4 pm`).
+
+Template placeholder syntax:
+- `{var}` — question side: raw English/digit; answer side: Korean.
+- `{var.field}` — choice fields (`en`, `ko`, `examples`, `koTemplate`).
+- `{var|ko}` — force Korean rendering on the question side.
+- `{var|sino}` / `{var|native}` / `{var|digit}` — render a number variable in
+  a different system at this reference, regardless of its declared `system`
+  (used so `{age|sino} 세` reads `이십오 세` while `{age} 살` still reads
+  `스물다섯 살`).
+
+Months use a `choice` variable with full Korean month names so the irregular
+forms `유월` (6) and `시월` (10) come out correctly.
+
 Answer comparison normalizes by stripping all whitespace and common punctuation,
 so spacing variations like `오후다섯시삼십분` vs `오후 다섯 시 삼십 분` both pass.
-
-JSON quirks left as-is (data, not code bugs):
-- One trailing comma fixed inside `day_durations.variables` so the file parses.
-- `day_duration_two/three/four` templates have question `"1 day"` instead of
-  `"2 days"`/`"3 days"`/`"4 days"`.
-- `temperature.sign` choice values look semantically swapped (`"-"` → 영상,
-  `""` → 영하).
-- `{age} 세` uses `system: "native"` though 세 is normally read with sino.
 
 ## Workflow
 

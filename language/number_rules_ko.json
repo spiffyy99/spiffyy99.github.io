@@ -11,7 +11,7 @@
             "label": "Time of day",
             "variables": {
               "hour": { "type": "int", "min": 1, "max": 12, "system": "native" },
-              "minute": { "type": "int", "min": 0, "max": 59, "system": "sino" },
+              "minute": { "type": "int", "min": 0, "max": 59, "system": "sino", "pad": 2 },
               "period": {
                 "type": "choice",
                 "values": [
@@ -38,7 +38,23 @@
             "label": "Full date",
             "variables": {
               "year": { "type": "int", "min": 1900, "max": 2035, "system": "sino" },
-              "month": { "type": "int", "min": 1, "max": 12, "system": "sino" },
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "1", "ko": "일월" },
+                  { "en": "2", "ko": "이월" },
+                  { "en": "3", "ko": "삼월" },
+                  { "en": "4", "ko": "사월" },
+                  { "en": "5", "ko": "오월" },
+                  { "en": "6", "ko": "유월" },
+                  { "en": "7", "ko": "칠월" },
+                  { "en": "8", "ko": "팔월" },
+                  { "en": "9", "ko": "구월" },
+                  { "en": "10", "ko": "시월" },
+                  { "en": "11", "ko": "십일월" },
+                  { "en": "12", "ko": "십이월" }
+                ]
+              },
               "day": { "type": "int", "min": 1, "max": 31, "system": "sino" },
               "weekday": {
                 "type": "choice",
@@ -57,22 +73,22 @@
               {
                 "id": "date_full_mdy",
                 "question": "{month}/{day}/{year}",
-                "answer": "{year} 년 {month} 월 {day} 일"
+                "answer": "{year} 년 {month} {day} 일"
               },
               {
                 "id": "date_month_day",
                 "question": "{month}/{day}",
-                "answer": "{month} 월 {day} 일"
+                "answer": "{month} {day} 일"
               },
               {
                 "id": "weekday_month_day",
                 "question": "{weekday.en}, {month}/{day}",
-                "answer": "{weekday.ko} {month} 월 {day} 일"
+                "answer": "{weekday.ko} {month} {day} 일"
               },
               {
                 "id": "weekday_month_day_year",
                 "question": "{weekday.en}, {month}/{day}/{year}",
-                "answer": "{weekday.ko} {year} 년 {month} 월 {day} 일"
+                "answer": "{weekday.ko} {year} 년 {month} {day} 일"
               }
             ]
           }
@@ -93,7 +109,7 @@
               {
                 "id": "age_sal_se",
                 "question": "{age} years old",
-                "answer": ["{age} 살", "{age} 세"]
+                "answer": ["{age} 살", "{age|sino} 세"]
               }
             ]
           },
@@ -302,8 +318,8 @@
               "sign": {
                 "type": "choice",
                 "values": [
-                  { "en": "-", "ko": ["영상", ""]},
-                  { "en": "", "ko": "영하" }
+                  { "en": "-", "ko": "영하" },
+                  { "en": "", "ko": ["영상", ""] }
                 ]
               }
             },
@@ -722,17 +738,17 @@
               },
               {
                 "id": "day_duration_two",
-                "question": "1 day",
+                "question": "2 days",
                 "answer": ["이틀", "이 일"]
               },
               {
                 "id": "day_duration_three",
-                "question": "1 day",
+                "question": "3 days",
                 "answer": ["사흘", "삼 일"]
               },
               {
                 "id": "day_duration_four",
-                "question": "1 day",
+                "question": "4 days",
                 "answer": ["나흘", "사 일"]
               },
               {
