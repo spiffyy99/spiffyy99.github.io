@@ -1,0 +1,832 @@
+{
+    "version": 1,
+    "numberSystems": ["native", "sino", "digit"],
+    "categories": [
+      {
+        "id": "date_time",
+        "label": "Date & Time",
+        "subcategories": [
+          {
+            "id": "time_of_day",
+            "label": "Time of day",
+            "variables": {
+              "hour": { "type": "int", "min": 1, "max": 12, "system": "native" },
+              "minute": { "type": "int", "min": 0, "max": 59, "system": "sino" },
+              "period": {
+                "type": "choice",
+                "values": [
+                  { "en": "am", "ko": "오전" },
+                  { "en": "pm", "ko": "오후" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "time_hour_minute",
+                "question": "{hour}:{minute} {period.en}",
+                "answer": "{period.ko} {hour}시 {minute}분"
+              },
+              {
+                "id": "time_half",
+                "question": "{hour}:30 {period.en}",
+                "answer": ["{period.ko} {hour}시 반", "{period.ko} {hour}시 삼십분"]
+              }
+            ]
+          },
+          {
+            "id": "date_full",
+            "label": "Full date",
+            "variables": {
+              "year": { "type": "int", "min": 1900, "max": 2035, "system": "sino" },
+              "month": { "type": "int", "min": 1, "max": 12, "system": "sino" },
+              "day": { "type": "int", "min": 1, "max": 31, "system": "sino" },
+              "weekday": {
+                "type": "choice",
+                "values": [
+                  { "en": "Monday", "ko": "월요일" },
+                  { "en": "Tuesday", "ko": "화요일" },
+                  { "en": "Wednesday", "ko": "수요일" },
+                  { "en": "Thursday", "ko": "목요일" },
+                  { "en": "Friday", "ko": "금요일" },
+                  { "en": "Saturday", "ko": "토요일" },
+                  { "en": "Sunday", "ko": "일요일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "date_full_mdy",
+                "question": "{month}/{day}/{year}",
+                "answer": "{year} 년 {month} 월 {day} 일"
+              },
+              {
+                "id": "date_month_day",
+                "question": "{month}/{day}",
+                "answer": "{month} 월 {day} 일"
+              },
+              {
+                "id": "weekday_month_day",
+                "question": "{weekday.en}, {month}/{day}",
+                "answer": "{weekday.ko} {month} 월 {day} 일"
+              },
+              {
+                "id": "weekday_month_day_year",
+                "question": "{weekday.en}, {month}/{day}/{year}",
+                "answer": "{weekday.ko} {year} 년 {month} 월 {day} 일"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "age",
+        "label": "Age",
+        "subcategories": [
+          {
+            "id": "standard_age",
+            "label": "Age",
+            "variables": {
+              "age": { "type": "int", "min": 1, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "age_sal_se",
+                "question": "{age} years old",
+                "answer": ["{age} 살", "{age} 세"]
+              }
+            ]
+          },
+          {
+            "id": "birth_year",
+            "label": "Birth year / 년생",
+            "variables": {
+              "year": { "type": "int", "min": 1900, "max": 2025, "system": "sino" },
+              "shortYearDigit": { "type": "int", "min": 0, "max": 9, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "birth_year_full",
+                "question": "born in {year}",
+                "answer": "{year} 년생"
+              },
+              {
+                "id": "birth_year_short",
+                "question": "born in {shortYearDigit}{shortYearDigit}",
+                "answer": "{shortYearDigit}{shortYearDigit} 년생"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "won",
+        "label": "Won",
+        "variables": {
+          "amount": {
+            "type": "int",
+            "min": 100,
+            "step": 100,
+            "system": "sino"
+          }
+        },
+        "templates": [
+          {
+            "id": "won_amount",
+            "question": "₩{amount}",
+            "answer": "{amount} 원"
+          }
+        ]
+      },
+  
+      {
+        "id": "phone_numbers",
+        "label": "Phone Numbers",
+        "subcategories": [
+          {
+            "id": "korean_mobile",
+            "label": "Korean phone number",
+            "variables": {
+              "prefix": { "type": "fixed", "value": "010", "system": "digit" },
+              "middle": { "type": "digits", "length": 4, "system": "digit" },
+              "last": { "type": "digits", "length": 4, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "korean_mobile",
+                "question": "{prefix}-{middle}-{last}",
+                "answer": "{prefix} {middle} {last}"
+              }
+            ]
+          },
+          {
+            "id": "western_phone",
+            "label": "Western phone number",
+            "variables": {
+              "area": { "type": "digits", "length": 3, "system": "digit" },
+              "middle": { "type": "digits", "length": 3, "system": "digit" },
+              "last": { "type": "digits", "length": 4, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "western_phone",
+                "question": "{area}-{middle}-{last}",
+                "answer": "{area} {middle} {last}"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "korean_address",
+        "label": "Korean address",
+        "variables": {
+          "roadName": {
+            "type": "choice",
+            "values": [
+                { "en": "Teheran-ro", "ko": "테헤란로" },
+                { "en": "Gangnam-daero", "ko": "강남대로" },
+                { "en": "Sejong-daero", "ko": "세종대로" },
+                { "en": "Hongik-ro", "ko": "홍익로" },
+                { "en": "Itaewon-ro", "ko": "이태원로" },
+                { "en": "Eulji-ro", "ko": "을지로" },
+                { "en": "Jong-ro", "ko": "종로" },
+                { "en": "Samseong-ro", "ko": "삼성로" },
+                { "en": "Yeouidaebang-ro", "ko": "여의대방로" },
+                { "en": "Olympic-ro", "ko": "올림픽로" },
+              
+                { "en": "Garosu-gil", "ko": "가로수길" },
+                { "en": "Gyeongridan-gil", "ko": "경리단길" },
+                { "en": "Songridan-gil", "ko": "송리단길" },
+                { "en": "Mangnidan-gil", "ko": "망리단길" },
+                { "en": "Haebangchon-gil", "ko": "해방촌길" },
+              
+                { "en": "Dosan-daero", "ko": "도산대로" },
+                { "en": "Banpo-daero", "ko": "반포대로" },
+                { "en": "Nambusunhwan-ro", "ko": "남부순환로" },
+                { "en": "Dongbu Expressway", "ko": "동부간선도로" },
+                { "en": "Gangbyeonbuk-ro", "ko": "강변북로" },
+              
+                { "en": "Jungang-ro", "ko": "중앙로" },
+                { "en": "Munhwa-ro", "ko": "문화로" },
+                { "en": "Daehak-ro", "ko": "대학로" },
+                { "en": "Sijang-gil", "ko": "시장길" },
+                { "en": "Seoul-ro", "ko": "서울로" },
+              
+                { "en": "Maple Street", "ko": "메이플 스트리트" },
+                { "en": "Oak Avenue", "ko": "오크 애비뉴" },
+                { "en": "King Street", "ko": "킹 스트리트" },
+                { "en": "Queen Street", "ko": "퀸 스트리트" },
+                { "en": "Main Road", "ko": "메인 로드" }
+              ]
+          },
+          "buildingNumber": { "type": "int", "min": 1, "max": 999, "system": "sino" },
+          "dong": { "type": "int", "min": 1, "max": 999, "system": "sino" },
+          "ho": { "type": "int", "min": 101, "max": 3005, "system": "sino" }
+        },
+        "templates": [
+          {
+            "id": "apartment_building",
+            "question": "{buildingNumber} {roadName.en}, Building {dong}, Unit {ho}",
+            "answer": "{roadName.ko} {buildingNumber}번길 {dong}동 {ho}호"
+          },
+          {
+            "id": "house",
+            "question": "{buildingNumber} {roadName.en}",
+            "answer": ["{roadName.ko} {buildingNumber}번길", "{roadName.ko} {buildingNumber}번", "{roadName.ko} {buildingNumber}번지"]
+          }
+        ]
+      },
+      {
+        "id": "static_measurements",
+        "label": "Static Measurements / Units",
+        "subcategories": [
+          {
+            "id": "height",
+            "label": "Height",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "cm", "ko": "센티미터" },
+                  { "en": "ft", "ko": "피트" },
+                  { "en": "in", "ko": "인치" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "height_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "weight",
+            "label": "Weight",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "kg", "ko": "킬로그램" },
+                  { "en": "g", "ko": "그램" },
+                  { "en": "lb", "ko": "파운드" },
+                  { "en": "oz", "ko": "온스" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "weight_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "temperature",
+            "label": "Temperature",
+            "variables": {
+              "value": { "type": "number", "min": 1, "max": 100, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "°C", "ko": "도" },
+                  { "en": "°F", "ko": "도" }
+                ]
+              },
+              "sign": {
+                "type": "choice",
+                "values": [
+                  { "en": "-", "ko": ["영상", ""]},
+                  { "en": "", "ko": "영하" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "temperature_unit",
+                "question": "{sign.en}{value}{unit.en}",
+                "answer": "{sign.ko} {value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "volume",
+            "label": "Volume",
+            "variables": {
+              "value": { "type": "number", "min": 0, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "mL", "ko": "밀리리터" },
+                  { "en": "L", "ko": "리터" },
+                  { "en": "cups", "ko": "컵" },
+                  { "en": "tbsp", "ko": "큰술" },
+                  { "en": "tsp", "ko": "작은술" },
+                  { "en": "fl oz", "ko": "액량 온스" },
+                  { "en": "gal", "ko": "갤런" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "volume_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "data_volume",
+            "label": "Data volume",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "KB", "ko": "킬로바이트" },
+                  { "en": "MB", "ko": "메가바이트" },
+                  { "en": "GB", "ko": "기가바이트" },
+                  { "en": "TB", "ko": "테라바이트" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "data_volume_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "distance",
+            "label": "Distance / Length",
+            "variables": {
+              "value": { "type": "number", "min": 0, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "mm", "ko": "밀리미터" },
+                  { "en": "cm", "ko": "센티미터" },
+                  { "en": "m", "ko": "미터" },
+                  { "en": "km", "ko": "킬로미터" },
+                  { "en": "in", "ko": "인치" },
+                  { "en": "ft", "ko": "피트" },
+                  { "en": "yd", "ko": "야드" },
+                  { "en": "mi", "ko": "마일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "distance_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "area",
+            "label": "Area",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "m²", "ko": "제곱미터" },
+                  { "en": "km²", "ko": "제곱킬로미터" },
+                  { "en": "sq ft", "ko": "제곱피트" },
+                  { "en": "acre", "ko": "에이커" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "area_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "rate_measurements",
+        "label": "Rate-Based Measurements / Units",
+        "subcategories": [
+          {
+            "id": "speed",
+            "label": "Speed",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "km/h", "koTemplate": "시속 {value} 킬로미터" },
+                  { "en": "mph", "koTemplate": "시속 {value} 마일" },
+                  { "en": "m/s", "koTemplate": "초속 {value} 미터" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "speed_rate",
+                "question": "{value} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ]
+          },
+          {
+            "id": "data_rate",
+            "label": "Data rate",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "Mbps", "koTemplate": "초당 {value} 메가비트" },
+                  { "en": "MB/s", "koTemplate": "초당 {value} 메가바이트" },
+                  { "en": "GB/s", "koTemplate": "초당 {value} 기가바이트" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "data_rate",
+                "question": "{value} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ]
+          },
+          {
+            "id": "price_per_unit",
+            "label": "Price per unit",
+            "variables": {
+              "amount": { "type": "int", "min": 100, "step": 100, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "per person", "koTemplate": "한 명당 {amount} 원" },
+                  { "en": "per item", "koTemplate": "한 개당 {amount} 원" },
+                  { "en": "per bottle", "koTemplate": "한 병당 {amount} 원" },
+                  { "en": "per hour", "koTemplate": "한 시간당 {amount} 원" },
+                  { "en": "per day", "koTemplate": "하루당 {amount} 원" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "price_per_unit",
+                "question": "₩{amount} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ]
+          },
+          {
+            "id": "frequency_per_time",
+            "label": "Frequency per time",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 20, "system": "native" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "per day", "koTemplate": "하루에 {count} 번" },
+                  { "en": "per week", "koTemplate": "일주일에 {count} 번" },
+                  { "en": "per month", "koTemplate": "한 달에 {count} 번" },
+                  { "en": "per year", "koTemplate": "일 년에 {count} 번" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "frequency_per_time",
+                "question": "{count} times {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "counters",
+        "label": "Counters",
+        "variables": {
+          "count": { "type": "int", "min": 1, "max": 99, "system": "native" },
+          "counter": {
+            "type": "choice",
+            "values": [
+                {
+                  "ko": "명",
+                  "examples": ["people", "friends", "students", "customers", "guests", "employees", "children"]
+                },
+                {
+                  "ko": "권",
+                  "examples": ["books", "textbooks", "novels", "notebooks", "magazines", "comic books"]
+                },
+                {
+                  "ko": "마리",
+                  "examples": ["dogs", "cats", "pigs", "birds", "fish", "rabbits", "horses", "chickens"]
+                },
+                {
+                  "ko": "병",
+                  "examples": ["water bottles", "beer bottles", "wine bottles", "soju bottles", "soda bottles", "juice bottles"]
+                },
+                {
+                  "ko": "채",
+                  "examples": ["houses", "buildings", "apartments", "villas"]
+                },
+                {
+                  "ko": "세트",
+                  "examples": ["sets", "meal sets", "gift sets", "card sets"]
+                },
+                {
+                  "ko": "잔",
+                  "examples": ["cups of coffee", "glasses of water", "cups of tea", "glasses of beer", "glasses of wine"]
+                },
+                {
+                  "ko": "개",
+                  "examples": ["items", "apples", "bags", "chairs", "cookies", "eggs"]
+                },
+                {
+                  "ko": "장",
+                  "examples": ["sheets of paper", "tickets", "photos", "cards", "pages", "receipts"]
+                },
+                {
+                  "ko": "쌍",
+                  "examples": ["pairs of shoes", "pairs of socks", "pairs of gloves"]
+                },
+                {
+                  "ko": "대",
+                  "examples": ["cars", "machines", "computers", "buses", "cameras", "phones", "bicycles"]
+                },
+                {
+                  "ko": "벌",
+                  "examples": ["outfits", "suits", "uniforms", "sets of clothes"]
+                },
+                {
+                  "ko": "조각",
+                  "examples": ["slices of cake", "pieces of pizza", "pieces of fruit", "pieces of bread", "pieces of meat"]
+                },
+                {
+                  "ko": "그릇",
+                  "examples": ["bowls of rice", "bowls of soup", "bowls of noodles", "bowls of cereal"]
+                }
+            ]
+          }
+        },
+        "templates": [
+          {
+            "id": "counter_standard",
+            "question": "{count} {counter.examples}",
+            "answer": "{count} {counter.ko}"
+          }
+        ]
+      },
+  
+      {
+        "id": "percent",
+        "label": "Percent",
+        "subcategories": [
+          {
+            "id": "percent",
+            "label": "Percent",
+            "variables": {
+              "value": { "type": "number", "min": 0, "max": 1000, "decimal": true, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "percent",
+                "question": "{value}%",
+                "answer": "{value} 퍼센트"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "fractions",
+        "label": "Fractions",
+        "variables": {
+          "numerator": { "type": "int", "min": 1, "max": 20, "system": "sino" },
+          "denominator": { "type": "int", "min": 2, "max": 20, "system": "sino" }
+        },
+        "templates": [
+          {
+            "id": "fraction",
+            "question": "{numerator}/{denominator}",
+            "answer": "{denominator} 분의 {numerator}"
+          }
+        ]
+      },
+  
+      {
+        "id": "rankings_times",
+        "label": "Rankings / Times",
+        "subcategories": [
+          {
+            "id": "times_beon",
+            "label": "Times / 번",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "times_beon",
+                "question": "{count} times",
+                "answer": "{count} 번"
+              }
+            ]
+          },
+          {
+            "id": "ordinal_beonjjae",
+            "label": "Ordinal / 번째",
+            "variables": {
+              "position": { "type": "int", "min": 1, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "ordinal_beonjjae",
+                "question": "{position}th",
+                "answer": "{position} 번째"
+              }
+            ]
+          },
+          {
+            "id": "ranking_deung",
+            "label": "Ranking / 등",
+            "variables": {
+              "rank": { "type": "int", "min": 1, "max": 100, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "ranking_deung",
+                "question": "{rank}th place",
+                "answer": "{rank} 등"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "durations",
+        "label": "Durations",
+        "subcategories": [
+          {
+            "id": "time_durations",
+            "label": "Hours / minutes / seconds",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 120 },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "hours", "ko": "시간", "system": "native" },
+                  { "en": "minutes", "ko": "분", "system": "sino" },
+                  { "en": "seconds", "ko": "초", "system": "sino" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "time_duration",
+                "question": "{count} {unit.en}",
+                "answer": "{count} {unit.ko}"
+              }
+            ]
+          },
+          {
+            "id": "day_durations",
+            "label": "Day durations",
+            "variables": {
+              "days": {
+                "type": "int",
+                "min": 2,
+                "max": 30,
+                "system": "sino"
+              },
+            },
+            "templates": [
+              {
+                "id": "day_duration_one",
+                "question": "1 day",
+                "answer": ["하루", "일 일"]
+              },
+              {
+                "id": "day_duration_two",
+                "question": "1 day",
+                "answer": ["이틀", "이 일"]
+              },
+              {
+                "id": "day_duration_three",
+                "question": "1 day",
+                "answer": ["사흘", "삼 일"]
+              },
+              {
+                "id": "day_duration_four",
+                "question": "1 day",
+                "answer": ["나흘", "사 일"]
+              },
+              {
+                "id": "day_duration",
+                "question": "{days} days",
+                "answer": "{days} 일"
+              }
+            ]
+          },
+          {
+            "id": "calendar_durations",
+            "label": "Weeks / months / years",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "weeks", "ko": "주" },
+                  { "en": "months", "ko": "개월" },
+                  { "en": "years", "ko": "년" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "calendar_duration",
+                "question": "{count} {unit.en}",
+                "answer": "{count} {unit.ko}"
+              }
+            ]
+          }
+        ]
+      },
+  
+      {
+        "id": "floors_room_numbers",
+        "label": "Floors / Room Numbers",
+        "subcategories": [
+          {
+            "id": "floors",
+            "label": "Floors",
+            "variables": {
+              "floor": { "type": "int", "min": 1, "max": 15, "system": "sino" },
+              "floorPrefix": {
+                "type": "choice",
+                "values": [
+                  { "en": "B", "ko": "지하" },
+                  { "en": "", "ko": "" }
+                ]
+              } 
+            },
+            "templates": [
+              {
+                "id": "floor_number",
+                "question": "{floorPrefix.en}{floor}F",
+                "answer": "{floorPrefix.ko} {floor} 층"
+              }
+            ]
+          },
+          {
+            "id": "room_numbers",
+            "label": "Room numbers",
+            "variables": {
+              "room": { "type": "int", "min": 101, "max": 3005, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "room_number",
+                "question": "Room {room}",
+                "answer": "{room} 호"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hotel_stays",
+        "label": "Hotel stays / nights and days",
+        "variables": {
+          "nights": { "type": "int", "min": 1, "max": 30, "system": "sino" },
+          "days": {
+            "type": "derivedAdd",
+            "source": "nights",
+            "amount": 1,
+            "system": "sino"
+          }
+        },
+        "templates": [
+          {
+            "id": "nights_days",
+            "question": "{nights} nights, {days} days",
+            "answer": "{nights|ko} 박 {days|ko} 일"
+          }
+        ]
+      }
+    ]
+  }
