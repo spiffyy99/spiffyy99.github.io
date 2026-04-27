@@ -305,11 +305,10 @@
       const code = lastChar.charCodeAt(0) - 0xAC00;
       const hasFinal = code >= 0 && code < 11172 && code % 28 !== 0;
       const correct = hasFinal ? '은' : '는';
-      const other = hasFinal ? '는' : '은';
       values[name] = {
         kind: 'choice',
         en: correct,
-        koAlternatives: [correct, other, ''],
+        koAlternatives: [correct],
       };
     }
 

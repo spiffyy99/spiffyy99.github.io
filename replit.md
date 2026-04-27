@@ -36,11 +36,10 @@ Derived variable types (resolved after primary values):
 - `derivedAdd { source, amount }` — source + constant.
 - `derived { op, sources: [a, b], system }` — `op` is `add`, `sub`, `mul`, or
   `div` over two other variables. Used by the math category.
-- `topicMarker { source }` — produces a choice value whose primary Korean is
-  the correct subject/topic particle (`은` if the source's last syllable ends
-  in a consonant, `는` if vowel). The cross-product expansion also accepts the
-  other particle and the no-particle form, so users aren't graded on this
-  detail.
+- `topicMarker { source }` — produces a choice value whose Korean is the
+  correct subject/topic particle (`은` if the source's last syllable ends in a
+  consonant, `는` if vowel). Only the correct particle is accepted, so users
+  learn the 은/는 distinction.
 
 Number variables (`int` / `number`) support an optional `"pad": N` field that
 zero-pads the raw question-side rendering (used so `3:04 pm` doesn't show as
