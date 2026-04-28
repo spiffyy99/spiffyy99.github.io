@@ -211,15 +211,29 @@
 
   function generateValue(def, settings) {
     if (def.type === 'int') {
-      const max = effectiveMax(def, settings);
       const min = def.min ?? 0;
+      const sliderMax = Math.pow(10, settings.maxPower);
+      const defMax = def.max !== undefined ? def.max : Infinity;
+      let max;
+      if (min > sliderMax) {
+        max = defMax 
+      } else {
+        max = effectiveMax(def, settings);
+      } 
       const step = def.step ?? 1;
       const raw = randInt(min, max, step);
       return { kind: 'number', raw, system: def.system, pad: def.pad };
     }
     if (def.type === 'number') {
-      const max = effectiveMax(def, settings);
       const min = def.min ?? 0;
+      const sliderMax = Math.pow(10, settings.maxPower);
+      const defMax = def.max !== undefined ? def.max : Infinity;
+      let max;
+      if (min > sliderMax) {
+        max = defMax 
+      } else {
+        max = effectiveMax(def, settings);
+      } 
       const allowDec = def.decimal && settings.allowDecimals;
       const raw = randomNumberValue(min, max, allowDec);
       return { kind: 'number', raw, system: def.system, pad: def.pad };
