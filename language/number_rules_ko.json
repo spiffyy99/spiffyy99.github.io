@@ -123,7 +123,7 @@
             "templates": [
               {
                 "id": "birth_year_full",
-                "question": "born in {year}",
+                "question": "born in {year} (full year)",
                 "answer": "{year} 년생"
               },
               {
