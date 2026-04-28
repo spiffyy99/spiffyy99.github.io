@@ -707,6 +707,7 @@
   }
 
   function nextQuestion() {
+    speechSynthesis.cancel();
     rebuildPool();
     if (state.pool.length === 0) {
       $('gameArea').hidden = true;
@@ -895,9 +896,9 @@
         state.score.total++;
         updateScoreUI();
         state.answered = true;
+        playAnswer(state.current.accepted[0]);    
       }
       showFeedback('revealed', '');
-      playAnswer(state.current.accepted[0]);    
       $('submitBtn').textContent = 'Next →';
     });
   }
