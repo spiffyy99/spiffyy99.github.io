@@ -85,10 +85,46 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 18px;
+  padding: 44px 18px 18px;
   z-index: 20;
 }
 .settings-panel[hidden] { display: none; }
+
+.settings-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.settings-close-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.category-group-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.category-group-label input { cursor: pointer; }
 
 .settings-section {
   margin-bottom: 18px;

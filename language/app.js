@@ -592,13 +592,32 @@
     for (const [, group] of groups) {
       const wrap = document.createElement('div');
       wrap.className = 'category-group';
+
+      const hasMultipleSubs = group.items.length > 1;
+      let parentCb = null;
+
       const title = document.createElement('div');
       title.className = 'category-group-title';
-      title.textContent = group.label;
+
+      if (hasMultipleSubs) {
+        const titleLabel = document.createElement('label');
+        titleLabel.className = 'category-group-label';
+        parentCb = document.createElement('input');
+        parentCb.type = 'checkbox';
+        parentCb.className = 'category-parent-cb';
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = group.label;
+        titleLabel.appendChild(parentCb);
+        titleLabel.appendChild(titleSpan);
+        title.appendChild(titleLabel);
+      } else {
+        title.textContent = group.label;
+      }
       wrap.appendChild(title);
 
       const sublist = document.createElement('div');
       sublist.className = 'subcategory-list';
+      const childCbs = [];
       for (const item of group.items) {
         const row = document.createElement('label');
         row.className = 'cat-row';
@@ -609,7 +628,9 @@
         cb.addEventListener('change', () => {
           if (cb.checked) state.enabledIds.add(item.id);
           else state.enabledIds.delete(item.id);
+          if (parentCb) updateParentCb(parentCb, childCbs);
         });
+        childCbs.push(cb);
         const span = document.createElement('span');
         const label = item.subcatLabel === item.categoryLabel ? item.categoryLabel : item.subcatLabel;
         span.textContent = label;
@@ -619,12 +640,49 @@
       }
       wrap.appendChild(sublist);
       root.appendChild(wrap);
+
+      if (parentCb) {
+        updateParentCb(parentCb, childCbs);
+        parentCb.addEventListener('change', () => {
+          const checked = parentCb.checked;
+          parentCb.indeterminate = false;
+          for (const cb of childCbs) {
+            cb.checked = checked;
+            if (checked) state.enabledIds.add(cb.value);
+            else state.enabledIds.delete(cb.value);
+          }
+        });
+      }
+    }
+  }
+
+  function updateParentCb(parentCb, childCbs) {
+    const total = childCbs.length;
+    const checkedCount = childCbs.filter((c) => c.checked).length;
+    if (checkedCount === 0) {
+      parentCb.checked = false;
+      parentCb.indeterminate = false;
+    } else if (checkedCount === total) {
+      parentCb.checked = true;
+      parentCb.indeterminate = false;
+    } else {
+      parentCb.checked = false;
+      parentCb.indeterminate = true;
     }
   }
 
   function syncCategoryCheckboxes() {
-    const cbs = $('categoryList').querySelectorAll('input[type="checkbox"]');
+    const root = $('categoryList');
+    const cbs = root.querySelectorAll('input[type="checkbox"]:not(.category-parent-cb)');
     cbs.forEach((cb) => { cb.checked = state.enabledIds.has(cb.value); });
+    // Update each parent checkbox to reflect children state
+    const groups = root.querySelectorAll('.category-group');
+    groups.forEach((g) => {
+      const parentCb = g.querySelector('.category-parent-cb');
+      if (!parentCb) return;
+      const childCbs = Array.from(g.querySelectorAll('.subcategory-list input[type="checkbox"]'));
+      updateParentCb(parentCb, childCbs);
+    });
   }
 
   function formatMaxLabel(power) {
@@ -767,6 +825,10 @@
     $('settingsToggle').addEventListener('click', () => {
       const p = $('settingsPanel');
       p.hidden = !p.hidden;
+    });
+
+    $('settingsCloseBtn').addEventListener('click', () => {
+      $('settingsPanel').hidden = true;
     });
 
     $('selectAllBtn').addEventListener('click', () => {
