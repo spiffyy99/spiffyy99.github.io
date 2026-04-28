@@ -530,108 +530,113 @@
           }
         ]
       },
-  
       {
-        "id": "counters",
-        "label": "Counters",
-        "variables": {
-          "count": { "type": "int", "min": 1, "max": 99, "system": "native" },
-          "counter": {
-            "type": "choice",
-            "values": [
-                {
-                  "ko": "명",
-                  "examples": ["people", "friends", "students", "customers", "guests", "employees", "children"]
-                },
-                {
-                  "ko": "권",
-                  "examples": ["books", "textbooks", "novels", "notebooks", "magazines", "comic books"]
-                },
-                {
-                  "ko": "마리",
-                  "examples": ["dogs", "cats", "pigs", "birds", "fish", "rabbits", "horses", "chickens"]
-                },
-                {
-                  "ko": "병",
-                  "examples": ["water bottles", "beer bottles", "wine bottles", "soju bottles", "soda bottles", "juice bottles"]
-                },
-                {
-                  "ko": "채",
-                  "examples": ["houses", "buildings", "apartments", "villas"]
-                },
-                {
-                  "ko": "세트",
-                  "examples": ["sets", "meal sets", "gift sets", "card sets"]
-                },
-                {
-                  "ko": "잔",
-                  "examples": ["cups of coffee", "glasses of water", "cups of tea", "glasses of beer", "glasses of wine"]
-                },
-                {
-                  "ko": "개",
-                  "examples": ["items", "apples", "bags", "chairs", "cookies", "eggs"]
-                },
-                {
-                  "ko": "장",
-                  "examples": ["sheets of paper", "tickets", "photos", "cards", "pages", "receipts"]
-                },
-                {
-                  "ko": "쌍",
-                  "examples": ["pairs of shoes", "pairs of socks", "pairs of gloves"]
-                },
-                {
-                  "ko": "대",
-                  "examples": ["cars", "machines", "computers", "buses", "cameras", "phones", "bicycles"]
-                },
-                {
-                  "ko": "벌",
-                  "examples": ["outfits", "suits", "uniforms", "sets of clothes"]
-                },
-                {
-                  "ko": "조각",
-                  "examples": ["slices of cake", "pieces of pizza", "pieces of fruit", "pieces of bread", "pieces of meat"]
-                },
-                {
-                  "ko": "그릇",
-                  "examples": ["bowls of rice", "bowls of soup", "bowls of noodles", "bowls of cereal"]
-                },
-                { "examples": ["pills"], "ko": "알" },
-                { "examples": ["tablets"], "ko": "정" },
-                { "examples": ["seats"], "ko": "자리" }
-            ]
-          }
-        },
-        "templates": [
+        "id": "counters_and_numbered_labels",
+        "label": "Counters and Numbered Labels",
+        "subcategories":[
           {
-            "id": "counter_standard",
-            "question": "{count} {counter.examples}",
-            "answer": "{count} {counter.ko}"
-          }
-        ]
-      },
-      {
-        "id": "numbered_labels",
-        "label": "Numbered Labels",
-        "variables": {
-          "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
-          "counter": {
-            "type": "choice",
-            "values": [
-              { "en": "Subway Line", "ko": "호선" },
-              { "en": "Exit", "ko": "번 출구" },
-              { "en": "Gate", "ko": "번 게이트" },
-              { "en": "Bus Route", "ko": "번 버스" },
-              { "en": "(School) Grade", "ko": "학년" },
-              { "en": "Class", "ko": "반" },
-              { "en": "Points - ", "ko": "점" }
+            "id": "counters",
+            "label": "Counters",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "native" },
+              "counter": {
+                "type": "choice",
+                "values": [
+                    {
+                      "ko": "명",
+                      "examples": ["people", "friends", "students", "customers", "guests", "employees", "children"]
+                    },
+                    {
+                      "ko": "권",
+                      "examples": ["books", "textbooks", "novels", "notebooks", "magazines", "comic books"]
+                    },
+                    {
+                      "ko": "마리",
+                      "examples": ["dogs", "cats", "pigs", "birds", "fish", "rabbits", "horses", "chickens"]
+                    },
+                    {
+                      "ko": "병",
+                      "examples": ["water bottles", "beer bottles", "wine bottles", "soju bottles", "soda bottles", "juice bottles"]
+                    },
+                    {
+                      "ko": "채",
+                      "examples": ["houses", "buildings", "apartments", "villas"]
+                    },
+                    {
+                      "ko": "세트",
+                      "examples": ["sets", "meal sets", "gift sets", "card sets"]
+                    },
+                    {
+                      "ko": "잔",
+                      "examples": ["cups of coffee", "glasses of water", "cups of tea", "glasses of beer", "glasses of wine"]
+                    },
+                    {
+                      "ko": "개",
+                      "examples": ["items", "apples", "bags", "chairs", "cookies", "eggs"]
+                    },
+                    {
+                      "ko": "장",
+                      "examples": ["sheets of paper", "tickets", "photos", "cards", "pages", "receipts"]
+                    },
+                    {
+                      "ko": "쌍",
+                      "examples": ["pairs of shoes", "pairs of socks", "pairs of gloves"]
+                    },
+                    {
+                      "ko": "대",
+                      "examples": ["cars", "machines", "computers", "buses", "cameras", "phones", "bicycles"]
+                    },
+                    {
+                      "ko": "벌",
+                      "examples": ["outfits", "suits", "uniforms", "sets of clothes"]
+                    },
+                    {
+                      "ko": "조각",
+                      "examples": ["slices of cake", "pieces of pizza", "pieces of fruit", "pieces of bread", "pieces of meat"]
+                    },
+                    {
+                      "ko": "그릇",
+                      "examples": ["bowls of rice", "bowls of soup", "bowls of noodles", "bowls of cereal"]
+                    },
+                    { "examples": ["pills"], "ko": "알" },
+                    { "examples": ["tablets"], "ko": "정" },
+                    { "examples": ["seats"], "ko": "자리" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "counter_standard",
+                "question": "{count} {counter.examples}",
+                "answer": "{count} {counter.ko}"
+              }
             ]
-          }
-        },
-        "templates": [
+          },
           {
-            "id": "counter_standard",
-            "question": "{counter.en} {count}",
-            "answer": "{count} {counter.ko}"
+            "id": "numbered_labels",
+            "label": "Numbered Labels",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
+              "counter": {
+                "type": "choice",
+                "values": [
+                  { "en": "Subway Line", "ko": "호선" },
+                  { "en": "Exit", "ko": "번 출구" },
+                  { "en": "Gate", "ko": "번 게이트" },
+                  { "en": "Bus Route", "ko": "번 버스" },
+                  { "en": "(School) Grade", "ko": "학년" },
+                  { "en": "Class", "ko": "반" },
+                  { "en": "Points - ", "ko": "점" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "counter_standard",
+                "question": "{counter.en} {count}",
+                "answer": "{count} {counter.ko}"
+              }
+            ]
           }
         ]
       },
@@ -655,7 +660,6 @@
           }
         ]
       },
-  
       {
         "id": "fractions",
         "label": "Fractions",
