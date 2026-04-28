@@ -594,7 +594,10 @@
                 {
                   "ko": "그릇",
                   "examples": ["bowls of rice", "bowls of soup", "bowls of noodles", "bowls of cereal"]
-                }
+                },
+                { "examples": ["pills"], "ko": "알" },
+                { "examples": ["tablets"], "ko": "정" },
+                { "examples": ["seats"], "ko": "자리" }
             ]
           }
         },
@@ -606,7 +609,32 @@
           }
         ]
       },
-  
+      {
+        "id": "numbered_labels",
+        "label": "Numbered Labels",
+        "variables": {
+          "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
+          "counter": {
+            "type": "choice",
+            "values": [
+              { "en": "Subway Line", "ko": "호선" },
+              { "en": "Exit", "ko": "번 출구" },
+              { "en": "Gate", "ko": "번 게이트" },
+              { "en": "Bus Route", "ko": "번 버스" },
+              { "en": "(School) Grade", "ko": "학년" },
+              { "en": "Class", "ko": "반" },
+              { "en": "Points - ", "ko": "점" }
+            ]
+          }
+        },
+        "templates": [
+          {
+            "id": "counter_standard",
+            "question": "{counter.en} {count}",
+            "answer": "{count} {counter.ko}"
+          }
+        ]
+      },
       {
         "id": "percent",
         "label": "Percent",

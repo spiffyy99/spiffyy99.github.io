@@ -19,6 +19,9 @@
 
   <aside id="settingsPanel" class="settings-panel" hidden>
     <div class="settings-section">
+      <button id="applyBtn" class="primary-btn">Apply &amp; new question</button>
+    </div>
+    <div class="settings-section">
       <div class="section-head">
         <h3>Categories</h3>
         <div class="section-actions">
@@ -35,6 +38,14 @@
         <input type="checkbox" id="allowDecimals" checked />
         <span>Allow decimals (where applicable)</span>
       </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="allowSound" checked />
+        <span>Enable answer playback voice</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showNumberType" checked />
+        <span>Show number system for question (sino/native/digit)</span>
+      </label>
 
       <div class="slider-row">
         <div class="slider-label">
@@ -46,10 +57,6 @@
           <span>10</span><span>1B</span>
         </div>
       </div>
-    </div>
-
-    <div class="settings-section">
-      <button id="applyBtn" class="primary-btn">Apply &amp; new question</button>
     </div>
   </aside>
 
@@ -63,7 +70,7 @@
       </div>
 
       <div class="question-card">
-        <div class="prompt-label">Say in Korean:</div>
+        <div class="prompt-label">Write in Korean:</div>
         <div id="questionDisplay" class="question-display"></div>
       </div>
 

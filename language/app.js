@@ -20,6 +20,19 @@
     10: '열', 20: '스무', 30: '서른', 40: '마흔',
     50: '쉰', 60: '예순', 70: '일흔', 80: '여든', 90: '아흔',
   };
+  const POWERS_OF_TEN = {
+    '10': '십',
+    '100': '백',
+    '1K': '천',
+    '10K': '만',
+    '100K': '십만',
+    '1M': '백만',
+    '10M': '천만',
+    '100M': '억',
+    '1B': '십억',
+    '10B': '백억',
+    '100B': '천억',
+  }
 
   function sinoChunk(n) {
     if (n === 0) return '';
@@ -502,7 +515,7 @@
     config: null,
     items: [],            // flattened items
     enabledIds: new Set(), // item.id
-    settings: { allowDecimals: true, maxPower: 4 },
+    settings: { allowDecimals: true, allowSound: true, showNumberType: false, maxPower: 4 },
     pool: [],             // active items
     current: null,
     score: { correct: 0, total: 0 },
@@ -536,6 +549,8 @@
       if (!raw) return;
       const saved = JSON.parse(raw);
       if (typeof saved.allowDecimals === 'boolean') state.settings.allowDecimals = saved.allowDecimals;
+      if (typeof saved.allowSound === 'boolean') state.settings.allowSound = saved.allowSound;
+      if (typeof saved.showNumberType === 'boolean') state.settings.showNumberType = saved.showNumberType;
       if (typeof saved.maxPower === 'number') state.settings.maxPower = saved.maxPower;
       if (Array.isArray(saved.enabledIds)) {
         state.enabledIds = new Set(saved.enabledIds.filter((id) => state.items.some((i) => i.id === id)));
@@ -552,6 +567,8 @@
         'koNumPractice',
         JSON.stringify({
           allowDecimals: state.settings.allowDecimals,
+          allowSound: state.settings.allowSound,
+          showNumberType: state.settings.showNumberType,
           maxPower: state.settings.maxPower,
           enabledIds: Array.from(state.enabledIds),
         })
@@ -619,7 +636,12 @@
   }
 
   function updateMaxDisplay() {
-    $('maxDisplay').textContent = formatMaxLabel(state.settings.maxPower);
+    let maxLabelNum = formatMaxLabel(state.settings.maxPower);
+    let krPow = POWERS_OF_TEN[maxLabelNum] ?? null;
+    if (krPow !== null) {
+      maxLabelNum += '/'+ krPow;
+    }
+    $('maxDisplay').textContent = maxLabelNum;
   }
 
   function rebuildPool() {
@@ -658,11 +680,13 @@
 
     const sb = $('systemBadges');
     sb.innerHTML = '';
-    for (const sys of q.systems) {
-      const tag = document.createElement('span');
-      tag.className = `sys-badge sys-${sys}`;
-      tag.textContent = sys;
-      sb.appendChild(tag);
+    if (state.settings.showNumberType) {
+      for (const sys of q.systems) {
+        const tag = document.createElement('span');
+        tag.className = `sys-badge sys-${sys}`;
+        tag.textContent = sys;
+        sb.appendChild(tag);
+      }    
     }
   }
 
@@ -707,6 +731,15 @@
     }
   }
 
+  function playAnswer(ans) {
+    if (state.settings.allowSound) {
+      const speak = new SpeechSynthesisUtterance(ans);
+      speak.lang = "ko-KR";
+      speak.rate = 0.8;
+      speechSynthesis.speak(speak);
+    }
+  }
+
   function submitAnswer() {
     if (!state.current) return;
     if (state.answered) {
@@ -722,6 +755,11 @@
     updateScoreUI();
     state.answered = true;
     showFeedback(ok ? 'correct' : 'incorrect', input);
+    if (ok) {
+      playAnswer(input);
+    } else {
+      playAnswer(state.current.accepted[0]);
+    }
     $('submitBtn').textContent = 'Next →';
   }
 
@@ -743,6 +781,16 @@
     $('allowDecimals').checked = state.settings.allowDecimals;
     $('allowDecimals').addEventListener('change', (e) => {
       state.settings.allowDecimals = e.target.checked;
+    });
+
+    $('allowSound').checked = state.settings.allowSound;
+    $('allowSound').addEventListener('change', (e) => {
+      state.settings.allowSound = e.target.checked;
+    });
+
+    $('showNumberType').checked = state.settings.showNumberType;
+    $('showNumberType').addEventListener('change', (e) => {
+      state.settings.showNumberType = e.target.checked;
     });
 
     $('maxPower').value = String(state.settings.maxPower);
@@ -787,6 +835,7 @@
         state.answered = true;
       }
       showFeedback('revealed', '');
+      playAnswer(state.current.accepted[0]);    
       $('submitBtn').textContent = 'Next →';
     });
   }
