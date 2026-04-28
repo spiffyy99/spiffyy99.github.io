@@ -718,7 +718,7 @@
               },
               {
                 "id": "ordinal_beonjjae",
-                "question": "{position}th",
+                "question": "{position|ord}",
                 "answer": "{position} 번째"
               }
             ]
@@ -732,7 +732,7 @@
             "templates": [
               {
                 "id": "ranking_deung",
-                "question": "{rank}th place (in a competition/ranking)",
+                "question": "{rank|ord} place (in a competition/ranking)",
                 "answer": "{rank} 등"
               }
             ]

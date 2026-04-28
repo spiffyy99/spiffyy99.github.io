@@ -119,6 +119,18 @@
       .join('');
   }
 
+  function ordinalSuffix(n) {
+    const num = Math.abs(parseInt(n, 10));
+    if (Number.isNaN(num)) return 'th';
+    const mod100 = num % 100;
+    const mod10 = num % 10;
+    if (mod100 >= 11 && mod100 <= 13) return 'th';
+    if (mod10 === 1) return 'st';
+    if (mod10 === 2) return 'nd';
+    if (mod10 === 3) return 'rd';
+    return 'th';
+  }
+
   function renderNumber(value, system) {
     if (system === 'native') return nativeNumber(Math.floor(Number(value)), true);
     if (system === 'sino') return sinoDecimal(Number(value));
@@ -379,6 +391,9 @@
       const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
       if (!v) return '';
+      if (mode === 'ord' && v.kind === 'number') {
+        return String(v.raw) + ordinalSuffix(v.raw);
+      }
       if (mode === 'ko') return renderKoForValue(v);
       if (isSystemMode(mode) && v.kind === 'number') return renderNumber(v.raw, mode);
       if (!field) return renderRawValue(v);
@@ -525,7 +540,7 @@
   const $ = (id) => document.getElementById(id);
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260427a')
+    fetch('./number_rules_ko.json?v=20260128b')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
