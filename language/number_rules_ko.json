@@ -698,9 +698,24 @@
             "id": "ordinal_beonjjae",
             "label": "Ordinal / 번째",
             "variables": {
-              "position": { "type": "int", "min": 1, "max": 99, "system": "native" }
+              "position": { "type": "int", "min": 4, "max": 99, "system": "native" }
             },
             "templates": [
+              {
+                "id": "ordinal_beonjjae_first",
+                "question": "1st",
+                "answer": "첫 번째"
+              },
+              {
+                "id": "ordinal_beonjjae_second",
+                "question": "2nd",
+                "answer": "두 번째"
+              },
+              {
+                "id": "ordinal_beonjjae_third",
+                "question": "3rd",
+                "answer": "세 번째"
+              },
               {
                 "id": "ordinal_beonjjae",
                 "question": "{position}th",
