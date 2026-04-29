@@ -20,6 +20,12 @@ Files:
 
 Settings (persisted in localStorage):
 - Per-subcategory checkboxes (defaults: all on).
+- Number-system filter: Both / Sino only / Native only. Filters subcategories
+  by which number systems their variables and template overrides use; a
+  subcategory that uses both systems passes any filter.
+- Progress history: either save all-time, or save the last N questions
+  (1–10000). Includes a "Clear progress" button. The score row shows
+  correct / total / accuracy from this rolling window.
 - Allow decimals toggle (only affects variables with `decimal: true`).
 - Max number slider, power-of-10 from 10 → 1B; capped per variable by its `max`.
 

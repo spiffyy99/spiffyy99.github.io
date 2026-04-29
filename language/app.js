@@ -950,6 +950,36 @@
       syncCategoryCheckboxes();
     });
 
+    // Number-system filter (sino / native / both)
+    document.querySelectorAll('input[name="systemFilter"]').forEach((r) => {
+      r.checked = (r.value === state.settings.systemFilter);
+      r.addEventListener('change', (e) => {
+        if (e.target.checked) state.settings.systemFilter = e.target.value;
+      });
+    });
+
+    // Progress-history mode + limit
+    document.querySelectorAll('input[name="historyMode"]').forEach((r) => {
+      r.checked = (r.value === state.settings.historyMode);
+      r.addEventListener('change', (e) => {
+        if (e.target.checked) state.settings.historyMode = e.target.value;
+      });
+    });
+
+    $('historyLimit').value = String(state.settings.historyLimit);
+    $('historyLimit').addEventListener('input', (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (!isNaN(v) && v >= 1) {
+        state.settings.historyLimit = Math.min(10000, v);
+      }
+    });
+
+    $('clearProgressBtn').addEventListener('click', () => {
+      if (window.confirm('Clear all saved progress? This cannot be undone.')) {
+        clearProgress();
+      }
+    });
+
     $('allowDecimals').checked = state.settings.allowDecimals;
     $('allowDecimals').addEventListener('change', (e) => {
       state.settings.allowDecimals = e.target.checked;
@@ -973,6 +1003,8 @@
     });
 
     $('applyBtn').addEventListener('click', () => {
+      applyHistoryLimit();
+      updateScoreUI();
       saveSettings();
       $('settingsPanel').hidden = true;
       nextQuestion();
@@ -992,9 +1024,8 @@
 
     $('skipBtn').addEventListener('click', () => {
       if (!state.answered && state.current) {
-        // count as a wrong/skip in total only (not correct)
-        state.score.total++;
-        updateScoreUI();
+        // count skip as wrong (total++, correct unchanged)
+        recordResult(false);
       }
       nextQuestion();
     });
@@ -1002,10 +1033,9 @@
     $('showAnswerBtn').addEventListener('click', () => {
       if (!state.current) return;
       if (!state.answered) {
-        state.score.total++;
-        updateScoreUI();
+        recordResult(false);
         state.answered = true;
-        playAnswer(state.current.accepted[0]);    
+        playAnswer(state.current.accepted[0]);
       }
       showFeedback('revealed', '');
       $('submitBtn').textContent = 'Next →';
