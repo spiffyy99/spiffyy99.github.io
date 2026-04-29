@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>한국어 숫자 연습 · Korean Number Practice</title>
-  <link rel="stylesheet" href="./style.css?v=20260128a" />
+  <link rel="stylesheet" href="./style.css?v=20260429a" />
 </head>
 <body>
   <header class="topbar">
@@ -12,10 +12,24 @@
       <span class="brand-ko">한국어 숫자 연습</span>
       <span class="brand-en">Korean Number Practice</span>
     </div>
-    <button id="settingsToggle" class="icon-btn" aria-label="Toggle settings">
-      <span class="gear">⚙</span><span class="label">Settings</span>
-    </button>
+    <div class="topbar-actions">
+      <button id="historyToggle" class="icon-btn" aria-label="Toggle history">
+        <span class="gear">≡</span><span class="label">History</span>
+      </button>
+      <button id="settingsToggle" class="icon-btn" aria-label="Toggle settings">
+        <span class="gear">⚙</span><span class="label">Settings</span>
+      </button>
+    </div>
   </header>
+
+  <aside id="historyPanel" class="settings-panel" hidden>
+    <button id="historyCloseBtn" class="settings-close-btn" aria-label="Close history" type="button">×</button>
+    <div class="settings-section">
+      <h3>Question history</h3>
+      <p id="historyEmpty" class="history-empty">No questions yet — answer some to see them here.</p>
+      <ul id="historyList" class="history-list"></ul>
+    </div>
+  </aside>
 
   <aside id="settingsPanel" class="settings-panel" hidden>
     <button id="settingsCloseBtn" class="settings-close-btn" aria-label="Close settings" type="button">×</button>
@@ -124,6 +138,6 @@
     </div>
   </main>
 
-  <script src="./app.js?v=20260128a"></script>
+  <script src="./app.js?v=20260429a"></script>
 </body>
 </html>

@@ -556,9 +556,72 @@
     },
     pool: [],             // active items
     current: null,
-    history: [],          // array of booleans (true = correct)
+    history: [],          // array of entry objects (see makeHistoryEntry)
     answered: false,      // current question already graded
   };
+
+  // ---- History entry shape ----
+  // {
+  //   ts: number,                                 // timestamp
+  //   itemId: string,                             // category::sub
+  //   categoryLabel: string, subcatLabel: string,
+  //   question: string,                           // rendered prompt
+  //   accepted: string[],                         // accepted Korean answers
+  //   systems: string[],                          // sino/native/digit tags
+  //   userInput: string,                          // what the user typed (or '')
+  //   result: 'correct' | 'wrong' | 'skipped' | 'revealed',
+  // }
+
+  const RESULT_KINDS = ['correct', 'wrong', 'skipped', 'revealed'];
+  const RESULT_LABEL = {
+    correct: '✓ Correct',
+    wrong: '✗ Wrong',
+    skipped: '↷ Skipped',
+    revealed: '⚐ Shown',
+  };
+
+  function makeHistoryEntry(result, userInput) {
+    const q = state.current || {};
+    return {
+      ts: Date.now(),
+      itemId: typeof q.itemId === 'string' ? q.itemId : '',
+      categoryLabel: typeof q.categoryLabel === 'string' ? q.categoryLabel : '',
+      subcatLabel: typeof q.subcatLabel === 'string' ? q.subcatLabel : '',
+      question: typeof q.question === 'string' ? q.question : '',
+      accepted: Array.isArray(q.accepted) ? q.accepted.slice() : [],
+      systems: Array.isArray(q.systems) ? q.systems.slice() : [],
+      userInput: typeof userInput === 'string' ? userInput : '',
+      result: RESULT_KINDS.includes(result) ? result : 'wrong',
+    };
+  }
+
+  function normalizeHistoryItem(item) {
+    if (typeof item === 'boolean') {
+      return {
+        ts: 0,
+        itemId: '',
+        categoryLabel: '',
+        subcatLabel: '',
+        question: '',
+        accepted: [],
+        systems: [],
+        userInput: '',
+        result: item ? 'correct' : 'wrong',
+      };
+    }
+    if (!item || typeof item !== 'object') return null;
+    return {
+      ts: typeof item.ts === 'number' ? item.ts : 0,
+      itemId: typeof item.itemId === 'string' ? item.itemId : '',
+      categoryLabel: typeof item.categoryLabel === 'string' ? item.categoryLabel : '',
+      subcatLabel: typeof item.subcatLabel === 'string' ? item.subcatLabel : '',
+      question: typeof item.question === 'string' ? item.question : '',
+      accepted: Array.isArray(item.accepted) ? item.accepted.filter((s) => typeof s === 'string') : [],
+      systems: Array.isArray(item.systems) ? item.systems.filter((s) => typeof s === 'string') : [],
+      userInput: typeof item.userInput === 'string' ? item.userInput : '',
+      result: RESULT_KINDS.includes(item.result) ? item.result : 'wrong',
+    };
+  }
 
   const $ = (id) => document.getElementById(id);
 
@@ -587,7 +650,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260128b')
+    fetch('./number_rules_ko.json?v=20260429a')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
@@ -599,6 +662,7 @@
         bindEvents();
         rebuildPool();
         updateScoreUI();
+        renderHistoryList();
         $('loadingState').hidden = true;
         nextQuestion();
       })
@@ -626,7 +690,9 @@
         state.settings.historyLimit = Math.min(10000, Math.floor(saved.historyLimit));
       }
       if (Array.isArray(saved.history)) {
-        state.history = saved.history.map(Boolean);
+        state.history = saved.history
+          .map(normalizeHistoryItem)
+          .filter((e) => e !== null);
         applyHistoryLimit();
       }
       if (Array.isArray(saved.enabledIds)) {
@@ -666,17 +732,19 @@
     }
   }
 
-  function recordResult(ok) {
-    state.history.push(!!ok);
+  function recordResult(result, userInput) {
+    state.history.push(makeHistoryEntry(result, userInput || ''));
     applyHistoryLimit();
     saveSettings();
     updateScoreUI();
+    renderHistoryList();
   }
 
   function clearProgress() {
     state.history = [];
     saveSettings();
     updateScoreUI();
+    renderHistoryList();
   }
 
   function renderCategoryList() {
@@ -890,7 +958,10 @@
 
   function updateScoreUI() {
     const total = state.history.length;
-    const correct = state.history.reduce((acc, v) => acc + (v ? 1 : 0), 0);
+    const correct = state.history.reduce(
+      (acc, e) => acc + (e && e.result === 'correct' ? 1 : 0),
+      0
+    );
     $('scoreCorrect').textContent = correct;
     $('scoreTotal').textContent = total;
     if (total === 0) {
@@ -899,6 +970,102 @@
       const pct = Math.round((correct / total) * 100);
       $('scoreAcc').textContent = pct + '%';
     }
+  }
+
+  function renderHistoryList() {
+    const list = $('historyList');
+    const empty = $('historyEmpty');
+    if (!list || !empty) return;
+    list.innerHTML = '';
+    if (state.history.length === 0) {
+      empty.hidden = false;
+      list.hidden = true;
+      return;
+    }
+    empty.hidden = true;
+    list.hidden = false;
+    // Newest first
+    for (let i = state.history.length - 1; i >= 0; i--) {
+      const entry = state.history[i];
+      list.appendChild(renderHistoryEntry(entry));
+    }
+  }
+
+  function renderHistoryEntry(entry) {
+    const li = document.createElement('li');
+    li.className = 'history-item ' + entry.result;
+
+    const header = document.createElement('div');
+    header.className = 'history-header';
+    const tag = document.createElement('span');
+    tag.className = 'history-result-tag ' + entry.result;
+    tag.textContent = RESULT_LABEL[entry.result] || entry.result;
+    header.appendChild(tag);
+    if (entry.subcatLabel || entry.categoryLabel) {
+      const cat = document.createElement('span');
+      cat.className = 'history-cat';
+      cat.textContent =
+        entry.subcatLabel && entry.subcatLabel !== entry.categoryLabel
+          ? `${entry.categoryLabel} · ${entry.subcatLabel}`
+          : entry.categoryLabel;
+      header.appendChild(cat);
+    }
+    li.appendChild(header);
+
+    if (entry.question) {
+      const q = document.createElement('div');
+      q.className = 'history-question';
+      q.textContent = entry.question;
+      li.appendChild(q);
+    }
+
+    if (entry.userInput && entry.result === 'wrong') {
+      const u = document.createElement('div');
+      u.className = 'history-meta';
+      u.innerHTML = `You typed: <code>${escapeHtml(entry.userInput)}</code>`;
+      li.appendChild(u);
+    }
+
+    if (entry.accepted && entry.accepted.length) {
+      const a = document.createElement('div');
+      a.className = 'history-meta';
+      a.innerHTML = `Answer: <code>${entry.accepted.map(escapeHtml).join(' / ')}</code>`;
+      li.appendChild(a);
+    }
+
+    if (entry.question && entry.accepted && entry.accepted.length) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ghost-btn history-try-btn';
+      btn.textContent = 'Try again';
+      btn.addEventListener('click', () => tryAgainFromHistory(entry));
+      li.appendChild(btn);
+    }
+
+    return li;
+  }
+
+  function tryAgainFromHistory(entry) {
+    speechSynthesis.cancel();
+    state.current = {
+      itemId: entry.itemId,
+      categoryLabel: entry.categoryLabel,
+      subcatLabel: entry.subcatLabel,
+      question: entry.question,
+      accepted: entry.accepted.slice(),
+      systems: entry.systems.slice(),
+      fromHistory: true,
+    };
+    state.answered = false;
+    $('emptyState').hidden = true;
+    $('gameArea').hidden = false;
+    renderQuestion();
+    $('answerInput').value = '';
+    $('feedback').hidden = true;
+    $('feedback').className = 'feedback';
+    $('submitBtn').textContent = 'Check';
+    $('historyPanel').hidden = true;
+    $('answerInput').focus();
   }
 
   function playAnswer(ans) {
@@ -920,7 +1087,7 @@
     const input = $('answerInput').value;
     if (!input.trim()) return;
     const ok = checkAnswer(input, state.current.accepted);
-    recordResult(ok);
+    recordResult(ok ? 'correct' : 'wrong', input);
     state.answered = true;
     showFeedback(ok ? 'correct' : 'incorrect', input);
     if (ok) {
@@ -934,11 +1101,29 @@
   function bindEvents() {
     $('settingsToggle').addEventListener('click', () => {
       const p = $('settingsPanel');
+      const willOpen = p.hidden;
       p.hidden = !p.hidden;
+      if (willOpen) $('historyPanel').hidden = true;
     });
 
     $('settingsCloseBtn').addEventListener('click', () => {
       $('settingsPanel').hidden = true;
+    });
+
+    $('historyToggle').addEventListener('click', () => {
+      const p = $('historyPanel');
+      const willOpen = p.hidden;
+      if (willOpen) {
+        renderHistoryList();
+        p.hidden = false;
+        $('settingsPanel').hidden = true;
+      } else {
+        p.hidden = true;
+      }
+    });
+
+    $('historyCloseBtn').addEventListener('click', () => {
+      $('historyPanel').hidden = true;
     });
 
     $('selectAllBtn').addEventListener('click', () => {
@@ -1025,7 +1210,7 @@
     $('skipBtn').addEventListener('click', () => {
       if (!state.answered && state.current) {
         // count skip as wrong (total++, correct unchanged)
-        recordResult(false);
+        recordResult('skipped', '');
       }
       nextQuestion();
     });
@@ -1033,7 +1218,7 @@
     $('showAnswerBtn').addEventListener('click', () => {
       if (!state.current) return;
       if (!state.answered) {
-        recordResult(false);
+        recordResult('revealed', '');
         state.answered = true;
         playAnswer(state.current.accepted[0]);
       }

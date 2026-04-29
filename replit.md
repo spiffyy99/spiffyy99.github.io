@@ -26,6 +26,12 @@ Settings (persisted in localStorage):
 - Progress history: either save all-time, or save the last N questions
   (1–10000). Includes a "Clear progress" button. The score row shows
   correct / total / accuracy from this rolling window.
+- Question history panel (≡ History button in topbar): a side panel listing
+  every entry in the rolling window — newest first — showing the question,
+  result (correct / wrong / skipped / shown), what the user typed (for
+  wrong answers), the accepted Korean answer(s), and a "Try again" button
+  that loads that exact question back into the main area. Scope is the
+  same window as the pass-rate; "Clear progress" empties both.
 - Allow decimals toggle (only affects variables with `decimal: true`).
 - Max number slider, power-of-10 from 10 → 1B; capped per variable by its `max`.
 
