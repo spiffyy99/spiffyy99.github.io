@@ -30,7 +30,23 @@
           <button id="clearAllBtn" class="link-btn">Clear all</button>
         </div>
       </div>
+      <div class="number-system-filter">
+        <span class="filter-label">Number system:</span>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="both" /><span>Both</span></label>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="sino" /><span>Sino only</span></label>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="native" /><span>Native only</span></label>
+      </div>
       <div id="categoryList" class="category-list"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Progress history</h3>
+      <label class="toggle-row"><input type="radio" name="historyMode" value="all" /><span>Save all-time</span></label>
+      <label class="toggle-row">
+        <input type="radio" name="historyMode" value="limited" />
+        <span>Save last <input type="number" id="historyLimit" min="1" max="10000" class="inline-number" /> questions</span>
+      </label>
+      <button id="clearProgressBtn" type="button" class="ghost-btn full-width-btn">Clear progress</button>
     </div>
 
     <div class="settings-section">

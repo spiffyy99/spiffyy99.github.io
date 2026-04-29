@@ -543,15 +543,48 @@
   const state = {
     config: null,
     items: [],            // flattened items
+    itemSystems: new Map(), // item.id -> Set of systems used (sino/native/digit)
     enabledIds: new Set(), // item.id
-    settings: { allowDecimals: true, allowSound: true, showNumberType: false, maxPower: 4 },
+    settings: {
+      allowDecimals: true,
+      allowSound: true,
+      showNumberType: false,
+      maxPower: 4,
+      systemFilter: 'both',  // 'both' | 'sino' | 'native'
+      historyMode: 'limited', // 'limited' | 'all'
+      historyLimit: 100,
+    },
     pool: [],             // active items
     current: null,
-    score: { correct: 0, total: 0 },
+    history: [],          // array of booleans (true = correct)
     answered: false,      // current question already graded
   };
 
   const $ = (id) => document.getElementById(id);
+
+  function computeItemSystems(items) {
+    const map = new Map();
+    for (const item of items) {
+      const sys = new Set();
+      for (const def of Object.values(item.variables)) {
+        if (def && typeof def.system === 'string') sys.add(def.system);
+      }
+      for (const tpl of item.templates) {
+        const strs = [tpl.question];
+        const ans = tpl.answer;
+        if (Array.isArray(ans)) strs.push(...ans);
+        else if (typeof ans === 'string') strs.push(ans);
+        for (const s of strs) {
+          if (typeof s !== 'string') continue;
+          const re = /\|(sino|native|digit)\b/g;
+          let m;
+          while ((m = re.exec(s)) !== null) sys.add(m[1]);
+        }
+      }
+      map.set(item.id, sys);
+    }
+    return map;
+  }
 
   function init() {
     fetch('./number_rules_ko.json?v=20260128b')
@@ -559,11 +592,13 @@
       .then((cfg) => {
         state.config = cfg;
         state.items = flattenConfig(cfg);
+        state.itemSystems = computeItemSystems(state.items);
         state.enabledIds = new Set(state.items.map((i) => i.id));
         loadSettings();
         renderCategoryList();
         bindEvents();
         rebuildPool();
+        updateScoreUI();
         $('loadingState').hidden = true;
         nextQuestion();
       })
@@ -581,6 +616,19 @@
       if (typeof saved.allowSound === 'boolean') state.settings.allowSound = saved.allowSound;
       if (typeof saved.showNumberType === 'boolean') state.settings.showNumberType = saved.showNumberType;
       if (typeof saved.maxPower === 'number') state.settings.maxPower = saved.maxPower;
+      if (saved.systemFilter === 'both' || saved.systemFilter === 'sino' || saved.systemFilter === 'native') {
+        state.settings.systemFilter = saved.systemFilter;
+      }
+      if (saved.historyMode === 'all' || saved.historyMode === 'limited') {
+        state.settings.historyMode = saved.historyMode;
+      }
+      if (typeof saved.historyLimit === 'number' && saved.historyLimit >= 1) {
+        state.settings.historyLimit = Math.min(10000, Math.floor(saved.historyLimit));
+      }
+      if (Array.isArray(saved.history)) {
+        state.history = saved.history.map(Boolean);
+        applyHistoryLimit();
+      }
       if (Array.isArray(saved.enabledIds)) {
         state.enabledIds = new Set(saved.enabledIds.filter((id) => state.items.some((i) => i.id === id)));
         if (state.enabledIds.size === 0) {
@@ -599,10 +647,36 @@
           allowSound: state.settings.allowSound,
           showNumberType: state.settings.showNumberType,
           maxPower: state.settings.maxPower,
+          systemFilter: state.settings.systemFilter,
+          historyMode: state.settings.historyMode,
+          historyLimit: state.settings.historyLimit,
           enabledIds: Array.from(state.enabledIds),
+          history: state.history,
         })
       );
     } catch (_) {}
+  }
+
+  function applyHistoryLimit() {
+    if (state.settings.historyMode === 'limited') {
+      const n = Math.max(1, parseInt(state.settings.historyLimit, 10) || 1);
+      if (state.history.length > n) {
+        state.history.splice(0, state.history.length - n);
+      }
+    }
+  }
+
+  function recordResult(ok) {
+    state.history.push(!!ok);
+    applyHistoryLimit();
+    saveSettings();
+    updateScoreUI();
+  }
+
+  function clearProgress() {
+    state.history = [];
+    saveSettings();
+    updateScoreUI();
   }
 
   function renderCategoryList() {
@@ -732,7 +806,13 @@
   }
 
   function rebuildPool() {
-    state.pool = state.items.filter((i) => state.enabledIds.has(i.id));
+    const filter = state.settings.systemFilter;
+    state.pool = state.items.filter((i) => {
+      if (!state.enabledIds.has(i.id)) return false;
+      if (filter === 'both') return true;
+      const sys = state.itemSystems.get(i.id) || new Set();
+      return sys.has(filter);
+    });
   }
 
   function nextQuestion() {
@@ -809,12 +889,14 @@
   }
 
   function updateScoreUI() {
-    $('scoreCorrect').textContent = state.score.correct;
-    $('scoreTotal').textContent = state.score.total;
-    if (state.score.total === 0) {
+    const total = state.history.length;
+    const correct = state.history.reduce((acc, v) => acc + (v ? 1 : 0), 0);
+    $('scoreCorrect').textContent = correct;
+    $('scoreTotal').textContent = total;
+    if (total === 0) {
       $('scoreAcc').textContent = '—';
     } else {
-      const pct = Math.round((state.score.correct / state.score.total) * 100);
+      const pct = Math.round((correct / total) * 100);
       $('scoreAcc').textContent = pct + '%';
     }
   }
@@ -838,9 +920,7 @@
     const input = $('answerInput').value;
     if (!input.trim()) return;
     const ok = checkAnswer(input, state.current.accepted);
-    state.score.total++;
-    if (ok) state.score.correct++;
-    updateScoreUI();
+    recordResult(ok);
     state.answered = true;
     showFeedback(ok ? 'correct' : 'incorrect', input);
     if (ok) {

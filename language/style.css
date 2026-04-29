@@ -192,6 +192,53 @@ html, body {
 }
 .cat-row input { cursor: pointer; }
 
+.number-system-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.filter-label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-right: 2px;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+}
+.filter-pill input { margin: 0; cursor: pointer; }
+
+.inline-number {
+  width: 70px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-family: inherit;
+  margin: 0 4px;
+}
+.inline-number:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.full-width-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .toggle-row {
   display: flex;
   align-items: center;
