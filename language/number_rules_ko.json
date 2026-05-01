@@ -12,6 +12,7 @@
             "variables": {
               "hour": { "type": "int", "min": 1, "max": 12, "system": "native" },
               "minute": { "type": "int", "min": 0, "max": 59, "system": "sino", "pad": 2 },
+              "second": { "type": "int", "min": 0, "max": 59, "system": "sino", "pad": 2 },
               "period": {
                 "type": "choice",
                 "values": [
@@ -24,14 +25,16 @@
               {
                 "id": "time_hour_minute",
                 "question": "{hour}:{minute} {period.en}",
-                "answer": "{period.ko} {hour}시 {minute}분"
+                "answer": "{period.ko} {hour}시 {minute}분 {second}초"
               },
               {
                 "id": "time_half",
                 "question": "{hour}:30 {period.en}",
                 "answer": ["{period.ko} {hour}시 반", "{period.ko} {hour}시 삼십분"]
               }
-            ]
+            ], 
+            "explanation": "AM is 오전. PM is 오후. Hours use native; minutes & seconds use sino.",
+            "example": "5:32:30 AM -> 오전 다섯 시 삼십이 분 삼십 초."
           },
           {
             "id": "date_full",
@@ -90,7 +93,9 @@
                 "question": "{weekday.en}, {month} {day}, {year}",
                 "answer": "{weekday.ko} {year} 년 {month} {day} 일"
               }
-            ]
+            ],
+            "explanation": "Dates use Sino numbers for year, month, and day. Days of the week are separate words, each ending in 요일.",
+            "example": "Sunday, May 3, 2026 -> 일요일 이천이십육 년 오 월 삼 일."
           }
         ]
       },
@@ -111,27 +116,32 @@
                 "question": "{age} years old",
                 "answer": ["{age} 살", "{age|sino} 세"]
               }
-            ]
+            ],
+            "explanation": "Age has two forms - native numbers before 살, or sino numbers before 세.",
+            "example": "24 years old -> 스물네 살 or 스물네 세."
           },
           {
             "id": "birth_year",
             "label": "Birth year / 년생",
             "variables": {
               "year": { "type": "int", "min": 1900, "max": 2025, "system": "sino" },
-              "shortYearDigit": { "type": "int", "min": 0, "max": 9, "system": "digit" }
+              "shortYearDigit": { "type": "int", "min": 0, "max": 9, "system": "digit" },
+              "shortYearDigit2": { "type": "int", "min": 0, "max": 9, "system": "digit" }
             },
             "templates": [
               {
                 "id": "birth_year_full",
                 "question": "born in {year} (full year)",
-                "answer": "{year} 년생"
+                "answer": "{year|digit} 년생"
               },
               {
                 "id": "birth_year_short",
-                "question": "born in {shortYearDigit}{shortYearDigit}",
-                "answer": "{shortYearDigit}{shortYearDigit} 년생"
+                "question": "born in {shortYearDigit}{shortYearDigit2}",
+                "answer": "{shortYearDigit}{shortYearDigit2} 년생"
               }
-            ]
+            ],
+            "explanation": "Birth years can either use sino or digit-style reading, usually expressed casually as the last two digits.",
+            "example": "born in 98 -> 구팔 년생."
           }
         ]
       },
@@ -153,7 +163,9 @@
             "question": "₩{amount}",
             "answer": "{amount} 원"
           }
-        ]
+        ],
+        "explanation": "Korean won uses Sino numbers before 원.",
+        "example": "₩35,000 -> 삼만 오천 원."
       },
   
       {
@@ -171,10 +183,12 @@
             "templates": [
               {
                 "id": "korean_mobile",
-                "question": "{prefix}-{middle}-{last}",
-                "answer": "{prefix} {middle} {last}"
+                "question": "010-{middle}-{last}",
+                "answer": ["010 {middle} {last}", "010-{middle}-{last}"]
               }
-            ]
+            ],
+            "explanation": "Korean phone numbers are read digit by digit, always starting with 010.",
+            "example": "010-1234-5678 -> 공일공 일이삼사 오육칠팔."        
           },
           {
             "id": "western_phone",
@@ -190,7 +204,9 @@
                 "question": "{area}-{middle}-{last}",
                 "answer": "{area} {middle} {last}"
               }
-            ]
+            ],
+            "explanation": "Western phone numbers are read digit by digit.",
+            "example": "212-555-0198 -> 이일이 오오오 공일구팔."        
           }
         ]
       },
@@ -690,7 +706,7 @@
               {
                 "id": "times_beon",
                 "question": "{count} times",
-                "answer": "{count} 번"
+                "answer": ["{count} 번", "{count|sino} 번"]
               }
             ]
           },
