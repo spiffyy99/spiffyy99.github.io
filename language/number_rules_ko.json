@@ -691,7 +691,6 @@
           }
         ]
       },
-  
       {
         "id": "rankings_times",
         "label": "Rankings / Times",
@@ -981,26 +980,65 @@
           {
             "id": "at_least",
             "question": "at least {n}",
-            "answer": "{n} 이상",
-            "accepted": ["{n} 이상"]
+            "answer": "{n} 이상"
           },
           {
             "id": "at_most",
             "question": "at most {n}",
-            "answer": "{n} 이하",
-            "accepted": ["{n} 이하"]
+            "answer": "{n} 이하"
           },
           {
             "id": "more_than",
-            "question": "more than {n}",
-            "answer": "{n} 초과",
-            "accepted": ["{n} 초과"]
+            "question": "more than {n} (strict)",
+            "answer": "{n} 초과"
           },
           {
             "id": "less_than",
-            "question": "less than {n}",
-            "answer": "{n} 미만",
-            "accepted": ["{n} 미만"]
+            "question": "less than {n} (strict)",
+            "answer": "{n} 미만"
+          }
+        ]
+      },
+      {
+        "id": "time_particles",
+        "label": "Time particles",
+        "variables": {
+          "n": { "type": "int", "min": 2, "max": 120},
+          "unit": {
+            "type": "choice",
+            "values": [
+              { "en": "days", "ko": "일", "system": "native" },
+              { "en": "hours", "ko": "시간", "system": "native" },
+              { "en": "minutes", "ko": "분", "system": "sino" },
+              { "en": "seconds", "ko": "초", "system": "sino" }
+            ]
+          } 
+        },
+        "templates": [
+          {
+            "id": "after",
+            "question": "{n} {unit.en} later",
+            "answer": ["{n} {unit.ko} 뒤", "{n} {unit.ko} 후"]
+          },
+          {
+            "id": "ago_before",
+            "question": "{n} {unit.en} ago",
+            "answer": ["{n} {unit.ko} 전", "{n} {unit.ko} 앞"]
+          },
+          {
+            "id": "within",
+            "question": "within {n} (i.e. i must do it within {n} {unit.en})",
+            "answer": ["{n} {unit.en} 안에", "{n} {unit.en} 속에"]
+          },
+          {
+            "id": "between",
+            "question": "between {a} and {b}",
+            "answer": ["{a}와 {b} 사이", "{a}부터 {b} 사이"]
+          },
+          {
+            "id": "in_time_result",
+            "question": "in {n} {unit.en} (i.e. i did it in {n} {unit.en})",
+            "answer": "{n} {unit.ko} 만에"
           }
         ]
       }
