@@ -268,7 +268,9 @@
             "question": "{buildingNumber} {roadName.en}",
             "answer": ["{roadName.ko} {buildingNumber}번길", "{roadName.ko} {buildingNumber}번", "{roadName.ko} {buildingNumber}번지"]
           }
-        ]
+        ],
+        "explanation": "Korean addresses put the road name first, then the building number + 번길. Apartment addresses also add 동 (building block) and 호 (unit number). All numbers use sino.",
+        "example": "123 Teheran-ro, Building 5, Unit 402 → 테헤란로 123번길 5동 402호."
       },
       {
         "id": "static_measurements",
@@ -294,7 +296,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Height units are transliterated: cm → 센티미터, ft → 피트, in → 인치. Numbers use sino.",
+            "example": "175 cm → 백칠십오 센티미터."
           },
           {
             "id": "weight",
@@ -317,7 +321,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Weight units are transliterated: kg → 킬로그램, g → 그램, lb → 파운드, oz → 온스. Numbers use sino.",
+            "example": "65 kg → 육십오 킬로그램."
           },
           {
             "id": "temperature",
@@ -345,7 +351,9 @@
                 "question": "{sign.en}{value}{unit.en}",
                 "answer": "{sign.ko} {value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Both °C and °F use 도. Negative temperatures use 영하 (below zero) before the number. Positive temperatures can say 영상 (above zero) or nothing — both are correct.",
+            "example": "-5°C → 영하 오 도. 25°C → 이십오 도 or 영상 이십오 도."
           },
           {
             "id": "volume",
@@ -371,7 +379,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Volume units are transliterated: mL → 밀리리터, L → 리터, cups → 컵, tbsp → 큰술, tsp → 작은술. Numbers use sino.",
+            "example": "350 mL → 삼백오십 밀리리터."
           },
           {
             "id": "data_volume",
@@ -394,7 +404,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Storage units are transliterated: KB → 킬로바이트, MB → 메가바이트, GB → 기가바이트, TB → 테라바이트. Numbers use sino.",
+            "example": "32 GB → 삼십이 기가바이트."
           },
           {
             "id": "distance",
@@ -421,7 +433,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Distance units are transliterated: mm → 밀리미터, cm → 센티미터, m → 미터, km → 킬로미터, in → 인치, ft → 피트, mi → 마일. Numbers use sino.",
+            "example": "5 km → 오 킬로미터."
           },
           {
             "id": "area",
@@ -444,7 +458,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{value} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Square units use 제곱 before the transliterated unit: m² → 제곱미터, km² → 제곱킬로미터. Numbers use sino.",
+            "example": "84 m² → 팔십사 제곱미터."
           }
         ]
       },
@@ -473,7 +489,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{unit.koTemplate}"
               }
-            ]
+            ],
+            "explanation": "Speed uses 시속 (per hour) before km/h and mph, and 초속 (per second) before m/s. The number comes between the rate word and the unit.",
+            "example": "60 km/h → 시속 육십 킬로미터."
           },
           {
             "id": "data_rate",
@@ -495,7 +513,9 @@
                 "question": "{value} {unit.en}",
                 "answer": "{unit.koTemplate}"
               }
-            ]
+            ],
+            "explanation": "Data rate uses 초당 (per second) before the transliterated unit. Mbps → 메가비트, MB/s → 메가바이트, GB/s → 기가바이트. Numbers use sino.",
+            "example": "100 Mbps → 초당 백 메가비트."
           },
           {
             "id": "price_per_unit",
@@ -508,8 +528,8 @@
                   { "en": "per person", "koTemplate": "한 명당 {amount} 원" },
                   { "en": "per item", "koTemplate": "한 개당 {amount} 원" },
                   { "en": "per bottle", "koTemplate": "한 병당 {amount} 원" },
-                  { "en": "per hour", "koTemplate": "한 시간당 {amount} 원" },
-                  { "en": "per day", "koTemplate": "하루당 {amount} 원" }
+                  { "en": "per hour", "koTemplate": ["한 시간당 {amount} 원", "한 시간에 {amount} 원"] },
+                  { "en": "per day", "koTemplate": ["하루당 {amount} 원", "하루에 {amount} 원"] }
                 ]
               }
             },
@@ -519,7 +539,9 @@
                 "question": "₩{amount} {unit.en}",
                 "answer": "{unit.koTemplate}"
               }
-            ]
+            ],
+            "explanation": "당 means 'per' and attaches to the unit: 명당 (per person), 개당 (per item), 시간당 (per hour). For time units, 에 is also natural: 한 시간에, 하루에. Amount uses sino numbers + 원.",
+            "example": "₩5,000 per person → 한 명당 오천 원."
           },
           {
             "id": "frequency_per_time",
@@ -542,7 +564,9 @@
                 "question": "{count} times {unit.en}",
                 "answer": "{unit.koTemplate}"
               }
-            ]
+            ],
+            "explanation": "[Time period]에 [native count] 번 means '[count] times per [period]'. Time words: 하루 (1 day), 일주일 (1 week), 한 달 (1 month), 일 년 (1 year). Counts use native numbers.",
+            "example": "3 times per week → 일주일에 세 번."
           }
         ]
       },
@@ -553,6 +577,8 @@
           {
             "id": "counters",
             "label": "Counters",
+            "explanation": "Native numbers come before the counter word. Common counters: 명 (people), 권 (books), 마리 (animals), 병 (bottles), 개 (general items), 장 (flat objects like paper/tickets), 대 (machines/vehicles), 잔 (cups/glasses).",
+            "example": "5 people → 다섯 명. 3 books → 세 권. 2 cats → 두 마리.",
             "variables": {
               "count": { "type": "int", "min": 1, "max": 99, "system": "native" },
               "counter": {
@@ -631,6 +657,8 @@
           {
             "id": "numbered_labels",
             "label": "Numbered Labels",
+            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 번 게이트 (gate), 번 버스 (bus route), 학년 (school grade), 반 (class), 점 (points/score).",
+            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. Grade 3 → 삼 학년.",
             "variables": {
               "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
               "counter": {
@@ -672,7 +700,9 @@
                 "question": "{value}%",
                 "answer": "{value} 퍼센트"
               }
-            ]
+            ],
+            "explanation": "Percentages use 퍼센트 after the sino number. There is no special word for 'percent' — just say the number then 퍼센트.",
+            "example": "75% → 칠십오 퍼센트. 12.5% → 십이 점 오 퍼센트."
           }
         ]
       },
@@ -689,7 +719,9 @@
             "question": "{numerator}/{denominator}",
             "answer": "{denominator} 분의 {numerator}"
           }
-        ]
+        ],
+        "explanation": "Fractions are said denominator-first: [denominator] 분의 [numerator]. Both use sino numbers. 분의 literally means 'parts of'.",
+        "example": "3/4 → 사 분의 삼. 1/2 → 이 분의 일."
       },
       {
         "id": "rankings_times",
@@ -707,7 +739,9 @@
                 "question": "{count} times",
                 "answer": ["{count} 번", "{count|sino} 번"]
               }
-            ]
+            ],
+            "explanation": "번 means 'time(s)' (as in occurrences). Native numbers are more common in speech, but sino numbers are also accepted.",
+            "example": "3 times → 세 번 or 삼 번. 10 times → 열 번 or 십 번."
           },
           {
             "id": "ordinal_beonjjae",
@@ -726,7 +760,9 @@
                 "question": "{position|ord}",
                 "answer": "{position} 번째"
               }
-            ]
+            ],
+            "explanation": "번째 makes ordinal numbers. 1st is always 첫 번째 (special form). All other ordinals use native numbers + 번째.",
+            "example": "1st → 첫 번째. 2nd → 두 번째. 5th → 다섯 번째."
           },
           {
             "id": "ranking_deung",
@@ -740,7 +776,9 @@
                 "question": "{rank|ord} place (in a competition/ranking)",
                 "answer": "{rank} 등"
               }
-            ]
+            ],
+            "explanation": "등 means 'place' or 'rank' in a competition or ordering. Uses sino numbers.",
+            "example": "1st place → 일 등. 3rd place → 삼 등."
           }
         ]
       },
@@ -769,7 +807,9 @@
                 "question": "{count} {unit.en}",
                 "answer": "{count} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Hours use native numbers (한 시간, 두 시간, 세 시간…). Minutes and seconds use sino numbers (십오 분, 삼십 초…).",
+            "example": "2 hours → 두 시간. 45 minutes → 사십오 분. 30 seconds → 삼십 초."
           },
           {
             "id": "day_durations",
@@ -808,7 +848,9 @@
                 "question": "{days} days",
                 "answer": "{days} 일"
               }
-            ]
+            ],
+            "explanation": "Days 1–4 have special native Korean words: 하루 (1 day), 이틀 (2 days), 사흘 (3 days), 나흘 (4 days). From 5 onwards, sino numbers + 일 are used. The native words are still accepted alongside sino forms for 1–4.",
+            "example": "1 day → 하루. 3 days → 사흘 or 삼 일. 7 days → 칠 일."
           },
           {
             "id": "calendar_durations",
@@ -830,7 +872,9 @@
                 "question": "{count} {unit.en}",
                 "answer": "{count} {unit.ko}"
               }
-            ]
+            ],
+            "explanation": "Weeks, months, and years all use sino numbers: 주 (weeks), 개월 (months), 년 (years). Note: 개월 is used for durations; 월 is used for calendar months.",
+            "example": "3 weeks → 삼 주. 6 months → 육 개월. 2 years → 이 년."
           }
         ]
       },
@@ -858,7 +902,9 @@
                 "question": "{floorPrefix.en}{floor}F",
                 "answer": "{floorPrefix.ko} {floor} 층"
               }
-            ]
+            ],
+            "explanation": "층 means 'floor'. Above-ground floors: sino number + 층. Underground floors: 지하 + sino number + 층.",
+            "example": "3F → 삼 층. B2 → 지하 이 층."
           },
           {
             "id": "room_numbers",
@@ -872,7 +918,9 @@
                 "question": "Room {room}",
                 "answer": "{room} 호"
               }
-            ]
+            ],
+            "explanation": "호 means 'room' or 'unit number'. Uses sino numbers read digit by digit for typical room/apartment numbers.",
+            "example": "Room 305 → 삼백오 호. Unit 1402 → 천사백이 호."
           }
         ]
       },
@@ -894,7 +942,9 @@
             "question": "{nights} nights, {days} days",
             "answer": "{nights|ko} 박 {days|ko} 일"
           }
-        ]
+        ],
+        "explanation": "Hotel stays use X 박 Y 일 (X nights, Y days). 박 = nights, 일 = days. The number of days is always nights + 1. Both use sino numbers.",
+        "example": "3 nights, 4 days → 삼 박 사 일. 1 night, 2 days → 일 박 이 일."
       },
       {
         "id": "math",
@@ -915,7 +965,9 @@
                 "question": "{a} + {b} = {c}",
                 "answer": "{a} 더하기 {b}{particle} {c}"
               }
-            ]
+            ],
+            "explanation": "더하기 means 'plus'. Structure: [A] 더하기 [B]는/은 [C]. 는 follows vowel-ending syllables; 은 follows consonant-ending syllables — the topic particle attaches to B.",
+            "example": "3 + 5 = 8 → 삼 더하기 오는 팔."
           },
           {
             "id": "subtraction",
@@ -932,7 +984,9 @@
                 "question": "{a} - {b} = {c}",
                 "answer": "{a} 빼기 {b}{particle} {c}"
               }
-            ]
+            ],
+            "explanation": "빼기 means 'minus'. Structure: [A] 빼기 [B]는/은 [C]. The topic particle 는/은 attaches to B based on whether B ends in a vowel or consonant.",
+            "example": "10 - 3 = 7 → 십 빼기 삼은 칠."
           },
           {
             "id": "multiplication",
@@ -949,7 +1003,9 @@
                 "question": "{a} × {b} = {c}",
                 "answer": "{a} 곱하기 {b}{particle} {c}"
               }
-            ]
+            ],
+            "explanation": "곱하기 means 'times / multiplied by'. Structure: [A] 곱하기 [B]는/은 [C]. The topic particle 는/은 attaches to B.",
+            "example": "4 × 7 = 28 → 사 곱하기 칠은 이십팔."
           },
           {
             "id": "division",
@@ -966,7 +1022,9 @@
                 "question": "{dividend} ÷ {divisor} = {quotient}",
                 "answer": "{dividend} 나누기 {divisor}{particle} {quotient}"
               }
-            ]
+            ],
+            "explanation": "나누기 means 'divided by'. Structure: [A] 나누기 [B]는/은 [C]. The topic particle 는/은 attaches to the divisor B.",
+            "example": "12 ÷ 3 = 4 → 십이 나누기 삼은 사."
           }
         ]
       },
@@ -997,7 +1055,9 @@
             "question": "less than {n} (strict)",
             "answer": "{n} 미만"
           }
-        ]
+        ],
+        "explanation": "Four range words: 이상 (≥ at least / or more), 이하 (≤ at most / or less), 초과 (> strictly more than), 미만 (< strictly less than). All use sino numbers.",
+        "example": "at least 5 → 오 이상. less than 10 → 십 미만."
       },
       {
         "id": "time_particles",
@@ -1040,7 +1100,9 @@
             "question": "in {n} {unit.en} (i.e. i did it in {n} {unit.en})",
             "answer": "{n} {unit.ko} 만에"
           }
-        ]
+        ],
+        "explanation": "Time-relation particles: 뒤/후 (after/later), 전/앞 (ago/before), 안에/속에 (within), 만에 (accomplished in a duration of time). Days/hours use native numbers; minutes/seconds use sino.",
+        "example": "3 hours later → 세 시간 뒤 or 세 시간 후. 30 minutes ago → 삼십 분 전."
       }
     ]
   }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>한국어 숫자 연습 · Korean Number Practice</title>
-  <link rel="stylesheet" href="./style.css?v=20260429a" />
+  <link rel="stylesheet" href="./style.css?v=20260502a" />
 </head>
 <body>
   <header class="topbar">
@@ -97,7 +97,15 @@
     <section id="gameArea" class="game-area" hidden>
       <div class="meta-row">
         <span id="categoryBadge" class="badge"></span>
-        <span id="systemBadges" class="system-badges"></span>
+        <div class="meta-right">
+          <span id="systemBadges" class="system-badges"></span>
+          <button id="helpBtn" class="help-btn" type="button" aria-pressed="false" hidden title="Show explanation">?</button>
+        </div>
+      </div>
+
+      <div id="helpPanel" class="help-panel" hidden>
+        <p id="helpExplanation" class="help-explanation"></p>
+        <p id="helpExample" class="help-example"></p>
       </div>
 
       <div class="question-card">
@@ -138,6 +146,6 @@
     </div>
   </main>
 
-  <script src="./app.js?v=20260429a"></script>
+  <script src="./app.js?v=20260502a"></script>
 </body>
 </html>

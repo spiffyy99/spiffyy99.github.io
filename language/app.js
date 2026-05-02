@@ -186,6 +186,8 @@
             subcatLabel: sub.label,
             variables: sub.variables || {},
             templates: sub.templates || [],
+            explanation: sub.explanation || '',
+            example: sub.example || '',
           });
         }
       } else {
@@ -197,6 +199,8 @@
           subcatLabel: cat.label,
           variables: cat.variables || {},
           templates: cat.templates || [],
+          explanation: cat.explanation || '',
+          example: cat.example || '',
         });
       }
     }
@@ -252,12 +256,18 @@
         : choice.ko !== undefined
           ? [choice.ko]
           : [];
+      const koTemplateAlts = Array.isArray(choice.koTemplate)
+        ? choice.koTemplate.slice()
+        : choice.koTemplate !== undefined
+          ? [choice.koTemplate]
+          : [];
       return {
         kind: 'choice',
         en: choice.en,
         koAlternatives: koList,
         examples: choice.examples,
-        koTemplate: choice.koTemplate,
+        koTemplate: koTemplateAlts[0],      // backward-compat single value
+        koTemplateAlts,
         choiceSystem: choice.system,
       };
     }
@@ -423,9 +433,9 @@
     });
   }
 
-  // For answer side: produce one rendered string given a koOverride map for choice vars.
-  // Choice variables default to the picked first alternative; koOverride can replace.
-  function renderAnswerTemplate(tpl, values, koOverride = {}) {
+  // For answer side: produce one rendered string given a koOverride map for choice vars
+  // and an optional koTemplateOverride map for koTemplate alternatives.
+  function renderAnswerTemplate(tpl, values, koOverride = {}, koTemplateOverride = {}) {
     return tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
       const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
@@ -449,7 +459,12 @@
             : v.koAlternatives[0] || '';
         }
         if (field === 'en') return v.en !== undefined ? v.en : '';
-        if (field === 'koTemplate') return renderKoTemplateString(v.koTemplate || '', values);
+        if (field === 'koTemplate') {
+          const tplStr = koTemplateOverride[varName] !== undefined
+            ? koTemplateOverride[varName]
+            : (v.koTemplate || '');
+          return renderKoTemplateString(tplStr, values);
+        }
         if (field === 'examples') {
           return Array.isArray(v.examples) && v.examples.length > 0 ? pick(v.examples) : '';
         }
@@ -458,35 +473,47 @@
     });
   }
 
-  // Cross-product expansion: template alternatives × per-variable ko alternatives.
+  // Cross-product expansion: template alternatives × per-variable ko alternatives
+  // × per-variable koTemplate alternatives.
   function expandAcceptedAnswers(template, values) {
     const tplList = Array.isArray(template.answer) ? template.answer : [template.answer];
 
-    // Collect choice variables with multiple ko alternatives.
-    const multi = [];
+    // Collect choice variables with multiple ko or koTemplate alternatives.
+    const koMulti = [];
+    const ktMulti = [];
     for (const [name, v] of Object.entries(values)) {
-      if (v.kind === 'choice' && v.koAlternatives.length > 1) {
-        multi.push({ name, alts: v.koAlternatives });
-      }
+      if (v.kind !== 'choice') continue;
+      if (v.koAlternatives.length > 1) koMulti.push({ name, alts: v.koAlternatives });
+      if (v.koTemplateAlts && v.koTemplateAlts.length > 1) ktMulti.push({ name, alts: v.koTemplateAlts });
     }
 
-    // Build override combos
-    let combos = [{}];
-    for (const m of multi) {
+    // Build ko override combos
+    let koCombos = [{}];
+    for (const m of koMulti) {
       const next = [];
-      for (const c of combos) {
-        for (const alt of m.alts) {
-          next.push({ ...c, [m.name]: alt });
-        }
+      for (const c of koCombos) {
+        for (const alt of m.alts) next.push({ ...c, [m.name]: alt });
       }
-      combos = next;
+      koCombos = next;
+    }
+
+    // Build koTemplate override combos
+    let ktCombos = [{}];
+    for (const m of ktMulti) {
+      const next = [];
+      for (const c of ktCombos) {
+        for (const alt of m.alts) next.push({ ...c, [m.name]: alt });
+      }
+      ktCombos = next;
     }
 
     const out = new Set();
     for (const tpl of tplList) {
-      for (const combo of combos) {
-        const rendered = renderAnswerTemplate(tpl, values, combo);
-        out.add(cleanWhitespace(rendered));
+      for (const koC of koCombos) {
+        for (const ktC of ktCombos) {
+          const rendered = renderAnswerTemplate(tpl, values, koC, ktC);
+          out.add(cleanWhitespace(rendered));
+        }
       }
     }
     return Array.from(out);
@@ -512,6 +539,8 @@
       question,
       accepted,
       systems: systemsUsed,
+      explanation: item.explanation || '',
+      example: item.example || '',
     };
   }
 
@@ -650,7 +679,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260429a')
+    fetch('./number_rules_ko.json?v=20260502a')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
@@ -922,7 +951,20 @@
         tag.className = `sys-badge sys-${sys}`;
         tag.textContent = sys;
         sb.appendChild(tag);
-      }    
+      }
+    }
+
+    const helpBtn = $('helpBtn');
+    const helpPanel = $('helpPanel');
+    if (q.explanation) {
+      helpBtn.hidden = false;
+      helpPanel.hidden = true;   // collapse on new question
+      helpBtn.setAttribute('aria-pressed', 'false');
+      $('helpExplanation').textContent = q.explanation;
+      $('helpExample').textContent = q.example ? '例 ' + q.example : '';
+    } else {
+      helpBtn.hidden = true;
+      helpPanel.hidden = true;
     }
   }
 
@@ -1099,6 +1141,14 @@
   }
 
   function bindEvents() {
+    $('helpBtn').addEventListener('click', () => {
+      const btn = $('helpBtn');
+      const panel = $('helpPanel');
+      const open = panel.hidden;
+      panel.hidden = !open;
+      btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    });
+
     $('settingsToggle').addEventListener('click', () => {
       const p = $('settingsPanel');
       const willOpen = p.hidden;
