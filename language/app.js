@@ -961,7 +961,7 @@
       helpPanel.hidden = true;   // collapse on new question
       helpBtn.setAttribute('aria-pressed', 'false');
       $('helpExplanation').textContent = q.explanation;
-      $('helpExample').textContent = q.example ? '例 ' + q.example : '';
+      $('helpExample').textContent = q.example ? q.example : '';
     } else {
       helpBtn.hidden = true;
       helpPanel.hidden = true;
