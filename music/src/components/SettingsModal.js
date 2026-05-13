@@ -7,7 +7,12 @@ const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
 const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, showScaleTypePool = true }) => {
   if (!isOpen) return null;
 
-  const { enabledScaleTypes = ['major'], includeBorrowed = false, include7ths = false } = settings;
+  const {
+    enabledScaleTypes = ['major'],
+    includeBorrowed = false,
+    include7ths = false,
+    guessScaleSubmode = 'chords'
+  } = settings;
 
   const majorEnabled = enabledScaleTypes.includes('major');
   const naturalMinorEnabled = enabledScaleTypes.includes('naturalMinor');
@@ -144,8 +149,42 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* 7th Chords - For number-to-chord and guess-scale modes */}
-          {(mode === 'number-to-chord' || mode === 'guess-scale') && (
+          {/* Clue Type toggle — only for guess-scale mode */}
+          {mode === 'guess-scale' && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <h4 className="font-bold text-[#1A1A1A] mb-1">Clue Type</h4>
+              <p className="text-xs text-[#9CA3AF] mb-3">What you see as the clue each round</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  data-testid="settings-clue-chords"
+                  onClick={() => onSettingsChange({ guessScaleSubmode: 'chords' })}
+                  className={`p-3 border-2 rounded-sm text-left transition-all ${
+                    guessScaleSubmode !== 'notes'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-[#1A1A1A]">Chords</div>
+                  <div className="text-xs text-[#9CA3AF]">Diatonic chord names</div>
+                </button>
+                <button
+                  data-testid="settings-clue-notes"
+                  onClick={() => onSettingsChange({ guessScaleSubmode: 'notes' })}
+                  className={`p-3 border-2 rounded-sm text-left transition-all ${
+                    guessScaleSubmode === 'notes'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-[#1A1A1A]">Notes</div>
+                  <div className="text-xs text-[#9CA3AF]">Individual scale notes</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 7th Chords - For number-to-chord, and guess-scale in chords sub-mode */}
+          {(mode === 'number-to-chord' || (mode === 'guess-scale' && guessScaleSubmode !== 'notes')) && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>

@@ -20,6 +20,7 @@ import {
   generateIntervalTransposition,
   generateRelativeIntervalQuestion,
   generateGuessScaleQuestion,
+  generateGuessScaleNotesQuestion,
   buildChordDisplay,
   formatRomanNumeral,
 } from '../utils/chordLogic';
@@ -51,9 +52,14 @@ const Game = () => {
   const [include7ths, setInclude7ths] = useState(config.include7ths || false);
   const include7thsRef = useRef(config.include7ths || false);
 
+  // guess-scale sub-mode: 'chords' (default) or 'notes'
+  const [guessScaleSubmode, setGuessScaleSubmode] = useState(config.guessScaleSubmode || 'chords');
+  const guessScaleSubmodeRef = useRef(config.guessScaleSubmode || 'chords');
+
   useEffect(() => { enabledScaleTypesRef.current = enabledScaleTypes; }, [enabledScaleTypes]);
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
   useEffect(() => { include7thsRef.current = include7ths; }, [include7ths]);
+  useEffect(() => { guessScaleSubmodeRef.current = guessScaleSubmode; }, [guessScaleSubmode]);
 
   // Quality + note/degree: both start unset; answering completes when both are chosen (any order)
   const [selectedQuality, setSelectedQuality] = useState(null);
@@ -143,6 +149,10 @@ const Game = () => {
       return { ...generateRandomNotePair(), type: 'interval' };
     }
     if (config.mode === 'guess-scale') {
+      const submode = guessScaleSubmodeRef.current || 'chords';
+      if (submode === 'notes') {
+        return generateGuessScaleNotesQuestion(scaleTypes);
+      }
       return generateGuessScaleQuestion(scaleTypes, sevenths);
     }
     if (config.mode === 'number-to-chord') {
@@ -232,7 +242,7 @@ const Game = () => {
     }
     if (q.type === 'interval' || q.type === 'interval-relative') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
-    if (q.type === 'guess-scale') return q.correctScale?.rootNote || '';
+    if (q.type === 'guess-scale' || q.type === 'guess-scale-notes') return q.correctScale?.rootNote || '';
     return '';
   };
 
@@ -315,7 +325,7 @@ const Game = () => {
   const handleScaleRootAnswer = (noteIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
-    if (!q || q.type !== 'guess-scale') return;
+    if (!q || (q.type !== 'guess-scale' && q.type !== 'guess-scale-notes')) return;
     const selectedNote = ALL_NOTES[noteIndex];
     const isCorrect = selectedNote === q.correctScale?.rootNote;
     submitAnswer(isCorrect);
@@ -366,13 +376,29 @@ const Game = () => {
 
   // Handle settings changes - FIX: regenerate question when scale type changes in preselected mode
   const handleSettingsChange = (newSettings) => {
+    if ('guessScaleSubmode' in newSettings) {
+      setGuessScaleSubmode(newSettings.guessScaleSubmode);
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+        const scaleTypes = enabledScaleTypesRef.current;
+        const sevenths = include7thsRef.current;
+        const newQuestion = newSettings.guessScaleSubmode === 'notes'
+          ? generateGuessScaleNotesQuestion(scaleTypes)
+          : generateGuessScaleQuestion(scaleTypes, sevenths);
+        if (newQuestion) {
+          setGameState(prev => ({ ...prev, currentQuestion: newQuestion, feedback: null }));
+        }
+      }
+    }
     if ('enabledScaleTypes' in newSettings) {
       setEnabledScaleTypes(newSettings.enabledScaleTypes);
       
       // For guess-scale mode, regenerate when scale types change (untimed only)
       if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
         const sevenths = include7thsRef.current;
-        const newQuestion = generateGuessScaleQuestion(newSettings.enabledScaleTypes, sevenths);
+        const submode = guessScaleSubmodeRef.current;
+        const newQuestion = submode === 'notes'
+          ? generateGuessScaleNotesQuestion(newSettings.enabledScaleTypes)
+          : generateGuessScaleQuestion(newSettings.enabledScaleTypes, sevenths);
         if (newQuestion) {
           setGameState(prev => ({
             ...prev,
@@ -417,8 +443,8 @@ const Game = () => {
     if ('include7ths' in newSettings) {
       setInclude7ths(newSettings.include7ths);
       
-      // For guess-scale mode, regenerate when 7ths setting changes (untimed only)
-      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+      // For guess-scale mode (chords only), regenerate when 7ths setting changes (untimed only)
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed' && guessScaleSubmodeRef.current !== 'notes') {
         const scaleTypes = enabledScaleTypesRef.current;
         const newQuestion = generateGuessScaleQuestion(scaleTypes, newSettings.include7ths);
         if (newQuestion) {
@@ -691,7 +717,7 @@ const Game = () => {
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
-             config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale:` :
+             config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale — ${q?.type === 'guess-scale-notes' ? 'identify the root from these notes' : 'identify the root from these chords'}:` :
              'Transpose this chord'}
           </p>
           <div
@@ -710,13 +736,20 @@ const Game = () => {
                 <div className="text-xl font-medium text-[#002FA7] mb-1">{q.direction === 'up' ? '\u2191 UP' : '\u2193 DOWN'}</div>
                 <div className="text-lg font-medium text-[#9CA3AF]">{q.intervalFullName}</div>
               </div>
-            ) : q.type === 'guess-scale' ? (
+            ) : (q.type === 'guess-scale' || q.type === 'guess-scale-notes') ? (
               <div className="flex flex-wrap justify-center gap-3 md:gap-4 px-4">
-                {q.chords.map((chord, idx) => (
-                  <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
-                    {chord.display}
-                  </span>
-                ))}
+                {q.type === 'guess-scale-notes'
+                  ? q.notes.map((note, idx) => (
+                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A] px-2 py-1 border-2 border-[#002FA7]/20 rounded-sm bg-[#002FA7]/5">
+                        {note}
+                      </span>
+                    ))
+                  : q.chords.map((chord, idx) => (
+                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
+                        {chord.display}
+                      </span>
+                    ))
+                }
               </div>
             ) : (
               <span className={`${questionTextClass(getQuestionText())} font-bold text-[#1A1A1A]`}>
@@ -883,7 +916,7 @@ const Game = () => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={{ enabledScaleTypes, includeBorrowed, include7ths }}
+        settings={{ enabledScaleTypes, includeBorrowed, include7ths, guessScaleSubmode }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
         showScaleTypePool={

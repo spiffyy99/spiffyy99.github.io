@@ -474,6 +474,90 @@ export const generateGuessScaleQuestion = (enabledScaleTypes, include7ths = fals
   };
 };
 
+// ===== GUESS THE SCALE (NOTES) LOGIC =====
+
+// Return all combinations of `size` elements chosen from `arr`.
+const getCombinations = (arr, size) => {
+  if (size === 0) return [[]];
+  if (arr.length < size) return [];
+  const [first, ...rest] = arr;
+  const withFirst = getCombinations(rest, size - 1).map(c => [first, ...c]);
+  return [...withFirst, ...getCombinations(rest, size)];
+};
+
+// Fisher-Yates in-place shuffle (returns the array).
+const shuffleInPlace = (arr) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// Generate a "Guess the Scale" question using individual notes instead of chords.
+//
+// Strategy: show the MINIMUM number of notes from the scale such that, given
+// the scale type (which the player already sees), only ONE root is consistent
+// with those notes.  We try all combinations of size 1, 2, 3, … until we find
+// a set that uniquely identifies the root, then pick randomly among that size.
+export const generateGuessScaleNotesQuestion = (enabledScaleTypes) => {
+  const scaleTypes = enabledScaleTypes && enabledScaleTypes.length > 0 ? enabledScaleTypes : ['major'];
+  const scaleType = scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+  const rootNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+
+  const scale = SCALE_TYPES[scaleType];
+  if (!scale) return null;
+
+  const rootIndex = ALL_NOTES.indexOf(rootNote);
+
+  // For each of the 12 possible roots, compute the set of note indices in this scale type.
+  const noteSetForRoot = (r) => new Set(scale.intervals.map(i => (r + i) % 12));
+  const allRootSets = Array.from({ length: 12 }, (_, r) => noteSetForRoot(r));
+
+  // Notes (as chromatic indices) of the correct scale.
+  const correctNoteIndices = scale.intervals.map(i => (rootIndex + i) % 12);
+
+  // Find the smallest subset of correctNoteIndices that uniquely identifies rootIndex
+  // among all 12 possible roots for this scale type.
+  let selectedIndices = correctNoteIndices; // safe fallback: show all 7
+
+  outer:
+  for (let size = 1; size <= 7; size++) {
+    const combos = getCombinations(correctNoteIndices, size);
+    shuffleInPlace(combos); // randomize so every session looks different
+    for (const combo of combos) {
+      let matchCount = 0;
+      let matchRoot = -1;
+      for (let r = 0; r < 12; r++) {
+        if (combo.every(n => allRootSets[r].has(n))) {
+          matchCount++;
+          matchRoot = r;
+          if (matchCount > 1) break;
+        }
+      }
+      if (matchCount === 1 && matchRoot === rootIndex) {
+        selectedIndices = combo;
+        break outer;
+      }
+    }
+  }
+
+  // Display notes in ascending chromatic order (C, C#, D, … B) so the
+  // root's position doesn't give away the answer.
+  const sortedIndices = [...selectedIndices].sort((a, b) => a - b);
+
+  return {
+    type: 'guess-scale-notes',
+    notes: sortedIndices.map(i => ALL_NOTES[i]),
+    correctScale: {
+      rootNote,
+      scaleType,
+      name: `${rootNote} ${scale.name}`
+    },
+    correctScaleType: scaleType
+  };
+};
+
 // ===== INTERVAL LOGIC (unchanged) =====
 
 export const INTERVALS = [
