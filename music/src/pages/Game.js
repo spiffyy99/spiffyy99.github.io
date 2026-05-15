@@ -757,7 +757,7 @@ const Game = () => {
               <div className="flex flex-wrap justify-center gap-3 md:gap-4 px-4">
                 {q.type === 'guess-scale-notes'
                   ? q.notes.map((note, idx) => (
-                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A] px-2 py-1 border-2 border-[#002FA7]/20 rounded-sm bg-[#002FA7]/5">
+                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
                         {note}
                       </span>
                     ))

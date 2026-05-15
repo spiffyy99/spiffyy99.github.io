@@ -373,7 +373,7 @@ const Setup = () => {
                     }`}
                   >
                     <div className="font-bold text-[#1A1A1A]">Notes</div>
-                    <div className="text-sm text-[#9CA3AF]">Individual scale notes (minimum needed)</div>
+                    <div className="text-sm text-[#9CA3AF]">Individual scale notes</div>
                   </button>
                 </div>
               </div>
