@@ -150,8 +150,8 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* Secondary Dominant Chords - Only for number-to-chord and chord-to-number */}
-          {(mode === 'number-to-chord' || mode === 'chord-to-number') && (
+          {/* Secondary Dominant Chords - For number-to-chord, chord-to-number, and transposition */}
+          {(mode === 'number-to-chord' || mode === 'chord-to-number' || mode === 'transposition') && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>

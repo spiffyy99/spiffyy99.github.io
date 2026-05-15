@@ -176,11 +176,11 @@ const Game = () => {
       if (config.targetScaleSelection === 'random') {
         const src = randomRoot();
         const tgt = getRandomDifferentRoot(src);
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
       } else {
         const src = config.sourceRoot || 'C';
         const tgt = config.targetRoot || 'D';
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
       }
     }
     return null;
@@ -480,7 +480,7 @@ const Game = () => {
           const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
           const tgt = gameState.targetScale || { rootNote: 'D', scaleType: 'major' };
           const randomScaleType = getRandomScaleType();
-          newQuestion = generateTranspositionQuestion(src.rootNote, randomScaleType, tgt.rootNote, randomScaleType, borrowed, false);
+          newQuestion = generateTranspositionQuestion(src.rootNote, randomScaleType, tgt.rootNote, randomScaleType, borrowed, false, secDom);
         }
         if (newQuestion) {
           setGameState(prev => ({
@@ -537,7 +537,7 @@ const Game = () => {
     if (config.targetScaleSelection !== 'preselected') return;
     const scaleType = getRandomScaleType();
     const tgtRoot = gameState.targetScale?.rootNote || 'D';
-    const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current);
+    const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current, include7thsRef.current, includeSecondaryDominantsRef.current);
     setGameState(prev => ({
       ...prev,
       sourceScale: { rootNote: newRoot, scaleType },
@@ -551,7 +551,7 @@ const Game = () => {
     const srcRoot = gameState.sourceScale?.rootNote || 'C';
     if (newRoot === srcRoot) return; // Prevent setting target same as source
     const scaleType = getRandomScaleType();
-    const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current);
+    const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current, include7thsRef.current, includeSecondaryDominantsRef.current);
     setGameState(prev => ({
       ...prev,
       targetScale: { rootNote: newRoot, scaleType },

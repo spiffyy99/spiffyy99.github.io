@@ -434,10 +434,33 @@ export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false) => {
+export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
-  
+
+  // Secondary dominant (25% chance when enabled and both scale types support it)
+  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(sourceScaleType) && SECONDARY_DOMINANT_SCALES.includes(targetScaleType) && Math.random() < 0.25) {
+    const sourceDoms = getSecondaryDominants(sourceRoot, sourceScaleType);
+    if (sourceDoms.length > 0) {
+      const sourceDom = sourceDoms[Math.floor(Math.random() * sourceDoms.length)];
+      const targetRootIndex = ALL_NOTES.indexOf(targetRoot);
+      const targetScale = SCALE_TYPES[targetScaleType];
+      const targetDomNoteIndex = (targetRootIndex + targetScale.intervals[sourceDom.targetDegreeIndex] + 7) % 12;
+      return {
+        type: 'transposition',
+        sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+        targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+        chordDisplay: buildChordDisplay(ALL_NOTES[sourceDom.noteIndex], 'major'),
+        correctNoteIndex: targetDomNoteIndex,
+        correctQuality: 'major',
+        isSecondaryDominant: true,
+        secondaryDominantLabel: sourceDom.label,
+        isBorrowed: false,
+        is7th: false
+      };
+    }
+  }
+
   if (includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const sourceBorrowed = getBorrowedChord(sourceRoot, def);
