@@ -164,6 +164,104 @@
             ],
             "explanation": "초 = early part of the year, 중 = middle of the year, 말 = late part / end of the year. All attach after 년.",
             "example": "beginning of 2025 → 이천이십오 년 초. end of 2024 → 이천이십사 년 말."
+          },
+          {
+            "id": "week_of_month",
+            "label": "Xth week of a month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              },
+              "x": {
+                "type": "choice",
+                "values": [
+                  { "en": "1st",  "ko": "첫째" },
+                  { "en": "2nd",  "ko": "둘째" },
+                  { "en": "3rd",  "ko": "셋째" },
+                  { "en": "4th",  "ko": "넷째" },
+                  { "en": "5th",  "ko": "다섯째" },
+                  { "en": "last", "ko": "마지막" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "week_of_month",
+                "question": "the {x.en} week of {month.en}",
+                "answer": "{month.ko} {x.ko} 주"
+              }
+            ],
+            "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] 주.",
+            "example": "the 2nd week of March → 삼월 둘째 주. the last week of October → 시월 마지막 주."
+          },
+          {
+            "id": "weekday_of_month",
+            "label": "Xth weekday of a month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              },
+              "x": {
+                "type": "choice",
+                "values": [
+                  { "en": "1st",  "ko": "첫째" },
+                  { "en": "2nd",  "ko": "둘째" },
+                  { "en": "3rd",  "ko": "셋째" },
+                  { "en": "4th",  "ko": "넷째" },
+                  { "en": "5th",  "ko": "다섯째" },
+                  { "en": "last", "ko": "마지막" }
+                ]
+              },
+              "weekday": {
+                "type": "choice",
+                "values": [
+                  { "en": "Monday",    "ko": "월요일" },
+                  { "en": "Tuesday",   "ko": "화요일" },
+                  { "en": "Wednesday", "ko": "수요일" },
+                  { "en": "Thursday",  "ko": "목요일" },
+                  { "en": "Friday",    "ko": "금요일" },
+                  { "en": "Saturday",  "ko": "토요일" },
+                  { "en": "Sunday",    "ko": "일요일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "weekday_of_month",
+                "question": "the {x.en} {weekday.en} of {month.en}",
+                "answer": "{month.ko} {x.ko} {weekday.ko}"
+              }
+            ],
+            "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] [요일].",
+            "example": "the 1st Monday of June → 유월 첫째 월요일. the last Friday of December → 십이월 마지막 금요일."
           }
         ]
       },
