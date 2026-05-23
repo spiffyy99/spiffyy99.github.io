@@ -96,6 +96,74 @@
             ],
             "explanation": "Dates use Sino numbers for year, month, and day. Days of the week are separate words, each ending in 요일.",
             "example": "Sunday, May 3, 2026 -> 일요일 이천이십육 년 오 월 삼 일."
+          },
+          {
+            "id": "month_period",
+            "label": "Beginning / middle / end of month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "beginning_of_month",
+                "question": "beginning of {month.en}",
+                "answer": "{month.ko} 초"
+              },
+              {
+                "id": "middle_of_month",
+                "question": "middle of {month.en}",
+                "answer": "{month.ko} 중"
+              },
+              {
+                "id": "end_of_month",
+                "question": "end of {month.en}",
+                "answer": "{month.ko} 말"
+              }
+            ],
+            "explanation": "초 = beginning (early part), 중 = middle, 말 = end (late part) of a month. Attach directly after the month name.",
+            "example": "end of February → 이월 말. middle of October → 시월 중."
+          },
+          {
+            "id": "year_period",
+            "label": "Beginning / middle / end of year",
+            "variables": {
+              "year": { "type": "int", "min": 1990, "max": 2100, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "beginning_of_year",
+                "question": "beginning of {year}",
+                "answer": "{year} 년 초"
+              },
+              {
+                "id": "middle_of_year",
+                "question": "middle of {year}",
+                "answer": "{year} 년 중"
+              },
+              {
+                "id": "end_of_year",
+                "question": "end of {year}",
+                "answer": "{year} 년 말"
+              }
+            ],
+            "explanation": "초 = early part of the year, 중 = middle of the year, 말 = late part / end of the year. All attach after 년.",
+            "example": "beginning of 2025 → 이천이십오 년 초. end of 2024 → 이천이십사 년 말."
           }
         ]
       },
