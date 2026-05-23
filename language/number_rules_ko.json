@@ -184,7 +184,7 @@
               {
                 "id": "korean_mobile",
                 "question": "010-{middle}-{last}",
-                "answer": ["010 {middle} {last}", "010-{middle}-{last}"]
+                "answer": ["{prefix} {middle} {last}", "{prefix}-{middle}-{last}"]
               }
             ],
             "explanation": "Korean phone numbers are read digit by digit, always starting with 010.",
@@ -1060,6 +1060,23 @@
         "example": "at least 5 → 오 이상. less than 10 → 십 미만."
       },
       {
+        "id": "between",
+        "label": "Between",
+        "variables": {
+          "a": { "type": "int", "min": 1, "max": 100, "system": "sino" },
+          "b": { "type": "int", "min": 1, "max": 100, "system": "sino" }
+        },
+        "templates": [
+          {
+            "id": "between",
+            "question": "between {a} and {b}",
+            "answer": ["{a}와 {b} 사이", "{a}부터 {b} 사이"]
+          }
+        ],
+        "explanation": "사이 means 'between/among'. Use 와 or 부터…사이 to express a range between two numbers.",
+        "example": "between 3 and 7 → 삼과 칠 사이 or 삼부터 칠 사이."
+      },
+      {
         "id": "time_particles",
         "label": "Time particles",
         "variables": {
@@ -1089,11 +1106,6 @@
             "id": "within",
             "question": "within {n} (i.e. i must do it within {n} {unit.en})",
             "answer": ["{n} {unit.en} 안에", "{n} {unit.en} 속에"]
-          },
-          {
-            "id": "between",
-            "question": "between {a} and {b}",
-            "answer": ["{a}와 {b} 사이", "{a}부터 {b} 사이"]
           },
           {
             "id": "in_time_result",
