@@ -189,11 +189,11 @@
               "x": {
                 "type": "choice",
                 "values": [
-                  { "en": "1st",  "ko": "첫째" },
-                  { "en": "2nd",  "ko": "둘째" },
-                  { "en": "3rd",  "ko": "셋째" },
-                  { "en": "4th",  "ko": "넷째" },
-                  { "en": "5th",  "ko": "다섯째" },
+                  { "en": "1st",  "ko": ["첫째", "일"] },
+                  { "en": "2nd",  "ko": ["둘째", "이"] },
+                  { "en": "3rd",  "ko": ["셋째", "삼"] },
+                  { "en": "4th",  "ko": ["넷째", "사"] },
+                  { "en": "5th",  "ko": ["다섯째", "오"] },
                   { "en": "last", "ko": "마지막" }
                 ]
               }
@@ -202,7 +202,7 @@
               {
                 "id": "week_of_month",
                 "question": "the {x.en} week of {month.en}",
-                "answer": "{month.ko} {x.ko} 주"
+                "answer": ["{month.ko} {x.ko} 주", "{month.ko} {x.ko}주차"]
               }
             ],
             "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] 주.",
@@ -232,11 +232,11 @@
               "x": {
                 "type": "choice",
                 "values": [
-                  { "en": "1st",  "ko": "첫째" },
-                  { "en": "2nd",  "ko": "둘째" },
-                  { "en": "3rd",  "ko": "셋째" },
-                  { "en": "4th",  "ko": "넷째" },
-                  { "en": "5th",  "ko": "다섯째" },
+                  { "en": "1st",  "ko": ["첫째", "일"] },
+                  { "en": "2nd",  "ko": ["둘째", "이"] },
+                  { "en": "3rd",  "ko": ["셋째", "삼"] },
+                  { "en": "4th",  "ko": ["넷째", "사"] },
+                  { "en": "5th",  "ko": ["다섯째", "오"] },
                   { "en": "last", "ko": "마지막" }
                 ]
               },
@@ -257,7 +257,7 @@
               {
                 "id": "weekday_of_month",
                 "question": "the {x.en} {weekday.en} of {month.en}",
-                "answer": "{month.ko} {x.ko} {weekday.ko}"
+                "answer": ["{month.ko} {x.ko} {weekday.ko}", "{month.ko} {x.ko}주차 {weekday.ko}"]
               }
             ],
             "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] [요일].",
