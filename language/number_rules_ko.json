@@ -1198,7 +1198,9 @@
         "id": "ranges",
         "label": "More than / Less than",
         "variables": {
-          "n": { "type": "int", "min": 1, "system": "sino" }
+          "n": { "type": "int", "min": 1, "system": "sino" },
+          "a": { "type": "int", "min": 1, "max": 100, "system": "sino" },
+          "b": { "type": "int", "min": 1, "max": 100, "system": "sino" }
         },
         "templates": [
           {
@@ -1220,27 +1222,15 @@
             "id": "less_than",
             "question": "less than {n} (strict)",
             "answer": "{n} 미만"
-          }
-        ],
-        "explanation": "Four range words: 이상 (≥ at least / or more), 이하 (≤ at most / or less), 초과 (> strictly more than), 미만 (< strictly less than). All use sino numbers.",
-        "example": "at least 5 → 오 이상. less than 10 → 십 미만."
-      },
-      {
-        "id": "between",
-        "label": "Between",
-        "variables": {
-          "a": { "type": "int", "min": 1, "max": 100, "system": "sino" },
-          "b": { "type": "int", "min": 1, "max": 100, "system": "sino" }
-        },
-        "templates": [
+          },
           {
             "id": "between",
             "question": "between {a} and {b}",
             "answer": ["{a}와 {b} 사이", "{a}부터 {b} 사이"]
           }
         ],
-        "explanation": "사이 means 'between/among'. Use 와 or 부터…사이 to express a range between two numbers.",
-        "example": "between 3 and 7 → 삼과 칠 사이 or 삼부터 칠 사이."
+        "explanation": "이상 (≥ at least), 이하 (≤ at most), 초과 (> strictly more than), 미만 (< strictly less than), 사이 (between). All use sino numbers.",
+        "example": "at least 5 → 오 이상. less than 10 → 십 미만. between 3 and 7 → 삼과 칠 사이."
       },
       {
         "id": "time_particles",
