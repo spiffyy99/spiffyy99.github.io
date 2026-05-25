@@ -1261,7 +1261,7 @@
           {
             "id": "within",
             "question": "within {n} (i.e. i must do it within {n} {unit.en})",
-            "answer": ["{n} {unit.en} 안에", "{n} {unit.en} 속에"]
+            "answer": ["{n} {unit.ko} 안에", "{n} {unit.ko} 속에"]
           },
           {
             "id": "in_time_result",
