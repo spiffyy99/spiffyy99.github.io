@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vibe Travel Itinerary</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="./style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   </head>
   <body>
     <main class="page">
@@ -55,14 +57,12 @@
               </div>
             </div>
 
-            <div class="field" id="startDateField">
-              <label for="startDate">Earliest start date</label>
-              <input id="startDate" name="startDate" type="date" />
-            </div>
-
-            <div class="field" id="endDateField">
-              <label for="endDate">Latest end date</label>
-              <input id="endDate" name="endDate" type="date" />
+            <div class="field" id="dateRangeField">
+              <label for="dateRange">Date range</label>
+              <input id="dateRange" name="dateRange" type="text" placeholder="Select date range" readonly />
+              <!-- Hidden inputs to store actual values for form processing -->
+              <input id="startDate" name="startDate" type="hidden" />
+              <input id="endDate" name="endDate" type="hidden" />
             </div>
 
             <div class="field" id="dowDirectionField" style="display: none;">

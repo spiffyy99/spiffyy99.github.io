@@ -2597,13 +2597,14 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     });
     
     // Clear cache button
-    //const clearCacheBtn = $("clearCacheBtn");
-    //if (clearCacheBtn) {
-    //  clearCacheBtn.addEventListener("click", () => {
-    //    clearAllCaches();
-    //    alert("Cache cleared! Refresh the page for a fresh start.");
-    //  });
-    //}
+    // Clear cache button
+    const clearCacheBtn = $("clearCacheBtn");
+    if (clearCacheBtn) {
+      clearCacheBtn.addEventListener("click", () => {
+        clearAllCaches();
+        alert("Cache cleared! Refresh the page for a fresh start.");
+      });
+    }
     
     // Set default dates
     const today = new Date();
@@ -2614,15 +2615,56 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     
     const startDateInput = $("startDate");
     const endDateInput = $("endDate");
-    startDateInput.min = todayISO;
-    endDateInput.min = todayISO;
-    startDateInput.value = todayISO;
-    endDateInput.value = oneMonthISO;
+    const dateRangeInput = $("dateRange");
+    
+    // Initialize Flatpickr for date range selection
+    let dateRangePicker = null;
+    if (dateRangeInput && typeof flatpickr !== 'undefined') {
+      dateRangePicker = flatpickr(dateRangeInput, {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        defaultDate: [todayISO, oneMonthISO],
+        allowInput: false,
+        onChange: function(selectedDates, dateStr) {
+          if (selectedDates.length === 2) {
+            startDateInput.value = isoDate(selectedDates[0]);
+            endDateInput.value = isoDate(selectedDates[1]);
+          } else if (selectedDates.length === 1) {
+            startDateInput.value = isoDate(selectedDates[0]);
+            endDateInput.value = "";
+          }
+        },
+        onReady: function() {
+          // Set initial values
+          startDateInput.value = todayISO;
+          endDateInput.value = oneMonthISO;
+        }
+      });
+    } else {
+      // Fallback if Flatpickr not loaded - convert hidden inputs back to date inputs
+      startDateInput.type = "date";
+      endDateInput.type = "date";
+      startDateInput.min = todayISO;
+      endDateInput.min = todayISO;
+      startDateInput.value = todayISO;
+      endDateInput.value = oneMonthISO;
+      if (dateRangeInput) dateRangeInput.parentElement.style.display = "none";
+    }
 
     const specificDateInput = $("specificDate");
     if (specificDateInput) {
-      specificDateInput.min = todayISO;
-      specificDateInput.value = oneMonthISO;
+      // Also use Flatpickr for specific date if available
+      if (typeof flatpickr !== 'undefined') {
+        flatpickr(specificDateInput, {
+          dateFormat: "Y-m-d",
+          minDate: "today",
+          defaultDate: oneMonthISO
+        });
+      } else {
+        specificDateInput.min = todayISO;
+        specificDateInput.value = oneMonthISO;
+      }
     }
 
     // Return city toggle
@@ -2649,8 +2691,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
 
     // Date mode + DOW toggle
     const dateModeSelect = $("dateMode");
-    const startDateField = $("startDateField");
-    const endDateField = $("endDateField");
+    const dateRangeField = $("dateRangeField");
     const dowToggle = $("dowToggle");
     const dowDirectionField = $("dowDirectionField");
     const dowDayField = $("dowDayField");
@@ -2664,8 +2705,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       const isSpecific = mode === "specific";
       const dowActive = dowDirectionField && dowDirectionField.style.display !== "none";
       
-      if (startDateField) startDateField.style.display = isRange ? "" : "none";
-      if (endDateField) endDateField.style.display = isRange ? "" : "none";
+      if (dateRangeField) dateRangeField.style.display = isRange ? "" : "none";
       if (dowToggle) {
         dowToggle.style.display = isRange ? "" : "none";
         dateChangerDiv.style.marginBottom = isRange ? "1em" : "0";
