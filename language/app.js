@@ -261,6 +261,13 @@
         : choice.koTemplate !== undefined
           ? [choice.koTemplate]
           : [];
+      // Preserve any extra custom fields (e.g. koNative, koSino) so templates
+      // can reference them via {var.fieldName} without cross-product mixing.
+      const known = new Set(['en', 'ko', 'koTemplate', 'examples', 'system']);
+      const extra = {};
+      for (const k of Object.keys(choice)) {
+        if (!known.has(k)) extra[k] = choice[k];
+      }
       return {
         kind: 'choice',
         en: choice.en,
@@ -269,6 +276,7 @@
         koTemplate: koTemplateAlts[0],      // backward-compat single value
         koTemplateAlts,
         choiceSystem: choice.system,
+        extra,
       };
     }
     if (def.type === 'derivedAdd') {
@@ -428,6 +436,7 @@
           return Array.isArray(v.examples) && v.examples.length > 0 ? pick(v.examples) : '';
         }
         if (field === 'koTemplate') return v.koTemplate || '';
+        if (v.extra && typeof v.extra[field] === 'string') return v.extra[field];
       }
       return renderRawValue(v);
     });
@@ -468,6 +477,7 @@
         if (field === 'examples') {
           return Array.isArray(v.examples) && v.examples.length > 0 ? pick(v.examples) : '';
         }
+        if (v.extra && typeof v.extra[field] === 'string') return v.extra[field];
       }
       return renderKoForValue(v);
     });
@@ -679,7 +689,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260502a')
+    fetch('./number_rules_ko.json?v=20260502b')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
