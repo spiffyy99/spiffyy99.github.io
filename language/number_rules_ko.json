@@ -897,17 +897,17 @@
             "templates": [
               {
                 "id": "ratio",
-                "question": "{a}:{b}",
+                "question": "{a} : {b} (ratio)",
                 "answer": "{a} 대 {b}"
               },
               {
                 "id": "ratio_score",
-                "question": "score of {a} to {b}",
+                "question": "{a} - {b} (score)",
                 "answer": "{a} 대 {b}"
               }
             ],
             "explanation": "Ratios use 대 (literally 'against/versus') between two sino numbers. Pattern: [A] 대 [B]. Also used for sports scores.",
-            "example": "3:1 → 삼 대 일. 2:5 → 이 대 오. Score of 3 to 0 → 삼 대 영."
+            "example": "3 : 1  → 삼 대 일. 2 : 5 → 이 대 오. Score of 3 to 0 → 삼 대 영."
           }
         ]
       },
@@ -961,8 +961,23 @@
             "templates": [
               {
                 "id": "ranking_deung",
-                "question": "{rank|ord} place (in a competition/ranking)",
+                "question": "{rank|ord} place (in a competition)",
                 "answer": "{rank} 등"
+              },
+              {
+                "id": "race_deung",
+                "question": "{rank|ord} place (in a marathon)",
+                "answer": "{rank} 등"
+              },
+              {
+                "id": "class_deung",
+                "question": "{rank|ord} place (rank in a class)",
+                "answer": "{rank} 등"
+              },
+              {
+                "id": "contest_deung",
+                "question": "won {rank|ord} place (in a contest)",
+                "answer": "{rank} 등 했어요"
               }
             ],
             "explanation": "등 means 'place' in a competition or ordering. Common for races, contests, class rank, and informal placements. Uses sino numbers.",
@@ -977,63 +992,22 @@
             "templates": [
               {
                 "id": "ranking_wi",
-                "question": "{rank|ord} (on a chart/leaderboard)",
+                "question": "{rank|ord} (on a leaderboard)",
+                "answer": "{rank} 위"
+              },
+              {
+                "id": "chart_wi",
+                "question": "{rank|ord} (on a chart)",
+                "answer": "{rank} 위"
+              },
+              {
+                "id": "world_ranking_wi",
+                "question": "{rank|ord} (in world rankings)",
                 "answer": "{rank} 위"
               }
             ],
             "explanation": "위 means 'rank' on a chart, leaderboard, or formal ranking. Uses sino numbers. Often paired with 차트, 랭킹, or 순위. More formal than 등.",
             "example": "1st on the chart → 일 위. 5th in the rankings → 오 위."
-          },
-          {
-            "id": "ranking_phrases",
-            "label": "등 vs 위 (context phrases)",
-            "variables": {
-              "rank": { "type": "int", "min": 1, "max": 20, "system": "sino" }
-            },
-            "templates": [
-              {
-                "id": "race_deung",
-                "question": "{rank|ord} place in the race",
-                "answer": "경주에서 {rank} 등"
-              },
-              {
-                "id": "marathon_deung",
-                "question": "{rank|ord} place in the marathon",
-                "answer": "마라톤에서 {rank} 등"
-              },
-              {
-                "id": "class_deung",
-                "question": "{rank|ord} place in class",
-                "answer": "반에서 {rank} 등"
-              },
-              {
-                "id": "contest_deung",
-                "question": "won {rank|ord} place in the contest",
-                "answer": "대회에서 {rank} 등 했어요"
-              },
-              {
-                "id": "chart_wi",
-                "question": "{rank|ord} on the chart",
-                "answer": "차트에서 {rank} 위"
-              },
-              {
-                "id": "world_ranking_wi",
-                "question": "{rank|ord} in the world rankings",
-                "answer": "세계 랭킹 {rank} 위"
-              },
-              {
-                "id": "company_wi",
-                "question": "{rank|ord} in the company rankings",
-                "answer": "회사 순위 {rank} 위"
-              },
-              {
-                "id": "billboard_wi",
-                "question": "{rank|ord} on the Billboard chart",
-                "answer": "빌보드 차트 {rank} 위"
-              }
-            ],
-            "explanation": "Use 등 for competition placements (races, contests, class rank). Use 위 for formal rankings (charts, leaderboards, world rankings, corporate standings). Both attach directly to sino numbers.",
-            "example": "1st place in the race → 일 등. 1st on the Billboard chart → 일 위."
           }
         ]
       },
