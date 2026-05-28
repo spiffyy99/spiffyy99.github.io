@@ -295,7 +295,12 @@
   function generateValuesFor(item, settings) {
     const values = {};
     const entries = Object.entries(item.variables);
-    const derivedTypes = new Set(['derivedAdd', 'derived', 'topicMarker']);
+    const PARTICLE_MARKERS = {
+      topicMarker: { withFinal: '은', withoutFinal: '는' },
+      objectMarker: { withFinal: '과', withoutFinal: '와' },
+      subjectMarker: { withFinal: '이', withoutFinal: '가' },
+    };
+    const derivedTypes = new Set(['derivedAdd', 'derived', ...Object.keys(PARTICLE_MARKERS)]);
 
     // 1) Generate non-derived
     for (const [name, def] of entries) {
@@ -349,9 +354,10 @@
       }
     }
 
-    // 3b) Resolve topic markers (run after all numeric values exist)
+    // 3b) Resolve particle markers (run after all numeric values exist)
     for (const [name, def] of entries) {
-      if (def.type !== 'topicMarker') continue;
+      const particle = PARTICLE_MARKERS[def.type];
+      if (!particle) continue;
       const source = values[def.source];
       let koStr = '';
       if (source) {
@@ -361,7 +367,7 @@
       const lastChar = koStr[koStr.length - 1] || '';
       const code = lastChar.charCodeAt(0) - 0xAC00;
       const hasFinal = code >= 0 && code < 11172 && code % 28 !== 0;
-      const correct = hasFinal ? '은' : '는';
+      const correct = hasFinal ? particle.withFinal : particle.withoutFinal;
       values[name] = {
         kind: 'choice',
         en: correct,
@@ -689,7 +695,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260502b')
+    fetch('./number_rules_ko.json?v=20260502c')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;

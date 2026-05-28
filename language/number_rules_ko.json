@@ -1196,11 +1196,13 @@
       },
       {
         "id": "ranges",
-        "label": "More than / Less than",
+        "label": "more than / less than / between",
         "variables": {
           "n": { "type": "int", "min": 1, "system": "sino" },
-          "a": { "type": "int", "min": 1, "max": 100, "system": "sino" },
-          "b": { "type": "int", "min": 1, "max": 100, "system": "sino" }
+          "a": { "type": "int", "min": 1, "max": 99, "system": "sino" },
+          "offset": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+          "b": { "type": "derived", "op": "add", "sources": ["a", "offset"], "system": "sino" },
+          "aMarker": { "type": "objectMarker", "source": "a" }
         },
         "templates": [
           {
@@ -1226,11 +1228,11 @@
           {
             "id": "between",
             "question": "between {a} and {b}",
-            "answer": ["{a}와 {b} 사이", "{a}부터 {b} 사이"]
+            "answer": ["{a}{aMarker} {b} 사이", "{a}부터 {b} 사이"]
           }
         ],
-        "explanation": "이상 (≥ at least), 이하 (≤ at most), 초과 (> strictly more than), 미만 (< strictly less than), 사이 (between). All use sino numbers.",
-        "example": "at least 5 → 오 이상. less than 10 → 십 미만. between 3 and 7 → 삼과 칠 사이."
+        "explanation": "이상 (≥ at least), 이하 (≤ at most), 초과 (> strictly more than), 미만 (< strictly less than), 사이 (between). All use sino numbers. For 사이, attach 와 to a vowel-final word and 과 to a consonant-final word.",
+        "example": "at least 5 → 오 이상. less than 10 → 십 미만. between 3 and 7 → 삼과 칠 사이. between 60 and 65 → 육십과 육십오 사이."
       },
       {
         "id": "time_particles",
