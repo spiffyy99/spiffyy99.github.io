@@ -695,7 +695,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260502c')
+    fetch('./number_rules_ko.json?v=20260502d')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
