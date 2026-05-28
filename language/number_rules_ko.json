@@ -24,7 +24,7 @@
             "templates": [
               {
                 "id": "time_hour_minute",
-                "question": "{hour}:{minute} {period.en}",
+                "question": "{hour}:{minute}:{second} {period.en}",
                 "answer": "{period.ko} {hour}시 {minute}분 {second}초"
               },
               {
