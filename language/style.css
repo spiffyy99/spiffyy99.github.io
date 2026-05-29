@@ -156,6 +156,9 @@ html, body {
   font-size: 12px;
   padding: 5px 10px;
 }
+[hidden] {
+  display: none !important;
+}
 
 .settings-panel {
   position: fixed;

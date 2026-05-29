@@ -985,7 +985,7 @@
     $('writingPrompt').hidden = listening;
     $('listeningPrompt').hidden = !listening;
     $('answerInput').placeholder = listening
-      ? 'Type what you hear (한글 or digits)…'
+      ? 'Type what you hear…'
       : 'Type the Korean answer…';
   }
 
