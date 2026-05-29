@@ -396,10 +396,12 @@
     return '';
   }
 
-  function renderKoTemplateString(tpl, values) {
+  function renderKoTemplateString(tpl, values, digitMode = false) {
     return tpl.replace(/\{([a-zA-Z_]\w*)\}/g, (_, name) => {
       const v = values[name];
-      return v ? renderKoForValue(v) : '';
+      if (!v) return '';
+      if (digitMode && v.kind === 'number') return renderRawValue(v);
+      return renderKoForValue(v);
     });
   }
 
@@ -450,14 +452,16 @@
 
   // For answer side: produce one rendered string given a koOverride map for choice vars
   // and an optional koTemplateOverride map for koTemplate alternatives.
-  function renderAnswerTemplate(tpl, values, koOverride = {}, koTemplateOverride = {}) {
+  // When digitMode is true, numbers are rendered as their raw digit form
+  // (e.g. "24 살" instead of "스물네 살") — used for listening-mode acceptance.
+  function renderAnswerTemplate(tpl, values, koOverride = {}, koTemplateOverride = {}, digitMode = false) {
     return tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
       const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
       if (!v) return '';
       // Per-reference system override (e.g. {age|sino})
       if (isSystemMode(mode) && v.kind === 'number') {
-        return renderNumber(v.raw, mode);
+        return digitMode ? renderRawValue(v) : renderNumber(v.raw, mode);
       }
       if (mode === 'ko' || !field) {
         if (v.kind === 'choice') {
@@ -465,6 +469,7 @@
             ? koOverride[varName]
             : v.koAlternatives[0] || '';
         }
+        if (digitMode && v.kind === 'number') return renderRawValue(v);
         return renderKoForValue(v);
       }
       if (v.kind === 'choice') {
@@ -478,20 +483,22 @@
           const tplStr = koTemplateOverride[varName] !== undefined
             ? koTemplateOverride[varName]
             : (v.koTemplate || '');
-          return renderKoTemplateString(tplStr, values);
+          return renderKoTemplateString(tplStr, values, digitMode);
         }
         if (field === 'examples') {
           return Array.isArray(v.examples) && v.examples.length > 0 ? pick(v.examples) : '';
         }
         if (v.extra && typeof v.extra[field] === 'string') return v.extra[field];
       }
+      if (digitMode && v.kind === 'number') return renderRawValue(v);
       return renderKoForValue(v);
     });
   }
 
   // Cross-product expansion: template alternatives × per-variable ko alternatives
-  // × per-variable koTemplate alternatives.
-  function expandAcceptedAnswers(template, values) {
+  // × per-variable koTemplate alternatives. When digitMode is true, numbers are
+  // rendered as their raw digit form so the user can input digits in listening mode.
+  function expandAcceptedAnswers(template, values, digitMode = false) {
     const tplList = Array.isArray(template.answer) ? template.answer : [template.answer];
 
     // Collect choice variables with multiple ko or koTemplate alternatives.
@@ -527,7 +534,7 @@
     for (const tpl of tplList) {
       for (const koC of koCombos) {
         for (const ktC of ktCombos) {
-          const rendered = renderAnswerTemplate(tpl, values, koC, ktC);
+          const rendered = renderAnswerTemplate(tpl, values, koC, ktC, digitMode);
           out.add(cleanWhitespace(rendered));
         }
       }
@@ -545,7 +552,8 @@
     const template = pick(item.templates);
     const values = generateValuesFor(item, settings);
     const question = renderQuestionTemplate(template.question, values);
-    const accepted = expandAcceptedAnswers(template, values);
+    const accepted = expandAcceptedAnswers(template, values, false);
+    const acceptedDigit = expandAcceptedAnswers(template, values, true);
     const systemsUsed = collectSystems(values);
     return {
       itemId: item.id,
@@ -554,6 +562,7 @@
       templateId: template.id,
       question,
       accepted,
+      acceptedDigit,
       systems: systemsUsed,
       explanation: item.explanation || '',
       example: item.example || '',
@@ -577,10 +586,17 @@
       .toLowerCase();
   }
 
-  function checkAnswer(input, accepted) {
+  function checkAnswer(input, current) {
     const norm = normalizeForCompare(input);
     if (!norm) return false;
-    return accepted.some((a) => normalizeForCompare(a) === norm);
+    const lists = [current.accepted];
+    if (state.mode === 'listening' && current.acceptedDigit) {
+      lists.push(current.acceptedDigit);
+    }
+    for (const list of lists) {
+      if (list.some((a) => normalizeForCompare(a) === norm)) return true;
+    }
+    return false;
   }
 
   // ---------- UI ----------
@@ -598,7 +614,9 @@
       systemFilter: 'both',  // 'both' | 'sino' | 'native'
       historyMode: 'limited', // 'limited' | 'all'
       historyLimit: 100,
+      mode: 'writing',       // 'writing' | 'listening'
     },
+    mode: 'writing',         // current question mode (mirrors settings.mode)
     pool: [],             // active items
     current: null,
     history: [],          // array of entry objects (see makeHistoryEntry)
@@ -695,7 +713,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260502d')
+    fetch('./number_rules_ko.json?v=20260502e')
       .then((r) => r.json())
       .then((cfg) => {
         state.config = cfg;
@@ -734,6 +752,10 @@
       if (typeof saved.historyLimit === 'number' && saved.historyLimit >= 1) {
         state.settings.historyLimit = Math.min(10000, Math.floor(saved.historyLimit));
       }
+      if (saved.mode === 'writing' || saved.mode === 'listening') {
+        state.settings.mode = saved.mode;
+        state.mode = saved.mode;
+      }
       if (Array.isArray(saved.history)) {
         state.history = saved.history
           .map(normalizeHistoryItem)
@@ -761,6 +783,7 @@
           systemFilter: state.settings.systemFilter,
           historyMode: state.settings.historyMode,
           historyLimit: state.settings.historyLimit,
+          mode: state.settings.mode,
           enabledIds: Array.from(state.enabledIds),
           history: state.history,
         })
@@ -948,6 +971,37 @@
     $('feedback').hidden = true;
     $('feedback').className = 'feedback';
     $('submitBtn').textContent = 'Check';
+    if (state.mode === 'listening') {
+      setTimeout(playCurrentAnswer, 120);
+    }
+  }
+
+  function applyModeUI() {
+    const listening = state.mode === 'listening';
+    $('modeWriteBtn').classList.toggle('active', !listening);
+    $('modeListenBtn').classList.toggle('active', listening);
+    $('modeWriteBtn').setAttribute('aria-selected', String(!listening));
+    $('modeListenBtn').setAttribute('aria-selected', String(listening));
+    $('writingPrompt').hidden = listening;
+    $('listeningPrompt').hidden = !listening;
+    $('answerInput').placeholder = listening
+      ? 'Type what you hear (한글 or digits)…'
+      : 'Type the Korean answer…';
+  }
+
+  function setMode(newMode) {
+    if (newMode !== 'writing' && newMode !== 'listening') return;
+    if (newMode === state.mode) return;
+    state.mode = newMode;
+    state.settings.mode = newMode;
+    saveSettings();
+    applyModeUI();
+    if (newMode === 'listening') {
+      playCurrentAnswer();
+    } else {
+      try { speechSynthesis.cancel(); } catch (_) {}
+    }
+    $('answerInput').focus();
   }
 
   function renderQuestion() {
@@ -1127,12 +1181,19 @@
   }
 
   function playAnswer(ans) {
-    if (state.settings.allowSound) {
+    // In listening mode audio is always required; in writing mode honor the toggle.
+    if (state.mode === 'listening' || state.settings.allowSound) {
+      try { speechSynthesis.cancel(); } catch (_) {}
       const speak = new SpeechSynthesisUtterance(ans);
       speak.lang = "ko-KR";
       speak.rate = 0.8;
       speechSynthesis.speak(speak);
     }
+  }
+
+  function playCurrentAnswer() {
+    if (!state.current || !state.current.accepted || state.current.accepted.length === 0) return;
+    playAnswer(state.current.accepted[0]);
   }
 
   function submitAnswer() {
@@ -1144,7 +1205,7 @@
     }
     const input = $('answerInput').value;
     if (!input.trim()) return;
-    const ok = checkAnswer(input, state.current.accepted);
+    const ok = checkAnswer(input, state.current);
     recordResult(ok ? 'correct' : 'wrong', input);
     state.answered = true;
     showFeedback(ok ? 'correct' : 'incorrect', input);
@@ -1191,6 +1252,11 @@
     $('historyCloseBtn').addEventListener('click', () => {
       $('historyPanel').hidden = true;
     });
+
+    $('modeWriteBtn').addEventListener('click', () => setMode('writing'));
+    $('modeListenBtn').addEventListener('click', () => setMode('listening'));
+    $('replayBtn').addEventListener('click', () => playCurrentAnswer());
+    applyModeUI();
 
     $('selectAllBtn').addEventListener('click', () => {
       state.enabledIds = new Set(state.items.map((i) => i.id));
