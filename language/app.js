@@ -1209,7 +1209,7 @@
     recordResult(ok ? 'correct' : 'wrong', input);
     state.answered = true;
     showFeedback(ok ? 'correct' : 'incorrect', input);
-    if (ok) {
+    if (ok && state.mode !== 'listening') { // plays digits as sino
       playAnswer(input);
     } else {
       playAnswer(state.current.accepted[0]);
