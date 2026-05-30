@@ -1337,7 +1337,7 @@
           },
           {
             "id": "within",
-            "question": "within {n} (i.e. i must do it within {n} {unit.en})",
+            "question": "within {n} {unit.en} (i.e. i must do it within {n} {unit.en})",
             "answer": "{n} {unit.ko} 안에"
           },
           {
