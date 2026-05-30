@@ -1337,21 +1337,21 @@
             "id": "after",
             "question": "{n} {unit.en} later",
             "answer": [
-              "{n|dayDuration} {unit.ko} 뒤",
-              "{n|dayDuration} {unit.ko} 후",
-              "{n} {unit.ko} 뒤",
+              "{n|dayDuration} {unit|dayKo} 후",
+              "{n|dayDuration} {unit|dayKo} 뒤",
               "{n} {unit.ko} 후",
-              "{n|monthNative} 달 뒤",
+              "{n} {unit.ko} 뒤",
               "{n|monthNative} 달 후",
-              "{n|monthSino} 개월 뒤",
-              "{n|monthSino} 개월 후"
+              "{n|monthNative} 달 뒤",
+              "{n|monthSino} 개월 후",
+              "{n|monthSino} 개월 뒤"
             ]
           },
           {
             "id": "ago_before",
             "question": "{n} {unit.en} ago",
             "answer": [
-              "{n|dayDuration} {unit.ko} 전",
+              "{n|dayDuration} {unit|dayKo} 전",
               "{n} {unit.ko} 전",
               "{n|monthNative} 달 전",
               "{n|monthSino} 개월 전"
@@ -1361,7 +1361,7 @@
             "id": "within",
             "question": "within {n} {unit.en} (i.e. i must do it within {n} {unit.en})",
             "answer": [
-              "{n|dayDuration} {unit.ko} 안에",
+              "{n|dayDuration} {unit|dayKo} 안에",
               "{n} {unit.ko} 안에",
               "{n|monthNative} 달 안에",
               "{n|monthSino} 개월 안에"
@@ -1371,7 +1371,7 @@
             "id": "in_time_result",
             "question": "in {n} {unit.en} (i.e. i did it in {n} {unit.en})",
             "answer": [
-              "{n|dayDuration} {unit.ko} 만에",
+              "{n|dayDuration} {unit|dayKo} 만에",
               "{n} {unit.ko} 만에",
               "{n|monthNative} 달 만에",
               "{n|monthSino} 개월 만에"

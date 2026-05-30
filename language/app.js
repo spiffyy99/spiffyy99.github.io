@@ -408,7 +408,7 @@
 
   function parseExpr(expr) {
     // Handles: var, var.field, var|ko, var|sino, var|native, var|digit,
-    // and contextual answer modes: dayDuration, monthNative, monthSino, weekYear
+    // and contextual answer modes: dayDuration, dayKo, monthNative, monthSino, weekYear
     let mode = null;
     let s = expr;
     const pipeIdx = s.indexOf('|');
@@ -436,6 +436,16 @@
       const num = Math.floor(Number(v.raw));
       if (num >= 1 && num <= 4) return NATIVE_DAY_WORDS[num];
       return digitMode ? String(num) : sinoInt(num);
+    }
+    // Omit 일 after 하루/이틀/사흘/나흘; keep 일 for 5+ day counts (오 일).
+    if (mode === 'dayKo' && v.kind === 'choice') {
+      if (v.en !== 'days') return null;
+      const nVal = values.n;
+      if (nVal && nVal.kind === 'number') {
+        const num = Math.floor(Number(nVal.raw));
+        if (num >= 1 && num <= 4) return '';
+      }
+      return v.koAlternatives[0] || '일';
     }
     if (mode === 'monthNative' && v.kind === 'number') {
       if (unitEn !== 'months') return null;
