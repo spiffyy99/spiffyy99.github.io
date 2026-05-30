@@ -823,8 +823,8 @@
           {
             "id": "numbered_labels",
             "label": "Numbered Labels",
-            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 번 게이트 (gate), 번 버스 (bus route), 학년 (school grade), 반 (class), 점 (points/score).",
-            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. Grade 3 → 삼 학년.",
+            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 편 (flight), 번 창구 (counter), 학년 (school grade), 반 (class), 점 (points/score).",
+            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. Flight 405 → 사백오 편. Counter 3 → 삼 번 창구.",
             "variables": {
               "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
               "counter": {
@@ -834,9 +834,11 @@
                   { "en": "Exit", "ko": "번 출구" },
                   { "en": "Gate", "ko": "번 게이트" },
                   { "en": "Bus Route", "ko": "번 버스" },
+                  { "en": "Flight", "ko": "편" },
+                  { "en": "Counter", "ko": "번 창구" },
                   { "en": "(School) Grade", "ko": "학년" },
                   { "en": "Class", "ko": "반" },
-                  { "en": "Points - ", "ko": "점" }
+                  { "en": "Points", "ko": "점" }
                 ]
               }
             },
@@ -961,7 +963,7 @@
             "templates": [
               {
                 "id": "ranking_deung",
-                "question": "{rank|ord} place (in a competition/context)",
+                "question": "{rank|ord} place (in a competition/contest)",
                 "answer": "{rank} 등"
               },
               {

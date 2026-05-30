@@ -712,9 +712,28 @@
     return map;
   }
 
+  let cachedKoVoice = null;
+
+  function loadKoVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return;
+    const ko = voices.filter((v) => v.lang === 'ko-KR' || v.lang.startsWith('ko'));
+    const pick = (needle) => ko.find((v) => v.name.includes(needle));
+    cachedKoVoice = pick('Google') || pick('Microsoft') || pick('Heami') || pick('Yuna') || ko[0] || null;
+  }
+
+  if ('speechSynthesis' in window) {
+    loadKoVoice();
+    speechSynthesis.addEventListener('voiceschanged', loadKoVoice);
+  }
+
   function init() {
-    fetch('./number_rules_ko.json?v=20260502e')
-      .then((r) => r.json())
+    fetch('./number_rules_ko.json?v=20260502f')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
+        return r.json();
+      })
       .then((cfg) => {
         state.config = cfg;
         state.items = flattenConfig(cfg);
@@ -1049,7 +1068,8 @@
     else if (kind === 'incorrect') titleText = '✗ Not quite';
     else if (kind === 'revealed') titleText = 'Answer';
 
-    const list = accepted.map((a) => `<li>${escapeHtml(a)}</li>`).join('');
+    let englishText = state.mode === 'listening' ? ' ('  + escapeHtml(state.current.question) + ')' : '';
+    const list = accepted.map((a, i) => `<li>${escapeHtml(a)}${i === 0 ? englishText : ''}</li>`).join('');
     let userBlock = '';
     if (kind === 'incorrect' && userInput) {
       userBlock = `<div class="user-answer">You typed: <code>${escapeHtml(userInput)}</code></div>`;
@@ -1183,10 +1203,14 @@
   function playAnswer(ans) {
     // In listening mode audio is always required; in writing mode honor the toggle.
     if (state.mode === 'listening' || state.settings.allowSound) {
+      if (!('speechSynthesis' in window)) return;
       try { speechSynthesis.cancel(); } catch (_) {}
+      if (!cachedKoVoice) loadKoVoice();
       const speak = new SpeechSynthesisUtterance(ans);
-      speak.lang = "ko-KR";
-      speak.rate = 0.8;
+      speak.lang = 'ko-KR';
+      if (cachedKoVoice) speak.voice = cachedKoVoice;
+      speak.rate = 0.85;
+      speak.pitch = 1;
       speechSynthesis.speak(speak);
     }
   }
