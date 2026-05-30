@@ -288,7 +288,7 @@
           },
           {
             "id": "birth_year",
-            "label": "Birth year / 년생",
+            "label": "Birth year",
             "variables": {
               "year": { "type": "int", "min": 1900, "max": 2025, "system": "sino" },
               "shortYearDigit": { "type": "int", "min": 0, "max": 9, "system": "digit" },
@@ -953,15 +953,15 @@
             "example": "1st → 첫 번째. 2nd → 두 번째. 5th → 다섯 번째."
           },
           {
-            "id": "ranking_deung",
-            "label": "Ranking / 등",
+            "id": "ranking",
+            "label": "Ranking",
             "variables": {
               "rank": { "type": "int", "min": 1, "max": 30, "system": "sino" }
             },
             "templates": [
               {
                 "id": "ranking_deung",
-                "question": "{rank|ord} place (in a competition)",
+                "question": "{rank|ord} place (in a competition/context)",
                 "answer": "{rank} 등"
               },
               {
@@ -974,22 +974,6 @@
                 "question": "{rank|ord} place (rank in a class)",
                 "answer": "{rank} 등"
               },
-              {
-                "id": "contest_deung",
-                "question": "won {rank|ord} place (in a contest)",
-                "answer": "{rank} 등 했어요"
-              }
-            ],
-            "explanation": "등 means 'place' in a competition or ordering. Common for races, contests, class rank, and informal placements. Uses sino numbers.",
-            "example": "1st place → 일 등. 3rd place → 삼 등."
-          },
-          {
-            "id": "ranking_wi",
-            "label": "Ranking / 위",
-            "variables": {
-              "rank": { "type": "int", "min": 1, "max": 100, "system": "sino" }
-            },
-            "templates": [
               {
                 "id": "ranking_wi",
                 "question": "{rank|ord} (on a leaderboard)",
@@ -1006,12 +990,11 @@
                 "answer": "{rank} 위"
               }
             ],
-            "explanation": "위 means 'rank' on a chart, leaderboard, or formal ranking. Uses sino numbers. Often paired with 차트, 랭킹, or 순위. More formal than 등.",
-            "example": "1st on the chart → 일 위. 5th in the rankings → 오 위."
+            "explanation": "등 means 'place' in a competition or ordering. Common for races, contests, class rank, and informal placements. Uses sino numbers. 위 means 'rank' on a chart, leaderboard, or formal ranking. Uses sino numbers. Often paired with 차트, 랭킹, or 순위. More formal than 등.",
+            "example": "1st place → 일 등. 3rd place → 삼 등. 1st on the chart → 일 위. 5th in the rankings → 오 위"
           }
         ]
       },
-  
       {
         "id": "durations",
         "label": "Durations",
