@@ -76,7 +76,7 @@
               {
                 "id": "date_full_mdy",
                 "question": "{month} {day}, {year}",
-                "answer": "{year} 년 {month} {day} 일"
+                "answer": ["{year} 년 {month} {day} 일", "{year|digit} 년 {month} {day} 일"]
               },
               {
                 "id": "date_month_day",
@@ -91,7 +91,7 @@
               {
                 "id": "weekday_month_day_year",
                 "question": "{weekday.en}, {month} {day}, {year}",
-                "answer": "{weekday.ko} {year} 년 {month} {day} 일"
+                "answer": ["{weekday.ko} {year} 년 {month} {day} 일", "{weekday.ko} {year|digit} 년 {month} {day} 일"]
               }
             ],
             "explanation": "Dates use Sino numbers for year, month, and day. Days of the week are separate words, each ending in 요일.",
@@ -149,17 +149,17 @@
               {
                 "id": "beginning_of_year",
                 "question": "beginning of {year}",
-                "answer": "{year} 년 초"
+                "answer": ["{year} 년 초", "{year|digit} 년 초"]
               },
               {
                 "id": "middle_of_year",
                 "question": "middle of {year}",
-                "answer": "{year} 년 중"
+                "answer": ["{year} 년 중", "{year|digit} 년 중"]
               },
               {
                 "id": "end_of_year",
                 "question": "end of {year}",
-                "answer": "{year} 년 말"
+                "answer": ["{year} 년 말", "{year|digit} 년 말"]
               }
             ],
             "explanation": "초 = early part of the year, 중 = middle of the year, 말 = late part / end of the year. All attach after 년.",
@@ -298,7 +298,7 @@
               {
                 "id": "birth_year_full",
                 "question": "born in {year} (full year)",
-                "answer": "{year|digit} 년생"
+                "answer": ["{year|digit} 년생", "{year} 년생"]
               },
               {
                 "id": "birth_year_short",
