@@ -7,6 +7,7 @@
   const SINO_PLACES = ['', '십', '백', '천'];
   const SINO_MAGS = ['', '만', '억', '조', '경'];
   const DIGIT_READ = ['공', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+  const NATIVE_DAY_WORDS = { 1: '하루', 2: '이틀', 3: '사흘', 4: '나흘' };
 
   const NATIVE_CARDINAL = {
     1: '하나', 2: '둘', 3: '셋', 4: '넷', 5: '다섯',
@@ -406,7 +407,8 @@
   }
 
   function parseExpr(expr) {
-    // Handles: var, var.field, var|ko, var|sino, var|native, var|digit
+    // Handles: var, var.field, var|ko, var|sino, var|native, var|digit,
+    // and contextual answer modes: dayDuration, monthNative, monthSino, weekYear
     let mode = null;
     let s = expr;
     const pipeIdx = s.indexOf('|');
@@ -423,6 +425,31 @@
 
   function isSystemMode(mode) {
     return mode === 'sino' || mode === 'native' || mode === 'digit';
+  }
+
+  // Contextual answer tokens return null when the current unit choice does not apply
+  // (whole answer alternative is skipped). Returns undefined when not a contextual mode.
+  function renderContextualAnswerToken(mode, v, values, digitMode) {
+    const unitEn = values.unit?.en;
+    if (mode === 'dayDuration' && v.kind === 'number') {
+      if (unitEn !== 'days') return null;
+      const num = Math.floor(Number(v.raw));
+      if (num >= 1 && num <= 4) return NATIVE_DAY_WORDS[num];
+      return digitMode ? String(num) : sinoInt(num);
+    }
+    if (mode === 'monthNative' && v.kind === 'number') {
+      if (unitEn !== 'months') return null;
+      return digitMode ? renderRawValue(v) : renderNumber(v.raw, 'native');
+    }
+    if (mode === 'monthSino' && v.kind === 'number') {
+      if (unitEn !== 'months') return null;
+      return digitMode ? renderRawValue(v) : renderNumber(v.raw, 'sino');
+    }
+    if (mode === 'weekYear' && v.kind === 'number') {
+      if (unitEn === 'months') return null;
+      return digitMode ? renderRawValue(v) : renderKoForValue(v);
+    }
+    return undefined;
   }
 
   // For question side: render English/raw forms.
@@ -455,10 +482,17 @@
   // When digitMode is true, numbers are rendered as their raw digit form
   // (e.g. "24 살" instead of "스물네 살") — used for listening-mode acceptance.
   function renderAnswerTemplate(tpl, values, koOverride = {}, koTemplateOverride = {}, digitMode = false) {
-    return tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
+    let skip = false;
+    const result = tpl.replace(/\{([^}]+)\}/g, (_, expr) => {
       const { varName, field, mode } = parseExpr(expr);
       const v = values[varName];
       if (!v) return '';
+      const contextual = renderContextualAnswerToken(mode, v, values, digitMode);
+      if (contextual === null) {
+        skip = true;
+        return '';
+      }
+      if (contextual !== undefined) return contextual;
       // Per-reference system override (e.g. {age|sino})
       if (isSystemMode(mode) && v.kind === 'number') {
         return digitMode ? renderRawValue(v) : renderNumber(v.raw, mode);
@@ -493,6 +527,7 @@
       if (digitMode && v.kind === 'number') return renderRawValue(v);
       return renderKoForValue(v);
     });
+    return skip ? null : result;
   }
 
   // Cross-product expansion: template alternatives × per-variable ko alternatives
@@ -535,6 +570,7 @@
       for (const koC of koCombos) {
         for (const ktC of ktCombos) {
           const rendered = renderAnswerTemplate(tpl, values, koC, ktC, digitMode);
+          if (rendered === null) continue;
           out.add(cleanWhitespace(rendered));
         }
       }

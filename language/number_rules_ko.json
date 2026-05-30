@@ -1085,10 +1085,15 @@
                 "id": "calendar_duration",
                 "question": "{count} {unit.en}",
                 "answer": "{count} {unit.ko}"
+              },
+              {
+                "id": "calendar_duration_months",
+                "question": "{count} months",
+                "answer": ["{count|native} 달", "{count} 개월"]
               }
             ],
-            "explanation": "Weeks, months, and years all use sino numbers: 주 (weeks), 개월 (months), 년 (years). Note: 개월 is used for durations; 월 is used for calendar months.",
-            "example": "3 weeks → 삼 주. 6 months → 육 개월. 2 years → 이 년."
+            "explanation": "Weeks and years use sino numbers: 주 (weeks), 년 (years). Months accept native + 달 (한 달, 두 달…) or sino + 개월 (삼 개월, 육 개월…). 개월 is typical for durations; 달 is common in everyday speech.",
+            "example": "3 weeks → 삼 주. 6 months → 여섯 달 or 육 개월. 2 years → 이 년."
           }
         ]
       },
@@ -1313,11 +1318,14 @@
         "id": "time_particles",
         "label": "Time particles",
         "variables": {
-          "n": { "type": "int", "min": 2, "max": 120},
+          "n": { "type": "int", "min": 1, "max": 120},
           "unit": {
             "type": "choice",
             "values": [
-              { "en": "days", "ko": "일", "system": "native" },
+              { "en": "years", "ko": "년", "system": "sino" },
+              { "en": "months", "ko": "개월", "system": "sino" },
+              { "en": "weeks", "ko": "주", "system": "sino" },
+              { "en": "days", "ko": "일", "system": "sino" },
               { "en": "hours", "ko": "시간", "system": "native" },
               { "en": "minutes", "ko": "분", "system": "sino" },
               { "en": "seconds", "ko": "초", "system": "sino" }
@@ -1328,26 +1336,50 @@
           {
             "id": "after",
             "question": "{n} {unit.en} later",
-            "answer": ["{n} {unit.ko} 뒤", "{n} {unit.ko} 후"]
+            "answer": [
+              "{n|dayDuration} {unit.ko} 뒤",
+              "{n|dayDuration} {unit.ko} 후",
+              "{n} {unit.ko} 뒤",
+              "{n} {unit.ko} 후",
+              "{n|monthNative} 달 뒤",
+              "{n|monthNative} 달 후",
+              "{n|monthSino} 개월 뒤",
+              "{n|monthSino} 개월 후"
+            ]
           },
           {
             "id": "ago_before",
             "question": "{n} {unit.en} ago",
-            "answer": "{n} {unit.ko} 전"
+            "answer": [
+              "{n|dayDuration} {unit.ko} 전",
+              "{n} {unit.ko} 전",
+              "{n|monthNative} 달 전",
+              "{n|monthSino} 개월 전"
+            ]
           },
           {
             "id": "within",
             "question": "within {n} (i.e. i must do it within {n} {unit.en})",
-            "answer": "{n} {unit.ko} 안에"
+            "answer": [
+              "{n|dayDuration} {unit.ko} 안에",
+              "{n} {unit.ko} 안에",
+              "{n|monthNative} 달 안에",
+              "{n|monthSino} 개월 안에"
+            ]
           },
           {
             "id": "in_time_result",
             "question": "in {n} {unit.en} (i.e. i did it in {n} {unit.en})",
-            "answer": "{n} {unit.ko} 만에"
+            "answer": [
+              "{n|dayDuration} {unit.ko} 만에",
+              "{n} {unit.ko} 만에",
+              "{n|monthNative} 달 만에",
+              "{n|monthSino} 개월 만에"
+            ]
           }
         ],
-        "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago/before), 안에 (within), 만에 (accomplished in a duration of time). Days/hours use native numbers; minutes/seconds use sino.",
-        "example": "3 hours later → 세 시간 뒤 or 세 시간 후. 30 minutes ago → 삼십 분 전."
+        "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
+        "example": "3 hours later → 세 시간 뒤. 2 days ago → 이틀 전 or 이 일 전. 3 months later → 세 달 뒤 or 삼 개월 뒤."
       }
     ]
   }
