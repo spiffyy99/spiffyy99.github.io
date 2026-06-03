@@ -661,6 +661,7 @@
       historyMode: 'limited', // 'limited' | 'all'
       historyLimit: 100,
       mode: 'writing',       // 'writing' | 'listening'
+      ttsListenSpeed: 0.85,  // playback rate for listening mode (0.5–1.5)
     },
     mode: 'writing',         // current question mode (mirrors settings.mode)
     pool: [],             // active items
@@ -775,7 +776,7 @@
   }
 
   function init() {
-    fetch('./number_rules_ko.json?v=20260502f')
+    fetch('./number_rules_ko.json?v=20260502g')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
         return r.json();
@@ -821,6 +822,9 @@
         state.settings.mode = saved.mode;
         state.mode = saved.mode;
       }
+      if (typeof saved.ttsListenSpeed === 'number' && saved.ttsListenSpeed >= 0.5 && saved.ttsListenSpeed <= 1.5) {
+        state.settings.ttsListenSpeed = saved.ttsListenSpeed;
+      }
       if (Array.isArray(saved.history)) {
         state.history = saved.history
           .map(normalizeHistoryItem)
@@ -849,6 +853,7 @@
           historyMode: state.settings.historyMode,
           historyLimit: state.settings.historyLimit,
           mode: state.settings.mode,
+          ttsListenSpeed: state.settings.ttsListenSpeed,
           enabledIds: Array.from(state.enabledIds),
           history: state.history,
         })
@@ -1246,6 +1251,14 @@
     $('answerInput').focus();
   }
 
+  function setSpeedSliderFrozen(frozen) {
+    const slider = $('speedSlider');
+    const replay = $('replayBtn');
+    if (slider) slider.disabled = frozen;
+    if (replay) replay.disabled = frozen;
+    if (replay) replay.style.opacity = frozen ? '0.5' : '';
+  }
+
   function playAnswer(ans) {
     // In listening mode audio is always required; in writing mode honor the toggle.
     if (state.mode === 'listening' || state.settings.allowSound) {
@@ -1255,8 +1268,14 @@
       const speak = new SpeechSynthesisUtterance(ans);
       speak.lang = 'ko-KR';
       if (cachedKoVoice) speak.voice = cachedKoVoice;
-      speak.rate = 0.85;
+      // Listening mode uses the adjustable speed; writing mode uses a fixed rate.
+      speak.rate = (state.mode === 'listening') ? state.settings.ttsListenSpeed : 0.85;
       speak.pitch = 1;
+      if (state.mode === 'listening') {
+        setSpeedSliderFrozen(true);
+        speak.onend = () => setSpeedSliderFrozen(false);
+        speak.onerror = () => setSpeedSliderFrozen(false);
+      }
       speechSynthesis.speak(speak);
     }
   }
@@ -1326,6 +1345,21 @@
     $('modeWriteBtn').addEventListener('click', () => setMode('writing'));
     $('modeListenBtn').addEventListener('click', () => setMode('listening'));
     $('replayBtn').addEventListener('click', () => playCurrentAnswer());
+
+    // Speed slider (listening mode only)
+    const speedSlider = $('speedSlider');
+    const speedDisplay = $('speedDisplay');
+    function syncSpeedDisplay(val) {
+      speedDisplay.textContent = parseFloat(val).toFixed(2).replace(/\.?0+$/, '') + '×';
+    }
+    speedSlider.value = state.settings.ttsListenSpeed;
+    syncSpeedDisplay(state.settings.ttsListenSpeed);
+    speedSlider.addEventListener('input', () => {
+      state.settings.ttsListenSpeed = parseFloat(speedSlider.value);
+      syncSpeedDisplay(speedSlider.value);
+      saveSettings();
+    });
+
     applyModeUI();
 
     $('selectAllBtn').addEventListener('click', () => {

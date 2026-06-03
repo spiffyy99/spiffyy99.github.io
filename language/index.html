@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>한국어 숫자 연습 · Korean Number Practice</title>
-  <link rel="stylesheet" href="./style.css?v=20260502f" />
+  <link rel="stylesheet" href="./style.css?v=20260502g" />
 </head>
 <body>
   <header class="topbar">
@@ -124,6 +124,12 @@
             <span class="replay-icon">🔊</span>
             <span class="replay-label">Play audio</span>
           </button>
+          <div class="speed-row">
+            <span class="speed-side">Slow</span>
+            <input id="speedSlider" type="range" min="0.5" max="1.5" step="0.05" value="0.85" />
+            <span class="speed-side">Fast</span>
+            <span class="speed-val" id="speedDisplay">0.9×</span>
+          </div>
         </div>
       </div>
 
@@ -160,6 +166,6 @@
     </div>
   </main>
 
-  <script src="./app.js?v=20260502f"></script>
+  <script src="./app.js?v=20260502g"></script>
 </body>
 </html>

@@ -373,7 +373,39 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+}
+.speed-side {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.speed-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 4px;
+}
+.speed-row input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.speed-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .toggle-row {
@@ -543,7 +575,7 @@ html, body {
   padding: 28px 24px;
   text-align: center;
   margin-bottom: 16px;
-  min-height: 160px;
+  min-height: 185px;
   display: flex;
   flex-direction: column;
   justify-content: center;
