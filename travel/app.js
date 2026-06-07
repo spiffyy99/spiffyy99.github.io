@@ -1925,6 +1925,12 @@
           matched = true;
         }
       }
+      // Keyword alias match — secondary metro name (e.g. NRT → "tokyo", EWR → "new york")
+      // Priority 4: shows after the primary city airport but before partial city matches
+      if (!matched && ap.ka && ap.ka.some(kw => kw === q || kw.startsWith(q))) {
+        priority = 4;
+        matched = true;
+      }
       
       // Airport name match (only if not already matched)
       if (!matched && ap.n && ap.n.toLowerCase().includes(q)) {
@@ -2807,16 +2813,17 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     function syncDateModeFields() {
       const mode = dateModeSelect ? dateModeSelect.value : "range";
       const isRange = mode === "range";
+      const isDow = mode === "dow";
       const isSpecific = mode === "specific";
-      const dowActive = dowDirectionField && dowDirectionField.style.display !== "none";
+      const dowActive = isDow || (dowDirectionField && dowDirectionField.style.display !== "none");
       
-      if (dateRangeField) dateRangeField.style.display = isRange ? "" : "none";
+      if (dateRangeField) dateRangeField.style.display = (isRange || isDow) ? "" : "none";
       if (dowToggle) {
         dowToggle.style.display = isRange ? "" : "none";
-        dateChangerDiv.style.marginBottom = isRange ? "1em" : "0";
+        dateChangerDiv.style.marginBottom = (isRange || isDow) ? "1em" : "0";
       }
-      if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
-      if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
+      if (dowDirectionField) dowDirectionField.style.display = (isDow || (isRange && dowActive)) ? "" : "none";
+      if (dowDayField) dowDayField.style.display = (isDow || (isRange && dowActive)) ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
       if (specificDateField) specificDateField.style.display = isSpecific ? "" : "none";
     }
@@ -3132,7 +3139,8 @@ addDestinationBtn.addEventListener("click", () => {
         const dowDirectionEl = $("dowDirection");
         const dowDayField = $("dowDayField");
         const dowDayEl = $("dowDay");
-        const dowFieldsVisible = dowDayField && dowDayField.style.display !== "none";
+        // "dow" mode always applies the DOW constraint; "range" mode only when toggle is visible
+        const dowFieldsVisible = dateMode === "dow" || (dowDayField && dowDayField.style.display !== "none");
         if (dowFieldsVisible) {
           const dowDirection = (dowDirectionEl && dowDirectionEl.value) || "depart";
           const dowDay = parseInt((dowDayEl && dowDayEl.value) ?? "1", 10);
