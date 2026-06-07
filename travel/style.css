@@ -370,6 +370,12 @@ input[type="checkbox"]{
   overflow:auto;
 }
 
+.tz-badge {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 table{
   width: 100%;
   border-collapse: collapse;

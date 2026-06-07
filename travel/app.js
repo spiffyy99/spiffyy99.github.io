@@ -148,6 +148,80 @@
     return diff < 0;
   }
 
+  // --- Timezone helpers ---
+
+  // Rough UTC offset from longitude (15° per hour). Accurate to ±1h for most airports.
+  function lonToUtcOffsetHours(lon) {
+    if (lon == null || !Number.isFinite(lon)) return 0;
+    return Math.round(lon / 15);
+  }
+
+  // Precise UTC offset from an IANA timezone name using Intl (browser-only, handles DST).
+  function tzNameToUtcOffsetHours(tzName) {
+    if (!tzName) return null;
+    try {
+      const parts = new Intl.DateTimeFormat('en', {
+        timeZone: tzName,
+        timeZoneName: 'shortOffset',
+      }).formatToParts(new Date());
+      const tzPart = parts.find(p => p.type === 'timeZoneName');
+      if (tzPart) {
+        if (tzPart.value === 'GMT') return 0;
+        const match = tzPart.value.match(/GMT([+-])(\d+)(?::(\d+))?/);
+        if (match) {
+          const sign = match[1] === '+' ? 1 : -1;
+          const h = parseInt(match[2], 10);
+          const m = parseInt(match[3] || '0', 10);
+          return sign * (h + m / 60);
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // Abbreviated timezone label for display (e.g. "JST", "EST", "UTC+5:30").
+  function tzDisplayLabel(loc) {
+    const offsetHours = locationUtcOffset(loc);
+    const sign = offsetHours >= 0 ? '+' : '−';
+    const absH = Math.abs(Math.floor(offsetHours));
+    const mPart = Math.round(Math.abs(offsetHours - Math.floor(offsetHours)) * 60);
+    const offsetStr = mPart ? `${absH}:${String(mPart).padStart(2,'0')}` : `${absH}`;
+    if (loc?.timezone) {
+      try {
+        const abbr = new Intl.DateTimeFormat('en', {
+          timeZone: loc.timezone,
+          timeZoneName: 'short',
+        }).formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value;
+        if (abbr && abbr !== `GMT${sign}${offsetStr}` && abbr !== `GMT`) {
+          return `${abbr} (UTC${offsetHours >= 0 ? '+' : ''}${offsetStr})`;
+        }
+      } catch (e) {}
+    }
+    return `UTC${offsetHours >= 0 ? '+' : ''}${offsetStr}`;
+  }
+
+  // UTC offset for a location object (tries timezone name, falls back to longitude).
+  function locationUtcOffset(loc) {
+    const fromTz = tzNameToUtcOffsetHours(loc?.timezone);
+    if (fromTz != null) return fromTz;
+    return lonToUtcOffsetHours(loc?.airport?.longitude);
+  }
+
+  // How many calendar days to advance currentDate after a travel block.
+  // For travelDays=1 the answer depends on timezone offset delta (handles dateline crossings).
+  function computeFlightCalDayAdvance(fromLoc, toLoc, durationHours, model) {
+    if (model.noTravelDay) return 0;      // redeye case advances separately
+    if (model.travelDays >= 2) return model.travelDays;
+    if (model.travelDays === 0) return 0;
+    // travelDays === 1: derive from timezone offset
+    const fromOffset = locationUtcOffset(fromLoc);
+    const toOffset = locationUtcOffset(toLoc);
+    const departureHour = 12; // assume noon local departure
+    const arrivalLocal = departureHour + durationHours + (toOffset - fromOffset);
+    const calDays = Math.floor(arrivalLocal / 24);
+    return Math.max(0, Math.min(calDays, 1));
+  }
+
   function haversineKm(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth radius km
     const toRad = (deg) => (deg * Math.PI) / 180;
@@ -461,6 +535,7 @@
         longitude: first.longitude,
         country: first.country,
         name: first.name,
+        timezone: first.timezone || null,
       };
     });
   }
@@ -649,6 +724,7 @@
           cityName: preferredCity || ap.c || inferCityFromAirportName(ap.n || ""),
           country: preferredCountry || ap.o || "",
           airport,
+          timezone: null,
         };
       }
       
@@ -676,6 +752,7 @@
           cityName: preferredCity || data.city || data.municipality || localCity || inferCityFromAirportName(data.name || ""),
           country: preferredCountry || data.country || "",
           airport,
+          timezone: null,
         };
       });
       return cachedAirport;
@@ -705,6 +782,7 @@
         : (titledTyped || geo.name || airport?.city || airport?.municipality || raw),
       country: preferredCountry || geo.country || "",
       airport,
+      timezone: geo.timezone || null,
     };
   }
 
@@ -1060,21 +1138,27 @@
             routeNote,
           });
         }
-        currentDate = addDays(currentDate, model.travelDays);
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
+        currentDate = addDays(currentDate, calDayAdvance);
       }
 
       // After travel, if the arrival is a destination city (not the final return), add stay days.
       if (leg.type !== "return") {
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
         // Check if there's spillover from the previous travel leg (red-eye with no dedicated travel day)
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
         const fromLabel = leg.from.cityName || leg.from.displayName;
         const toLabel = leg.to.cityName || leg.to.displayName;
-        
+        const destTzLabel = tzDisplayLabel(leg.to);
+
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          let ptoRequired = isWeekday(d) && !off;
+          // If westward TZ gain causes travel day and first city day to share the same date,
+          // PTO was already counted on the travel row — avoid double-counting.
+          const sameAsTravelDay = calDayAdvance === 0 && s === 0 && model.travelDays > 0;
+          let ptoRequired = isWeekday(d) && !off && !sameAsTravelDay;
           let workPlusFly = false;
           
           let cityLabel = formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country);
@@ -1096,6 +1180,7 @@
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityTzLabel: destTzLabel,
           });
           tripDays++;
         }
@@ -1208,7 +1293,19 @@
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
-      total += model.travelDays;
+      // Use timezone-aware calendar day advance (accounts for dateline crossings).
+      let calDayAdvance;
+      if (model.noTravelDay) {
+        calDayAdvance = model.isRedeye ? 1 : 0;
+      } else if (model.travelDays >= 2) {
+        calDayAdvance = model.travelDays;
+      } else {
+        const fromOffset = lonToUtcOffsetHours(leg.from.airport?.longitude);
+        const toOffset = lonToUtcOffsetHours(leg.to.airport?.longitude);
+        const arrivalLocal = 12 + durationHours + (toOffset - fromOffset);
+        calDayAdvance = Math.max(0, Math.min(Math.floor(arrivalLocal / 24), 1));
+      }
+      total += calDayAdvance;
       if (leg.type !== "return") total += leg.to.stayDays;
     }
     return total;
@@ -2321,6 +2418,14 @@
         ptoTd.textContent = "No (Weekend)";
       }
 
+      // Timezone badge for city rows
+      if (day.kind === "city" && day.cityTzLabel) {
+        const tzSpan = document.createElement("span");
+        tzSpan.className = "tz-badge";
+        tzSpan.textContent = ` · ${day.cityTzLabel}`;
+        detailsTd.appendChild(tzSpan);
+      }
+
       tr.appendChild(dateTd);
       tr.appendChild(dayTd);
       tr.appendChild(detailsTd);
@@ -3184,6 +3289,7 @@ addDestinationBtn.addEventListener("click", () => {
           cityName: homeCityName,
           country: homeResolved.country,
           airport: homeResolved.airport,
+          timezone: homeResolved.timezone || null,
         };
 
         const rawCities = [];
@@ -3202,6 +3308,7 @@ addDestinationBtn.addEventListener("click", () => {
             country: resolved.country,
             stayDays: d.stayDays,
             airport: resolved.airport,
+            timezone: resolved.timezone || null,
             _inputCity: d.city,
           });
         }
@@ -3327,6 +3434,7 @@ addDestinationBtn.addEventListener("click", () => {
             cityName: rcCityName,
             country: rcResolved.country,
             airport: rcResolved.airport,
+            timezone: rcResolved.timezone || null,
           };
         }
 
@@ -3628,18 +3736,22 @@ addDestinationBtn.addEventListener("click", () => {
             arrivalSpilloverHours,
           });
         }
-        currentDate = addDays(currentDate, model.travelDays);
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
+        currentDate = addDays(currentDate, calDayAdvance);
       }
 
       if (leg.type !== "return") {
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
         const fromLabel = leg.from.cityName || leg.from.displayName;
-        
+        const destTzLabel = tzDisplayLabel(leg.to);
+
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          let ptoRequired = isWeekday(d) && !off;
+          const sameAsTravelDay = calDayAdvance === 0 && s === 0 && model.travelDays > 0;
+          let ptoRequired = isWeekday(d) && !off && !sameAsTravelDay;
           let workPlusFly = false;
           
           let cityLabel = formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country);
@@ -3660,6 +3772,7 @@ addDestinationBtn.addEventListener("click", () => {
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityTzLabel: destTzLabel,
           });
           tripDays++;
         }
