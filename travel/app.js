@@ -66,19 +66,25 @@
   // - travelDays: number of calendar days consumed by travel (0 = no dedicated travel day)
   // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
   // - noTravelDay: true if flight doesn't need a dedicated travel day
-  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8) {
+  // tzShift = locationUtcOffset(to) - locationUtcOffset(from).
+  // Eastward flights add hours to the arrival day (worse); westward subtract (better).
+  // The effective hours consumed in the destination arrival day = spilloverHours + tzShift.
+  // We compare that against the user's threshold, not just the raw spillover.
+  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8, tzShift = 0) {
     // Always avoid dedicated travel days when flight time is under the user's threshold.
     if (durationHours < travelDayThresholdH) {
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
     }
 
     // If red-eye is allowed, split into overnight + next-day spillover.
-    // ONLY use red-eye if it actually saves a travel day (spillover within threshold).
-    // If spillover exceeds threshold, we'd need a travel day anyway, so skip the red-eye
-    // and just do a regular daytime flight on a dedicated travel day.
+    // ONLY use red-eye if the time consumed on the arrival day fits within the threshold.
+    // Going east (positive tzShift) means you lose hours; going west you gain them.
     if (redeyeOK) {
       const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
-      if (spilloverHours <= travelDayThresholdH) {
+      // effectiveSpillover = hours of the destination day consumed by the remaining flight.
+      // Clamp to 0 for westward flights where the plane "arrives" before dest midnight.
+      const effectiveSpillover = Math.max(0, spilloverHours + tzShift);
+      if (effectiveSpillover <= travelDayThresholdH) {
         // Red-eye saves a travel day - use it
         return {
           travelDays: 0,
@@ -89,7 +95,7 @@
           travelDayOnNextDay: false,
         };
       }
-      // Spillover exceeds threshold: red-eye doesn't help, fall through to regular travel day logic
+      // Effective spillover exceeds threshold: red-eye doesn't help, use a dedicated travel day
     }
 
     // Most flights, including typical long-haul, should use one travel day.
@@ -201,10 +207,12 @@
   }
 
   // UTC offset for a location object (tries timezone name, falls back to longitude).
+  // Airport graph uses compact field "g" for longitude; also handles full "longitude" field.
   function locationUtcOffset(loc) {
     const fromTz = tzNameToUtcOffsetHours(loc?.timezone);
     if (fromTz != null) return fromTz;
-    return lonToUtcOffsetHours(loc?.airport?.longitude);
+    const lon = loc?.airport?.g ?? loc?.airport?.longitude;
+    return lonToUtcOffsetHours(lon);
   }
 
   // How many calendar days to advance currentDate after a travel block.
@@ -959,7 +967,8 @@
       
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
+      const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
       
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
@@ -1001,8 +1010,6 @@
           isDepartureDay: true,
           hasNextDaySpillover: model.isRedeye && dayHours > 0,
           spilloverHours: dayHours,
-          arrivalTzFromOffset: locationUtcOffset(leg.from),
-          arrivalTzToOffset: locationUtcOffset(leg.to),
           fromIata: leg.from.airport?.iataCode,
           toIata: leg.to.airport?.iataCode,
           fromCityName: fromLabel,
@@ -1110,18 +1117,9 @@
           let isArrivalDay = false;
           let arrivalSpilloverHours = 0;
           
-          let arrivalHourInDest = null;
           if (model.travelDayOnNextDay && t === 0) {
-            // This is the arrival day after a red-eye departure.
-            // dayHours = flight minutes remaining after midnight (origin tz).
-            // At origin midnight, dest clock reads tzShift hours ahead/behind.
-            // So dest arrival hour = (dayHours + tzShift) mod 24, and
-            // remaining dest-day hours = 24 − that.
             isArrivalDay = true;
-            const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
-            const rawArrivalHour = ((dayHours + tzShift) % 24 + 24) % 24;
-            arrivalSpilloverHours = Math.round(Math.max(0, 24 - rawArrivalHour));
-            arrivalHourInDest = rawArrivalHour;
+            arrivalSpilloverHours = dayHours; // raw remaining flight time after midnight origin tz
           } else if (!model.isRedeye) {
             // Regular daytime flight
             displayDayHours = durationHours;
@@ -1143,7 +1141,6 @@
             isRedeyeTravel,
             isArrivalDay,
             arrivalSpilloverHours,
-            arrivalHourInDest,
             routeInfo,
             isDirect,
             routeNote,
@@ -1176,16 +1173,11 @@
           let arrivalSpillover = 0;
           let arrivalFlightDuration = 0;
           
-          // If this is the first day in this city and there's pending spillover from a red-eye.
-          // pendingSpillover = remaining flight time after midnight (origin tz).
-          // Convert to hours remaining in the destination day using the stored tz offsets.
-          let cityArrivalHour = null;
+          // If this is the first day in this city and there's pending spillover from a red-eye,
+          // show the raw remaining flight time (hours after midnight in origin tz).
           if (s === 0 && pendingSpillover > 0) {
-            const tzShift = (lastDayEntry?.arrivalTzToOffset ?? 0) - (lastDayEntry?.arrivalTzFromOffset ?? 0);
-            const rawArrivalHour = ((pendingSpillover + tzShift) % 24 + 24) % 24;
-            arrivalSpillover = Math.round(Math.max(0, 24 - rawArrivalHour));
+            arrivalSpillover = pendingSpillover;
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
-            cityArrivalHour = rawArrivalHour;
           }
 
           days.push({
@@ -1197,7 +1189,6 @@
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
-            arrivalHourInDest: cityArrivalHour,
             cityTzLabel: destTzLabel,
           });
           tripDays++;
@@ -1310,7 +1301,10 @@
     let total = 0;
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
+      const fromLon = leg.from.airport?.g ?? leg.from.airport?.longitude;
+      const toLon = leg.to.airport?.g ?? leg.to.airport?.longitude;
+      const tzShift = lonToUtcOffsetHours(toLon) - lonToUtcOffsetHours(fromLon);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
       // Use timezone-aware calendar day advance (accounts for dateline crossings).
       let calDayAdvance;
       if (model.noTravelDay) {
@@ -2375,8 +2369,7 @@
         
         // Check if this is an arrival day with spillover from previous night's red-eye
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          const arrTime = day.arrivalHourInDest != null ? `, arrives ${formatArrivalTime(day.arrivalHourInDest)}` : "";
-          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote}${arrTime}; ${formatHours(day.arrivalSpilloverHours)} left in day)`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (day.isDepartureDay) {
           // Departure day - label already contains the flight info
           detailsTd.textContent = day.label;
@@ -2393,12 +2386,11 @@
         // First city day after a red-eye with spillover
         const flightTime = formatHours(day.arrivalFlightDurationHours);
         const spillover = formatHours(day.arrivalSpilloverHours);
-        const arrTime = day.arrivalHourInDest != null ? `, arrives ${formatArrivalTime(day.arrivalHourInDest)}` : "";
         const fromCity = day.arrivalFromCity || "";
         if (fromCity) {
-          detailsTd.textContent = `${fromCity} → ${day.label} (~${flightTime}${arrTime}; ${spillover} left in day). Day 1 in ${day.label.split(" (")[0]}`;
+          detailsTd.textContent = `${fromCity} → ${day.label} (~${flightTime}; ${spillover} remaining). Day 1 in ${day.label.split(" (")[0]}`;
         } else {
-          detailsTd.textContent = `${day.label} (arrival${arrTime}; ${spillover} left in day)`;
+          detailsTd.textContent = `${day.label} (arrival; ${spillover} remaining)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         // City day with evening departure - show both daytime and overnight portions
@@ -2460,14 +2452,6 @@
     }
     table.appendChild(tbody);
     wrap.appendChild(table);
-  }
-
-  // Format an hour-of-day (0–23, may be fractional) as a 12-h clock string, e.g. "~1pm"
-  function formatArrivalTime(h) {
-    const hr = ((Math.round(h) % 24) + 24) % 24;
-    const suffix = hr >= 12 ? 'pm' : 'am';
-    const display = hr % 12 === 0 ? 12 : hr % 12;
-    return `~${display}${suffix}`;
   }
 
   function formatHours(hours) {
@@ -2574,8 +2558,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
         const directSuffix = directStatus.note ? `, ${directStatus.note}` : "";
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          const arrTime = day.arrivalHourInDest != null ? `, arrives ${formatArrivalTime(day.arrivalHourInDest)}` : "";
-          details = `${day.label} (~${flightTime}${directSuffix}${arrTime}; ${formatHours(day.arrivalSpilloverHours)} left in day)`;
+          details = `${day.label} (~${flightTime}${directSuffix}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (!day.isDepartureDay && !day.noTravelDay && !day.isArrivalDay) {
           details = `${day.label} (~${flightTime}${directSuffix})`;
         } else if (day.isDepartureDay && directStatus.note) {
@@ -2584,12 +2567,11 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       } else if (day.kind === "city" && day.arrivalSpilloverHours > 0) {
         const flightTime = formatHours(day.arrivalFlightDurationHours);
         const spillover = formatHours(day.arrivalSpilloverHours);
-        const arrTime = day.arrivalHourInDest != null ? `, arrives ${formatArrivalTime(day.arrivalHourInDest)}` : "";
         const fromCity = day.arrivalFromCity || "";
         if (fromCity) {
-          details = `${fromCity} → ${day.label} (~${flightTime}${arrTime}; ${spillover} left in day). Day 1 in ${day.label.split(" (")[0]}`;
+          details = `${fromCity} → ${day.label} (~${flightTime}; ${spillover} remaining). Day 1 in ${day.label.split(" (")[0]}`;
         } else {
-          details = `${day.label} (arrival${arrTime}; ${spillover} left in day)`;
+          details = `${day.label} (arrival; ${spillover} remaining)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
@@ -3658,7 +3640,8 @@ addDestinationBtn.addEventListener("click", () => {
       if (!Number.isFinite(durationHours)) return null;
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
+      const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
       const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
 
       if (model.noTravelDay) {
@@ -3688,8 +3671,6 @@ addDestinationBtn.addEventListener("click", () => {
             isDepartureDay: true,
             hasNextDaySpillover: model.isRedeye && dayHours > 0,
             spilloverHours: dayHours,
-            arrivalTzFromOffset: locationUtcOffset(leg.from),
-            arrivalTzToOffset: locationUtcOffset(leg.to),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             fromCityName: fromLabel,
@@ -3771,13 +3752,9 @@ addDestinationBtn.addEventListener("click", () => {
           
           let isArrivalDay = false;
           let arrivalSpilloverHours = 0;
-          let arrivalHourInDest = null;
           if (model.travelDayOnNextDay && t === 0) {
             isArrivalDay = true;
-            const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
-            const rawArrivalHour = ((dayHours + tzShift) % 24 + 24) % 24;
-            arrivalSpilloverHours = Math.round(Math.max(0, 24 - rawArrivalHour));
-            arrivalHourInDest = rawArrivalHour;
+            arrivalSpilloverHours = dayHours; // raw remaining flight time after midnight origin tz
           }
           
           days.push({
@@ -3796,7 +3773,6 @@ addDestinationBtn.addEventListener("click", () => {
             isRedeyeTravel,
             isArrivalDay,
             arrivalSpilloverHours,
-            arrivalHourInDest,
           });
         }
         const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
@@ -3821,13 +3797,9 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalSpillover = 0;
           let arrivalFlightDuration = 0;
           
-          let cityArrivalHour = null;
           if (s === 0 && pendingSpillover > 0) {
-            const tzShift = (lastDayEntry?.arrivalTzToOffset ?? 0) - (lastDayEntry?.arrivalTzFromOffset ?? 0);
-            const rawArrivalHour = ((pendingSpillover + tzShift) % 24 + 24) % 24;
-            arrivalSpillover = Math.round(Math.max(0, 24 - rawArrivalHour));
+            arrivalSpillover = pendingSpillover; // raw remaining flight time
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
-            cityArrivalHour = rawArrivalHour;
           }
 
           days.push({
@@ -3839,7 +3811,6 @@ addDestinationBtn.addEventListener("click", () => {
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
-            arrivalHourInDest: cityArrivalHour,
             cityTzLabel: destTzLabel,
           });
           tripDays++;
