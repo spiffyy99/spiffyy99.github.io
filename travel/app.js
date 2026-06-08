@@ -1001,6 +1001,8 @@
           isDepartureDay: true,
           hasNextDaySpillover: model.isRedeye && dayHours > 0,
           spilloverHours: dayHours,
+          arrivalTzFromOffset: locationUtcOffset(leg.from),
+          arrivalTzToOffset: locationUtcOffset(leg.to),
           fromIata: leg.from.airport?.iataCode,
           toIata: leg.to.airport?.iataCode,
           fromCityName: fromLabel,
@@ -1109,9 +1111,15 @@
           let arrivalSpilloverHours = 0;
           
           if (model.travelDayOnNextDay && t === 0) {
-            // This is the arrival day after a red-eye departure
+            // This is the arrival day after a red-eye departure.
+            // dayHours = flight minutes remaining after midnight (origin tz).
+            // At origin midnight, dest clock reads tzShift hours ahead/behind.
+            // So dest arrival hour = (dayHours + tzShift) mod 24, and
+            // remaining dest-day hours = 24 − that.
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours; // The remaining portion after overnight
+            const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+            const rawArrivalHour = ((dayHours + tzShift) % 24 + 24) % 24;
+            arrivalSpilloverHours = Math.round(Math.max(0, 24 - rawArrivalHour));
           } else if (!model.isRedeye) {
             // Regular daytime flight
             displayDayHours = durationHours;
@@ -1165,9 +1173,13 @@
           let arrivalSpillover = 0;
           let arrivalFlightDuration = 0;
           
-          // If this is the first day in this city and there's pending spillover from a red-eye
+          // If this is the first day in this city and there's pending spillover from a red-eye.
+          // pendingSpillover = remaining flight time after midnight (origin tz).
+          // Convert to hours remaining in the destination day using the stored tz offsets.
           if (s === 0 && pendingSpillover > 0) {
-            arrivalSpillover = pendingSpillover;
+            const tzShift = (lastDayEntry?.arrivalTzToOffset ?? 0) - (lastDayEntry?.arrivalTzFromOffset ?? 0);
+            const rawArrivalHour = ((pendingSpillover + tzShift) % 24 + 24) % 24;
+            arrivalSpillover = Math.round(Math.max(0, 24 - rawArrivalHour));
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
           }
 
@@ -3640,6 +3652,8 @@ addDestinationBtn.addEventListener("click", () => {
             isDepartureDay: true,
             hasNextDaySpillover: model.isRedeye && dayHours > 0,
             spilloverHours: dayHours,
+            arrivalTzFromOffset: locationUtcOffset(leg.from),
+            arrivalTzToOffset: locationUtcOffset(leg.to),
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
             fromCityName: fromLabel,
@@ -3723,7 +3737,9 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalSpilloverHours = 0;
           if (model.travelDayOnNextDay && t === 0) {
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours;
+            const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+            const rawArrivalHour = ((dayHours + tzShift) % 24 + 24) % 24;
+            arrivalSpilloverHours = Math.round(Math.max(0, 24 - rawArrivalHour));
           }
           
           days.push({
@@ -3767,7 +3783,9 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalFlightDuration = 0;
           
           if (s === 0 && pendingSpillover > 0) {
-            arrivalSpillover = pendingSpillover;
+            const tzShift = (lastDayEntry?.arrivalTzToOffset ?? 0) - (lastDayEntry?.arrivalTzFromOffset ?? 0);
+            const rawArrivalHour = ((pendingSpillover + tzShift) % 24 + 24) % 24;
+            arrivalSpillover = Math.round(Math.max(0, 24 - rawArrivalHour));
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
           }
 
