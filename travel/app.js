@@ -138,11 +138,14 @@
     return Math.max(0.75, airborneHours + groundTimeHours);
   }
 
-  function splitFlightHours(durationHours, isRedeye, redeyeOvernightH = 8) {
+  function splitFlightHours(durationHours, isRedeye, redeyeOvernightH = 8, tzShift = 0) {
     if (!Number.isFinite(durationHours)) return { nightHours: 0, dayHours: 0 };
     if (!isRedeye) return { nightHours: 0, dayHours: durationHours };
     const nightHours = Math.min(durationHours, redeyeOvernightH);
-    return { nightHours, dayHours: Math.max(0, durationHours - nightHours) };
+    const rawDayHours = Math.max(0, durationHours - nightHours);
+    // Add timezone shift: flying east means the arrival day starts that many hours earlier
+    // in local time, consuming more of the arrival day even if the raw flight spillover is 0.
+    return { nightHours, dayHours: Math.max(0, rawDayHours + tzShift) };
   }
   
   function isWestwardFlight(fromLon, toLon) {
@@ -972,7 +975,7 @@
       
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH, tzShift);
       
       if (model.noTravelDay) {
         // For outbound leg from home, we need to note the departure
@@ -2744,7 +2747,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     if (dateRangeInput && typeof flatpickr !== 'undefined') {
       dateRangePicker = flatpickr(dateRangeInput, {
         mode: "range",
-        dateFormat: "Y-m-d",
+        dateFormat: "M j, Y",
         minDate: "today",
         defaultDate: [todayISO, oneMonthISO],
         allowInput: false,
@@ -2780,6 +2783,8 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       if (typeof flatpickr !== 'undefined') {
         flatpickr(specificDateInput, {
           dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "M j, Y",
           minDate: "today",
           defaultDate: oneMonthISO
         });
@@ -2824,19 +2829,18 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     function syncDateModeFields() {
       const mode = dateModeSelect ? dateModeSelect.value : "range";
       const isRange = mode === "range";
-      const isDow = mode === "dow";
       const isSpecific = mode === "specific";
-      const dowActive = isDow || (dowDirectionField && dowDirectionField.style.display !== "none");
+      const dowActive = dowDirectionField && dowDirectionField.style.display !== "none";
       
-      if (dateRangeField) dateRangeField.style.display = (isRange || isDow) ? "" : "none";
+      if (dateRangeField) dateRangeField.style.display = isRange ? "" : "none";
       if (dowToggle) {
         dowToggle.style.display = isRange ? "" : "none";
         // Hide the whole row (not just the button) to avoid a blank gap in non-range modes
         if (dowToggle.parentElement) dowToggle.parentElement.style.display = isRange ? "" : "none";
-        dateChangerDiv.style.marginBottom = (isRange || isDow) ? "1em" : "0";
+        dateChangerDiv.style.marginBottom = isRange ? "1em" : "0";
       }
-      if (dowDirectionField) dowDirectionField.style.display = (isDow || (isRange && dowActive)) ? "" : "none";
-      if (dowDayField) dowDayField.style.display = (isDow || (isRange && dowActive)) ? "" : "none";
+      if (dowDirectionField) dowDirectionField.style.display = (isRange && dowActive) ? "" : "none";
+      if (dowDayField) dowDayField.style.display = (isRange && dowActive) ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
       if (specificDateField) specificDateField.style.display = isSpecific ? "" : "none";
     }
@@ -2959,13 +2963,26 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
             });
           });
           if (homeCityInput.value.trim()) return; // user already typed
-          const { city: geoCity, country } = await reverseGeocode(
-            pos.coords.latitude,
-            pos.coords.longitude
-          );
-          // Prefer the city name from the nearest airport (e.g. "New York" instead of "Jamaica")
-          const nearbyCity = nearestAirportCity(pos.coords.latitude, pos.coords.longitude);
-          applyDetectedLocation({ city: nearbyCity || geoCity, country });
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          // Use the smart hub-aware airport lookup (in-memory, instant) to get the
+          // canonical city name for the region (e.g. "New York" for JFK/LGA/EWR,
+          // not "Queens" or "Jamaica" that a borough-level reverse geocoder returns).
+          const bestAirport = findBestAirportNearCoords(lat, lon, 100);
+          if (bestAirport?.city) {
+            // Apply city immediately — no network round-trip needed.
+            applyDetectedLocation({ city: bestAirport.city, country: '' });
+            // Fetch country in the background for the holiday-country selector.
+            try {
+              const { country } = await reverseGeocode(lat, lon);
+              if (country) applyDetectedLocation({ city: bestAirport.city, country });
+            } catch (_) {}
+          } else {
+            // Airport graph not yet loaded or no airport within 100 km — fall back to
+            // reverse geocode for both city and country.
+            const { city, country } = await reverseGeocode(lat, lon);
+            applyDetectedLocation({ city, country });
+          }
           return;
         } catch (err) {
           // Fall through to IP-based fallback. Capture reason for the toast
@@ -3169,8 +3186,8 @@ addDestinationBtn.addEventListener("click", () => {
         const dowDirectionEl = $("dowDirection");
         const dowDayField = $("dowDayField");
         const dowDayEl = $("dowDay");
-        // "dow" mode always applies the DOW constraint; "range" mode only when toggle is visible
-        const dowFieldsVisible = dateMode === "dow" || (dowDayField && dowDayField.style.display !== "none");
+        // DOW constraint applies only when the toggle is expanded under "date range" mode
+        const dowFieldsVisible = dowDayField && dowDayField.style.display !== "none";
         if (dowFieldsVisible) {
           const dowDirection = (dowDirectionEl && dowDirectionEl.value) || "depart";
           const dowDay = parseInt((dowDayEl && dowDayEl.value) ?? "1", 10);
@@ -3642,7 +3659,7 @@ addDestinationBtn.addEventListener("click", () => {
 
       const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
       const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH, tzShift);
 
       if (model.noTravelDay) {
         if (leg.type === "outbound" && days.length === 0) {
