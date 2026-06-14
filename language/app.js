@@ -594,9 +594,16 @@
 
   // ---------- Game logic ----------
 
+  function pickTemplate(item, values) {
+    const counter = values.counter;
+    const wantOrdinal = counter?.kind === 'choice' && counter.extra?.ordinal === true;
+    const matching = item.templates.filter((t) => (t.ordinal === true) === wantOrdinal);
+    return pick(matching.length ? matching : item.templates);
+  }
+
   function generateQuestion(item, settings) {
-    const template = pick(item.templates);
     const values = generateValuesFor(item, settings);
+    const template = pickTemplate(item, values);
     const question = renderQuestionTemplate(template.question, values);
     const accepted = expandAcceptedAnswers(template, values, false);
     const acceptedDigit = expandAcceptedAnswers(template, values, true);

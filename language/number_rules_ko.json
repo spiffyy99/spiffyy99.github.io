@@ -823,8 +823,8 @@
           {
             "id": "numbered_labels",
             "label": "Numbered Labels",
-            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 편 (flight), 번 창구 (counter), 학년 (school grade), 반 (class), 점 (points/score).",
-            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. Flight 405 → 사백오 편. Counter 3 → 삼 번 창구.",
+            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 편 (flight), 번 창구 (counter), 학년 (school grade), 반 (class), 점 (points/score), 주년 (anniversary), 세대 (generation).",
+            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. 1st anniversary → 일 주년. 3rd generation → 삼 세대.",
             "variables": {
               "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
               "counter": {
@@ -838,7 +838,9 @@
                   { "en": "Counter", "ko": "번 창구" },
                   { "en": "(School) Grade", "ko": "학년" },
                   { "en": "Class", "ko": "반" },
-                  { "en": "Points", "ko": "점" }
+                  { "en": "Points", "ko": "점" },
+                  { "en": "anniversary", "ko": "주년", "ordinal": true },
+                  { "en": "generation", "ko": "세대", "ordinal": true }
                 ]
               }
             },
@@ -846,6 +848,12 @@
               {
                 "id": "numbered_labels_standard",
                 "question": "{counter.en} {count}",
+                "answer": "{count} {counter.ko}"
+              },
+              {
+                "id": "numbered_labels_ordinal",
+                "ordinal": true,
+                "question": "{count|ord} {counter.en}",
                 "answer": "{count} {counter.ko}"
               }
             ]
