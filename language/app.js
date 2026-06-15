@@ -596,8 +596,13 @@
 
   function pickTemplate(item, values) {
     const counter = values.counter;
-    const wantOrdinal = counter?.kind === 'choice' && counter.extra?.ordinal === true;
-    const matching = item.templates.filter((t) => (t.ordinal === true) === wantOrdinal);
+    const isOrdinal = counter?.kind === 'choice' && counter.extra?.ordinal === true;
+    const isCountFirst = counter?.kind === 'choice' && counter.extra?.countFirst === true;
+    const matching = item.templates.filter((t) => {
+      if (t.ordinal === true) return isOrdinal;
+      if (t.countFirst === true) return isCountFirst && !isOrdinal;
+      return !isOrdinal && !isCountFirst;
+    });
     return pick(matching.length ? matching : item.templates);
   }
 

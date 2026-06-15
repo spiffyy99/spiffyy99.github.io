@@ -808,7 +808,8 @@
                     },
                     { "examples": ["pills"], "ko": "알" },
                     { "examples": ["tablets"], "ko": "정" },
-                    { "examples": ["seats"], "ko": "자리" }
+                    { "examples": ["seats"], "ko": "자리" },
+                    { "examples": ["orders of..."], "ko": "인분"}
                 ]
               }
             },
@@ -824,7 +825,7 @@
             "id": "numbered_labels",
             "label": "Numbered Labels",
             "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 편 (flight), 번 창구 (counter), 학년 (school grade), 반 (class), 점 (points/score), 주년 (anniversary), 세대 (generation).",
-            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. 1st anniversary → 일 주년. 3rd generation → 삼 세대.",
+            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. 5 points → 오 점. 1st anniversary → 일 주년. 3rd generation → 삼 세대.",
             "variables": {
               "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
               "counter": {
@@ -836,9 +837,9 @@
                   { "en": "Bus Route", "ko": "번 버스" },
                   { "en": "Flight", "ko": "편" },
                   { "en": "Counter", "ko": "번 창구" },
-                  { "en": "(School) Grade", "ko": "학년" },
+                  { "en": "(School) Grade", "ko": "학년", "ordinal": true },
                   { "en": "Class", "ko": "반" },
-                  { "en": "Points", "ko": "점" },
+                  { "en": "points", "ko": "점", "countFirst": true },
                   { "en": "anniversary", "ko": "주년", "ordinal": true },
                   { "en": "generation", "ko": "세대", "ordinal": true }
                 ]
@@ -848,6 +849,12 @@
               {
                 "id": "numbered_labels_standard",
                 "question": "{counter.en} {count}",
+                "answer": "{count} {counter.ko}"
+              },
+              {
+                "id": "numbered_labels_count_first",
+                "countFirst": true,
+                "question": "{count} {counter.en}",
                 "answer": "{count} {counter.ko}"
               },
               {
