@@ -647,7 +647,7 @@ const Setup = () => {
                     onChange={() => setIncludeSecondaryDominants(!includeSecondaryDominants)}
                     testId="secondary-dominants-toggle"
                   />
-                  {mode === 'number-to-chord' && (
+                  {isChordSourceMode && (
                     <SwitchRow
                       label="7ths"
                       description="Randomly turns the chords above into 7th chords (Maj7, m7, dom7, ø7, °7, aug7). Questions show (7). This is a modifier, not a standalone chord type."

@@ -1,19 +1,63 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Info } from 'lucide-react';
 import { SCALE_TYPES } from '../utils/chordLogic';
 
 const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
+const CHORD_SOURCE_MODES = ['number-to-chord', 'chord-to-number', 'transposition'];
+
+const SwitchRow = ({ label, description, checked, onChange, testId }) => {
+  const [showTip, setShowTip] = useState(false);
+  return (
+    <div className="flex items-center justify-between py-3">
+      <div className="flex items-center gap-1.5 min-w-0 mr-3">
+        <span className="text-sm font-semibold text-[#1A1A1A]">{label}</span>
+        {description && (
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onMouseEnter={() => setShowTip(true)}
+              onMouseLeave={() => setShowTip(false)}
+              onFocus={() => setShowTip(true)}
+              onBlur={() => setShowTip(false)}
+              className="text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
+              aria-label={`Info about ${label}`}
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+            {showTip && (
+              <div className="absolute left-5 top-0 z-20 w-56 bg-[#1A1A1A] text-white text-xs rounded-sm p-2 leading-relaxed shadow-lg">
+                {description}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <button
+        data-testid={testId}
+        type="button"
+        onClick={onChange}
+        className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${checked ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}
+        aria-pressed={checked}
+      >
+        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${checked ? 'translate-x-6' : 'translate-x-0.5'}`} />
+      </button>
+    </div>
+  );
+};
 
 const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, showScaleTypePool = true }) => {
   if (!isOpen) return null;
 
   const {
     enabledScaleTypes = ['major'],
+    includeRegular = true,
     includeBorrowed = false,
     includeSecondaryDominants = false,
     include7ths = false,
     guessScaleSubmode = 'chords'
   } = settings;
+
+  const isChordSourceMode = CHORD_SOURCE_MODES.includes(mode);
 
   const majorEnabled = enabledScaleTypes.includes('major');
   const naturalMinorEnabled = enabledScaleTypes.includes('naturalMinor');
@@ -21,13 +65,10 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
   const melodicMinorEnabled = enabledScaleTypes.includes('melodicMinor');
   const otherModesEnabled = OTHER_MODES.some(m => enabledScaleTypes.includes(m));
 
-  // Count enabled to prevent deselecting last
   const enabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled, melodicMinorEnabled, otherModesEnabled].filter(Boolean).length;
 
   const toggleScaleTypes = (types, currentlyEnabled) => {
-    // Prevent deselecting last option
     if (currentlyEnabled && enabledCount === 1) return;
-    
     let newTypes;
     if (currentlyEnabled) {
       newTypes = enabledScaleTypes.filter(t => !types.includes(t));
@@ -122,58 +163,40 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* Parallel Minor Chords - Not shown for guess-scale mode */}
-          {mode !== 'guess-scale' && (
+          {/* Unified Chord Types panel — for chord-source modes */}
+          {isChordSourceMode && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-[#1A1A1A]">Parallel Minor Chords</h4>
-                  <p className="text-xs text-[#9CA3AF] mt-1">
-                    {includeBorrowed
-                      ? 'Includes chords from parallel minor'
-                      : 'Only diatonic scale chords'}
-                  </p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5">Only applies in major scale context</p>
-                </div>
-                <button
-                  data-testid="settings-borrowed-toggle"
-                  onClick={() => onSettingsChange({ includeBorrowed: !includeBorrowed })}
-                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
-                    includeBorrowed ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                    includeBorrowed ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Secondary Dominant Chords - For number-to-chord, chord-to-number, and transposition */}
-          {(mode === 'number-to-chord' || mode === 'chord-to-number' || mode === 'transposition') && (
-            <div className="border border-[#E5E7EB] rounded-sm p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-[#1A1A1A]">Secondary Dominant Chords</h4>
-                  <p className="text-xs text-[#9CA3AF] mt-1">
-                    {includeSecondaryDominants
-                      ? 'Includes secondary dominants (V/ii, V/iii, V/V, etc.)'
-                      : 'Only diatonic scale chords'}
-                  </p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5">Only applies for Major, Natural Minor, Harmonic Minor</p>
-                </div>
-                <button
-                  data-testid="settings-secondary-dominants-toggle"
-                  onClick={() => onSettingsChange({ includeSecondaryDominants: !includeSecondaryDominants })}
-                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
-                    includeSecondaryDominants ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                    includeSecondaryDominants ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </button>
+              <h4 className="font-bold text-[#1A1A1A] mb-0.5">Chord Types</h4>
+              <p className="text-xs text-[#9CA3AF] mb-1">Hover the info icon for details.</p>
+              <div className="divide-y divide-[#E5E7EB]">
+                <SwitchRow
+                  label="Regular Chords"
+                  description="Standard diatonic chords from the scale. Turn this off to focus exclusively on the special chord types below."
+                  checked={includeRegular}
+                  onChange={() => onSettingsChange({ includeRegular: !includeRegular })}
+                  testId="settings-regular-chords-toggle"
+                />
+                <SwitchRow
+                  label="Parallel Minor"
+                  description={'Borrowed chords from the parallel minor (i, \u266DIII, iv, v, \u266DVI, \u266DVII). Only applies in a major scale.'}
+                  checked={includeBorrowed}
+                  onChange={() => onSettingsChange({ includeBorrowed: !includeBorrowed })}
+                  testId="settings-borrowed-toggle"
+                />
+                <SwitchRow
+                  label="Secondary Dominants"
+                  description="Secondary dominant chords (V/ii, V/iii, V/V, etc.). Only applies for Major, Natural Minor, and Harmonic Minor scales."
+                  checked={includeSecondaryDominants}
+                  onChange={() => onSettingsChange({ includeSecondaryDominants: !includeSecondaryDominants })}
+                  testId="settings-secondary-dominants-toggle"
+                />
+                <SwitchRow
+                  label="7ths"
+                  description="Randomly turns the chords above into 7th chords (Maj7, m7, dom7, ø7, °7, aug7). Questions show (7). This is a modifier, not a standalone chord type."
+                  checked={include7ths}
+                  onChange={() => onSettingsChange({ include7ths: !include7ths })}
+                  testId="settings-7th-toggle"
+                />
               </div>
             </div>
           )}
@@ -212,21 +235,16 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* 7th Chords - For number-to-chord, and guess-scale in chords sub-mode */}
-          {(mode === 'number-to-chord' || (mode === 'guess-scale' && guessScaleSubmode !== 'notes')) && (
+          {/* 7th Chords — guess-scale mode only */}
+          {mode === 'guess-scale' && guessScaleSubmode !== 'notes' && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-[#1A1A1A]">{mode === 'guess-scale' ? 'Display 7th Chords' : '7th Chords'}</h4>
+                  <h4 className="font-bold text-[#1A1A1A]">Display 7th Chords</h4>
                   <p className="text-xs text-[#9CA3AF] mt-1">
-                    {mode === 'guess-scale' 
-                      ? (include7ths ? 'Chords displayed with 7ths' : 'Chords displayed as triads')
-                      : (include7ths ? 'Includes Maj7, m7, dom7, ø7, °7, aug7' : 'Only triads')
-                    }
+                    {include7ths ? 'Chords displayed with 7ths' : 'Chords displayed as triads'}
                   </p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5">
-                    {mode === 'guess-scale' ? 'New question generated on change' : 'Changes apply on next question'}
-                  </p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">New question generated on change</p>
                 </div>
                 <button
                   data-testid="settings-7th-toggle"

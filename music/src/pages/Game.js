@@ -462,6 +462,9 @@ const Game = () => {
       }
       // For transposition mode, scale type is randomized, so no need to adjust
     }
+    if ('includeRegular' in newSettings) {
+      setIncludeRegular(newSettings.includeRegular);
+    }
     if ('includeBorrowed' in newSettings) {
       setIncludeBorrowed(newSettings.includeBorrowed);
     }
@@ -950,7 +953,7 @@ const Game = () => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={{ enabledScaleTypes, includeBorrowed, includeSecondaryDominants, include7ths, guessScaleSubmode }}
+        settings={{ enabledScaleTypes, includeRegular, includeBorrowed, includeSecondaryDominants, include7ths, guessScaleSubmode }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
         showScaleTypePool={
