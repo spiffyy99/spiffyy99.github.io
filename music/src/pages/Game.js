@@ -157,6 +157,7 @@ const Game = () => {
     const borrowed = includeBorrowedRef.current;
     const sevenths = include7thsRef.current;
     const secDom = includeSecondaryDominantsRef.current;
+    const regular = includeRegularRef.current;
 
     if (config.mode === 'interval-transpose') {
       return { ...generateIntervalTransposition(), type: 'interval-transpose' };
@@ -179,24 +180,24 @@ const Game = () => {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
+      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom, regular);
     }
     if (config.mode === 'chord-to-number') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
+      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom, regular);
     }
     if (config.mode === 'transposition') {
       const randomScaleType = getRandomScaleType();
       if (config.targetScaleSelection === 'random') {
         const src = randomRoot();
         const tgt = getRandomDifferentRoot(src);
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom, regular);
       } else {
         const src = config.sourceRoot || 'C';
         const tgt = config.targetRoot || 'D';
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom, regular);
       }
     }
     return null;
