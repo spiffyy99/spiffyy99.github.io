@@ -1,0 +1,850 @@
+/* Vibe Visa & Entry Briefing — distinct passport-y aesthetic.
+   Parchment + deep navy + warm gold. Serif headlines, clean sans body. */
+
+:root{
+  --bg:#F1ECE0;             /* parchment */
+  --bg-pattern:rgba(30,58,95,0.04);
+  --card:#FFFCF5;           /* slightly warmer card */
+  --text:#16243A;           /* near-navy ink */
+  --muted:#6B7382;
+  --border:#E2D9C2;         /* warm parchment border */
+  --border-soft:#EFE8D6;
+  --primary:#1E3A5F;        /* passport navy */
+  --primary-soft:#2C5282;
+  --accent:#C9A24A;         /* foil gold */
+  --accent-soft:#E8D5A0;
+  --secondary:#EFE9DA;
+  --error-bg:#FCE8E6;
+  --error-border:#F2BFB6;
+  --error-text:#8E2D1F;
+  --good-bg:#E5F1E5;
+  --good-border:#A8CFA8;
+  --good-text:#1F5F2C;
+  --warn-bg:#FBF1D9;
+  --warn-border:#E8C97D;
+  --warn-text:#7A5318;
+  --info-bg:#E2EAF6;
+  --info-border:#B6C7E0;
+  --info-text:#1F3D6E;
+
+  --visa-free:#3F8B5A;       /* green */
+  --visa-onarrival:#C49232;  /* amber */
+  --visa-evisa:#3266B0;      /* blue */
+  --visa-tourist:#B85A2A;    /* terracotta */
+  --visa-work:#6B4FB1;       /* purple */
+  --visa-other:#5C6772;
+}
+
+[data-theme="dark"]{
+  --bg:#0F1722;
+  --bg-pattern:rgba(200,212,229,0.04);
+  --card:#1A2332;
+  --text:#E5E9F0;
+  --muted:#94A0B5;
+  --border:#2B3A52;
+  --border-soft:#243046;
+  --primary:#9BB5DB;
+  --primary-soft:#7E9DCC;
+  --accent:#D4B266;
+  --accent-soft:#5A4A22;
+  --secondary:#22304A;
+  --error-bg:#3A1E1A;
+  --error-border:#6B2F26;
+  --error-text:#F5A89A;
+  --good-bg:#143123;
+  --good-border:#2C5E40;
+  --good-text:#A8DDB4;
+  --warn-bg:#3A2E12;
+  --warn-border:#705518;
+  --warn-text:#EFCB7A;
+  --info-bg:#1B2A45;
+  --info-border:#33486B;
+  --info-text:#9FB7DC;
+
+  --visa-free:#5DAD78;
+  --visa-onarrival:#D6A75E;
+  --visa-evisa:#6892D5;
+  --visa-tourist:#D08260;
+  --visa-work:#9D86D2;
+  --visa-other:#94A0B5;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 8%, var(--bg-pattern) 0%, transparent 35%),
+    radial-gradient(circle at 88% 92%, var(--bg-pattern) 0%, transparent 35%);
+  color: var(--text);
+  transition: background 0.2s, color 0.2s;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.page{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 18px 64px;
+}
+
+.header{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.header-left{ flex: 1; min-width: 0; }
+.header-right{ flex-shrink: 0; }
+
+.header-left h1{
+  font-family: inherit;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: var(--primary);
+}
+
+.theme-toggle{
+  width: 38px; height: 38px; padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover{ background: var(--secondary); border-color: var(--primary-soft); }
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 14px 0;
+  box-shadow: 0 1px 0 rgba(30,58,95,0.04), 0 8px 24px -16px rgba(30,58,95,0.18);
+}
+
+.form{ width: 100%; }
+
+.sectionTitle{
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 6px 0 6px;
+}
+
+.hint{
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 2px 0 10px;
+}
+
+.row{ margin-top: 10px; }
+
+label{
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+input[type="text"], input[type="number"], select{
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus{
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
+}
+
+input[type="checkbox"]{ accent-color: var(--primary); }
+
+.btn{
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: filter 0.15s, transform 0.05s;
+}
+.btn.primary{
+  background: var(--primary);
+  color: #FFFCF5;
+  border-color: var(--primary);
+}
+.btn.secondary{ background: var(--secondary); color: var(--text); }
+.btn:hover{ filter: brightness(0.96); }
+.btn:active{ transform: translateY(1px); }
+
+.errorBox{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--error-border);
+  background: var(--error-bg);
+  color: var(--error-text);
+  font-size: 14px;
+}
+
+/* Passport chips */
+.chips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 8px;
+  min-height: 4px;
+}
+.chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 8px 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  box-shadow: 0 1px 0 rgba(30,58,95,0.06);
+}
+.chip .chip-flag{ font-size: 14px; line-height: 1; }
+.chip .chip-remove{
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 50%;
+}
+.chip .chip-remove:hover{ color: var(--error-text); background: var(--error-bg); }
+.chips-empty{
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Destination card */
+.destinationCard{
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.destField{ display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.destField label{ font-size: 12px; }
+
+.destinationCard .destTopRow{
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 10px;
+}
+
+.daysUnitWrap{
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--input-bg);
+}
+.daysNumInput{
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 8px 6px 8px 10px;
+  font-size: 14px;
+  color: var(--fg);
+  outline: none;
+  -moz-appearance: textfield;
+}
+.daysNumInput::-webkit-outer-spin-button,
+.daysNumInput::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+.daysUnitSelect{
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface-2, var(--surface));
+  color: var(--fg-muted, var(--fg));
+  font-size: 13px;
+  padding: 0 6px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 42px;
+  text-align: center;
+  width: auto;
+}
+.daysUnitSelect:focus{ background: var(--surface); }
+.daysUnitWrap:focus-within{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+@media (max-width: 520px){
+  .destinationCard .destTopRow{ grid-template-columns: 1fr; }
+}
+
+.destinationCard .destOptionsRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Toggle pill (multi-entry / work) */
+.togglePill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  background: var(--card);
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.togglePill input{ display: none; }
+.togglePill .pill-icon{ font-size: 14px; line-height: 1; opacity: 0.85; }
+.togglePill:hover{ border-color: var(--primary-soft); }
+.togglePill.is-on{
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFFCF5;
+}
+.togglePill.is-on .pill-icon{ opacity: 1; }
+
+.removeDestBtn{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.removeDestBtn:hover{
+  color: var(--error-text);
+  background: var(--error-bg);
+  border-color: var(--error-border);
+}
+
+/* ───────────── Results ───────────── */
+.resultsList{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.resultCard{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: var(--card);
+  box-shadow: 0 1px 0 rgba(30,58,95,0.04);
+  position: relative;
+  overflow: hidden;
+}
+/* Color bar on the left, themed by visa type */
+.resultCard::before{
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--card-accent, var(--primary));
+}
+.resultCard.no-match::before{ background: var(--warn-border); }
+
+.resultHeader{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.resultHeader .flag{ font-size: 28px; line-height: 1; }
+.resultHeader .country{
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+/* Plan chips above results */
+.planChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+.planChip{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+.planChip .pc-icon{ opacity: 0.75; font-size: 13px; }
+
+.recommend{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  margin: 6px 0 12px;
+  font-size: 14px;
+}
+.recommend .rec-label{
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.recommend .passport-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.recommend .passport-pill .chip-flag{ font-size: 14px; }
+
+/* Big visa-type badge */
+.visaBadge{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  background: var(--card-accent-bg, var(--secondary));
+  color: var(--card-accent, var(--primary));
+  border: 1.5px solid var(--card-accent, var(--primary));
+}
+.visaBadge .vb-icon{ font-size: 16px; }
+
+.visaSummary{
+  font-size: 14.5px;
+  margin: 12px 0 14px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* Tile grid for key facts */
+.factGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.factTile{
+  background: var(--secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.factTile .ft-label{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.factTile .ft-value{
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.factTile .ft-icon{ font-size: 15px; opacity: 0.85; }
+
+/* Stay timeline bar — visualizes user's days vs allowed */
+.stayBar{
+  margin: 10px 0 4px;
+}
+.stayBar .sb-meta{
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.stayBar .sb-track{
+  position: relative;
+  height: 8px;
+  background: var(--border-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.stayBar .sb-fill{
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  background: var(--card-accent, var(--primary));
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+.stayBar.over .sb-fill{ background: var(--error-text); }
+
+/* Requirements */
+.requirementsBlock{
+  margin-top: 12px;
+}
+.requirementsBlock .rb-title{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.requirements{
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 13.5px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.requirements li{
+  position: relative;
+  padding-left: 18px;
+}
+.requirements li::before{
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ========== Discovery Mode ========== */
+
+/* Mode Toggle */
+.modeToggle{
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--secondary);
+}
+.modeBtn{
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.modeBtn:hover{ background: var(--border-soft); }
+.modeBtn.active{
+  background: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .modeBtn.active{
+  background: var(--primary);
+  color: var(--bg);
+}
+
+/* Discovery Sections */
+.discoveryRow{
+  margin-bottom: 20px;
+}
+.discoveryField label{
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.discoveryField .hint{
+  margin-top: -2px;
+  margin-bottom: 8px;
+}
+
+/* Toggle Group (Tourism / Work) */
+.toggleGroup{
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content;
+}
+.toggleBtn{
+  padding: 10px 20px;
+  border: none;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.toggleBtn:not(:last-child){ border-right: 1px solid var(--border); }
+.toggleBtn:hover{ background: var(--secondary); }
+.toggleBtn.active{
+  background: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .toggleBtn.active{
+  color: var(--bg);
+}
+
+/* Region Checkboxes Grid */
+.regionGrid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 16px;
+}
+.regionCheck{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.regionCheck:hover{
+  background: var(--border-soft);
+}
+.regionCheck:has(input:checked){
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  border-color: var(--primary);
+}
+.regionCheck input{
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Visa Type Checkboxes */
+.visaTypeChecks{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.visaTypeCheck{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.visaTypeCheck input{
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Discovery Duration Mount */
+#discoveryDurationMount{
+  max-width: 200px;
+}
+#discoveryDurationMount .daysUnitWrap{
+  border: 1px solid var(--border);
+}
+
+/* Discovery Results - shared header above reused result cards */
+.discoverySummary{
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Discovery empty state */
+.discoveryEmpty{
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.discoveryEmpty .de-icon{
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.discoveryEmpty .de-title{
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.discoveryEmpty .de-hint{
+  font-size: 14px;
+}
+
+@media (max-width: 600px){
+  .modeToggle{
+    flex-direction: column;
+  }
+  .modeBtn{
+    padding: 14px 16px;
+  }
+  .toggleGroup{
+    width: 100%;
+  }
+  .toggleBtn{
+    flex: 1;
+  }
+  .regionGrid{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Callouts */
+.callout{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.callout .c-icon{ font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+.callout.warn{ background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.callout.info{ background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+.callout.good{ background: var(--good-bg); border-color: var(--good-border); color: var(--good-text); }
+.callout.error{ background: var(--error-bg); border-color: var(--error-border); color: var(--error-text); }
+.callout strong{ font-weight: 700; }
+
+.notesText{
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
+  border-left: 2px solid var(--border);
+  background: linear-gradient(to right, var(--secondary), transparent);
+  border-radius: 4px;
+}
+
+/* Per-card link to the country's official immigration / consulate page. */
+.officialLink{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 14px;
+  padding-bottom: 1px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(15, 32, 64, 0.35);
+  align-self: flex-start;
+  transition: color 0.15s, border-color 0.15s;
+}
+.officialLink:hover{
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ───────────── Custom combobox (typeable dropdown) ───────────── */
+.combobox{ position: relative; width: 100%; }
+.combobox .cb-input{ width: 100%; }
+.combobox .cb-panel{
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px -10px rgba(30,58,95,0.28);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 4px;
+}
+.combobox .cb-option{
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.combobox .cb-option:hover,
+.combobox .cb-option.is-active{
+  background: var(--secondary);
+  color: var(--primary);
+}
+.combobox .cb-empty{
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}

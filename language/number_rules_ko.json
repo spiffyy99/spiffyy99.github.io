@@ -1,0 +1,1400 @@
+{
+    "version": 1,
+    "numberSystems": ["native", "sino", "digit"],
+    "categories": [
+      {
+        "id": "date_time",
+        "label": "Date & Time",
+        "subcategories": [
+          {
+            "id": "time_of_day",
+            "label": "Time of day",
+            "variables": {
+              "hour": { "type": "int", "min": 1, "max": 12, "system": "native" },
+              "minute": { "type": "int", "min": 0, "max": 59, "system": "sino", "pad": 2 },
+              "second": { "type": "int", "min": 0, "max": 59, "system": "sino", "pad": 2 },
+              "period": {
+                "type": "choice",
+                "values": [
+                  { "en": "am", "ko": "오전" },
+                  { "en": "pm", "ko": "오후" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "time_hour_minute",
+                "question": "{hour}:{minute}:{second} {period.en}",
+                "answer": "{period.ko} {hour}시 {minute}분 {second}초"
+              },
+              {
+                "id": "time_half",
+                "question": "{hour}:30 {period.en}",
+                "answer": ["{period.ko} {hour}시 반", "{period.ko} {hour}시 삼십분"]
+              }
+            ], 
+            "explanation": "AM is 오전. PM is 오후. Hours use native; minutes & seconds use sino.",
+            "example": "5:32:30 AM -> 오전 다섯 시 삼십이 분 삼십 초."
+          },
+          {
+            "id": "date_full",
+            "label": "Full date",
+            "variables": {
+              "year": { "type": "int", "min": 1500, "max": 2100, "system": "sino" },
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January", "ko": "일월" },
+                  { "en": "February", "ko": "이월" },
+                  { "en": "March", "ko": "삼월" },
+                  { "en": "April", "ko": "사월" },
+                  { "en": "May", "ko": "오월" },
+                  { "en": "June", "ko": "유월" },
+                  { "en": "July", "ko": "칠월" },
+                  { "en": "August", "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October", "ko": "시월" },
+                  { "en": "November", "ko": "십일월" },
+                  { "en": "December", "ko": "십이월" }
+                ]
+              },
+              "day": { "type": "int", "min": 1, "max": 31, "system": "sino" },
+              "weekday": {
+                "type": "choice",
+                "values": [
+                  { "en": "Monday", "ko": "월요일" },
+                  { "en": "Tuesday", "ko": "화요일" },
+                  { "en": "Wednesday", "ko": "수요일" },
+                  { "en": "Thursday", "ko": "목요일" },
+                  { "en": "Friday", "ko": "금요일" },
+                  { "en": "Saturday", "ko": "토요일" },
+                  { "en": "Sunday", "ko": "일요일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "date_full_mdy",
+                "question": "{month} {day}, {year}",
+                "answer": ["{year} 년 {month} {day} 일", "{year|digit} 년 {month} {day} 일"]
+              },
+              {
+                "id": "date_month_day",
+                "question": "{month} {day}",
+                "answer": "{month} {day} 일"
+              },
+              {
+                "id": "weekday_month_day",
+                "question": "{weekday.en}, {month} {day}",
+                "answer": "{weekday.ko} {month} {day} 일"
+              },
+              {
+                "id": "weekday_month_day_year",
+                "question": "{weekday.en}, {month} {day}, {year}",
+                "answer": ["{weekday.ko} {year} 년 {month} {day} 일", "{weekday.ko} {year|digit} 년 {month} {day} 일"]
+              }
+            ],
+            "explanation": "Dates use Sino numbers for year, month, and day. Days of the week are separate words, each ending in 요일.",
+            "example": "Sunday, May 3, 2026 -> 일요일 이천이십육 년 오월 삼 일."
+          },
+          {
+            "id": "month_period",
+            "label": "Beginning / middle / end of month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "beginning_of_month",
+                "question": "beginning of {month.en}",
+                "answer": "{month.ko} 초"
+              },
+              {
+                "id": "middle_of_month",
+                "question": "middle of {month.en}",
+                "answer": "{month.ko} 중"
+              },
+              {
+                "id": "end_of_month",
+                "question": "end of {month.en}",
+                "answer": "{month.ko} 말"
+              }
+            ],
+            "explanation": "초 = beginning (early part), 중 = middle, 말 = end (late part) of a month. Attach directly after the month name.",
+            "example": "end of February → 이월 말. middle of October → 시월 중."
+          },
+          {
+            "id": "year_period",
+            "label": "Beginning / middle / end of year",
+            "variables": {
+              "year": { "type": "int", "min": 1990, "max": 2100, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "beginning_of_year",
+                "question": "beginning of {year}",
+                "answer": ["{year} 년 초", "{year|digit} 년 초"]
+              },
+              {
+                "id": "middle_of_year",
+                "question": "middle of {year}",
+                "answer": ["{year} 년 중", "{year|digit} 년 중"]
+              },
+              {
+                "id": "end_of_year",
+                "question": "end of {year}",
+                "answer": ["{year} 년 말", "{year|digit} 년 말"]
+              }
+            ],
+            "explanation": "초 = early part of the year, 중 = middle of the year, 말 = late part / end of the year. All attach after 년.",
+            "example": "beginning of 2025 → 이천이십오 년 초. end of 2024 → 이천이십사 년 말."
+          },
+          {
+            "id": "week_of_month",
+            "label": "Xth week of a month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              },
+              "x": {
+                "type": "choice",
+                "values": [
+                  { "en": "1st",  "koNative": "첫째",   "koSino": "일" },
+                  { "en": "2nd",  "koNative": "둘째",   "koSino": "이" },
+                  { "en": "3rd",  "koNative": "셋째",   "koSino": "삼" },
+                  { "en": "4th",  "koNative": "넷째",   "koSino": "사" },
+                  { "en": "5th",  "koNative": "다섯째", "koSino": "오" },
+                  { "en": "last", "koNative": "마지막", "koSino": "마지막" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "week_of_month",
+                "question": "the {x.en} week of {month.en}",
+                "answer": ["{month.ko} {x.koNative} 주", "{month.ko} {x.koSino}주차"]
+              }
+            ],
+            "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] 주.",
+            "example": "the 2nd week of March → 삼월 둘째 주. the last week of October → 시월 마지막 주."
+          },
+          {
+            "id": "weekday_of_month",
+            "label": "Xth weekday of a month",
+            "variables": {
+              "month": {
+                "type": "choice",
+                "values": [
+                  { "en": "January",   "ko": "일월" },
+                  { "en": "February",  "ko": "이월" },
+                  { "en": "March",     "ko": "삼월" },
+                  { "en": "April",     "ko": "사월" },
+                  { "en": "May",       "ko": "오월" },
+                  { "en": "June",      "ko": "유월" },
+                  { "en": "July",      "ko": "칠월" },
+                  { "en": "August",    "ko": "팔월" },
+                  { "en": "September", "ko": "구월" },
+                  { "en": "October",   "ko": "시월" },
+                  { "en": "November",  "ko": "십일월" },
+                  { "en": "December",  "ko": "십이월" }
+                ]
+              },
+              "x": {
+                "type": "choice",
+                "values": [
+                  { "en": "1st",  "koNative": "첫째",   "koSino": "일" },
+                  { "en": "2nd",  "koNative": "둘째",   "koSino": "이" },
+                  { "en": "3rd",  "koNative": "셋째",   "koSino": "삼" },
+                  { "en": "4th",  "koNative": "넷째",   "koSino": "사" },
+                  { "en": "5th",  "koNative": "다섯째", "koSino": "오" },
+                  { "en": "last", "koNative": "마지막", "koSino": "마지막" }
+                ]
+              },
+              "weekday": {
+                "type": "choice",
+                "values": [
+                  { "en": "Monday",    "ko": "월요일" },
+                  { "en": "Tuesday",   "ko": "화요일" },
+                  { "en": "Wednesday", "ko": "수요일" },
+                  { "en": "Thursday",  "ko": "목요일" },
+                  { "en": "Friday",    "ko": "금요일" },
+                  { "en": "Saturday",  "ko": "토요일" },
+                  { "en": "Sunday",    "ko": "일요일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "weekday_of_month",
+                "question": "the {x.en} {weekday.en} of {month.en}",
+                "answer": ["{month.ko} {x.koNative} {weekday.ko}", "{month.ko} {x.koSino}주차 {weekday.ko}"]
+              }
+            ],
+            "explanation": "Use native ordinals 첫째/둘째/셋째/넷째/다섯째 for 1st–5th, and 마지막 for last. The pattern is [month] [ordinal] [요일].",
+            "example": "the 1st Monday of June → 유월 첫째 월요일. the last Friday of December → 십이월 마지막 금요일."
+          }
+        ]
+      },
+  
+      {
+        "id": "age",
+        "label": "Age",
+        "subcategories": [
+          {
+            "id": "standard_age",
+            "label": "Age",
+            "variables": {
+              "age": { "type": "int", "min": 1, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "age_sal_se",
+                "question": "{age} years old",
+                "answer": ["{age} 살", "{age|sino} 세"]
+              }
+            ],
+            "explanation": "Age has two forms - native numbers before 살, or sino numbers before 세.",
+            "example": "24 years old -> 스물네 살 or 이십사 세."
+          },
+          {
+            "id": "birth_year",
+            "label": "Birth year",
+            "variables": {
+              "year": { "type": "int", "min": 1900, "max": 2025, "system": "sino" },
+              "shortYearDigit": { "type": "int", "min": 0, "max": 9, "system": "digit" },
+              "shortYearDigit2": { "type": "int", "min": 0, "max": 9, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "birth_year_full",
+                "question": "born in {year} (full year)",
+                "answer": ["{year|digit} 년생", "{year} 년생"]
+              },
+              {
+                "id": "birth_year_short",
+                "question": "born in {shortYearDigit}{shortYearDigit2}",
+                "answer": "{shortYearDigit}{shortYearDigit2} 년생"
+              }
+            ],
+            "explanation": "Birth years can either use sino or digit-style reading, usually expressed casually as the last two digits.",
+            "example": "born in 98 -> 구팔 년생."
+          }
+        ]
+      },
+  
+      {
+        "id": "won",
+        "label": "Won",
+        "variables": {
+          "amount": {
+            "type": "int",
+            "min": 100,
+            "step": 100,
+            "system": "sino"
+          }
+        },
+        "templates": [
+          {
+            "id": "won_amount",
+            "question": "₩{amount}",
+            "answer": "{amount} 원"
+          }
+        ],
+        "explanation": "Korean won uses Sino numbers before 원.",
+        "example": "₩35,000 -> 삼만 오천 원."
+      },
+  
+      {
+        "id": "phone_numbers",
+        "label": "Phone Numbers",
+        "subcategories": [
+          {
+            "id": "korean_mobile",
+            "label": "Korean phone number",
+            "variables": {
+              "prefix": { "type": "fixed", "value": "010", "system": "digit" },
+              "middle": { "type": "digits", "length": 4, "system": "digit" },
+              "last": { "type": "digits", "length": 4, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "korean_mobile",
+                "question": "010-{middle}-{last}",
+                "answer": ["{prefix} {middle} {last}", "{prefix}-{middle}-{last}"]
+              }
+            ],
+            "explanation": "Korean phone numbers are read digit by digit, always starting with 010.",
+            "example": "010-1234-5678 -> 공일공 일이삼사 오육칠팔."        
+          },
+          {
+            "id": "western_phone",
+            "label": "Western phone number",
+            "variables": {
+              "area": { "type": "digits", "length": 3, "system": "digit" },
+              "middle": { "type": "digits", "length": 3, "system": "digit" },
+              "last": { "type": "digits", "length": 4, "system": "digit" }
+            },
+            "templates": [
+              {
+                "id": "western_phone",
+                "question": "{area}-{middle}-{last}",
+                "answer": "{area} {middle} {last}"
+              }
+            ],
+            "explanation": "Western phone numbers are read digit by digit.",
+            "example": "212-555-0198 -> 이일이 오오오 공일구팔."        
+          }
+        ]
+      },
+      {
+        "id": "korean_address",
+        "label": "Korean address",
+        "variables": {
+          "roadName": {
+            "type": "choice",
+            "values": [
+                { "en": "Teheran-ro", "ko": "테헤란로" },
+                { "en": "Gangnam-daero", "ko": "강남대로" },
+                { "en": "Sejong-daero", "ko": "세종대로" },
+                { "en": "Hongik-ro", "ko": "홍익로" },
+                { "en": "Itaewon-ro", "ko": "이태원로" },
+                { "en": "Eulji-ro", "ko": "을지로" },
+                { "en": "Jong-ro", "ko": "종로" },
+                { "en": "Samseong-ro", "ko": "삼성로" },
+                { "en": "Yeouidaebang-ro", "ko": "여의대방로" },
+                { "en": "Olympic-ro", "ko": "올림픽로" },
+              
+                { "en": "Garosu-gil", "ko": "가로수길" },
+                { "en": "Gyeongridan-gil", "ko": "경리단길" },
+                { "en": "Songridan-gil", "ko": "송리단길" },
+                { "en": "Mangnidan-gil", "ko": "망리단길" },
+                { "en": "Haebangchon-gil", "ko": "해방촌길" },
+              
+                { "en": "Dosan-daero", "ko": "도산대로" },
+                { "en": "Banpo-daero", "ko": "반포대로" },
+                { "en": "Nambusunhwan-ro", "ko": "남부순환로" },
+                { "en": "Dongbu Expressway", "ko": "동부간선도로" },
+                { "en": "Gangbyeonbuk-ro", "ko": "강변북로" },
+              
+                { "en": "Jungang-ro", "ko": "중앙로" },
+                { "en": "Munhwa-ro", "ko": "문화로" },
+                { "en": "Daehak-ro", "ko": "대학로" },
+                { "en": "Sijang-gil", "ko": "시장길" },
+                { "en": "Seoul-ro", "ko": "서울로" },
+              
+                { "en": "Maple Street", "ko": "메이플 스트리트" },
+                { "en": "Oak Avenue", "ko": "오크 애비뉴" },
+                { "en": "King Street", "ko": "킹 스트리트" },
+                { "en": "Queen Street", "ko": "퀸 스트리트" },
+                { "en": "Main Road", "ko": "메인 로드" }
+              ]
+          },
+          "buildingNumber": { "type": "int", "min": 1, "max": 999, "system": "sino" },
+          "dong": { "type": "int", "min": 1, "max": 999, "system": "sino" },
+          "ho": { "type": "int", "min": 101, "max": 3005, "system": "sino" }
+        },
+        "templates": [
+          {
+            "id": "apartment_building",
+            "question": "{buildingNumber} {roadName.en}, Building {dong}, Unit {ho}",
+            "answer": "{roadName.ko} {buildingNumber} {dong}동 {ho}호"
+          },
+          {
+            "id": "house",
+            "question": "{buildingNumber} {roadName.en}",
+            "answer": ["{roadName.ko} {buildingNumber}", "{roadName.ko} {buildingNumber}번", "{roadName.ko} {buildingNumber}번지"]
+          }
+        ],
+        "explanation": "Korean addresses put the road name first, then the building number. Apartment addresses also add 동 (building block) and 호 (unit number). All numbers use sino.",
+        "example": "123 Teheran-ro, Building 5, Unit 402 → 테헤란로 123 5동 402호."
+      },
+      {
+        "id": "static_measurements",
+        "label": "Static Measurements / Units",
+        "subcategories": [
+          {
+            "id": "height",
+            "label": "Height",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "cm", "ko": "센티미터" },
+                  { "en": "ft", "ko": "피트" },
+                  { "en": "in", "ko": "인치" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "height_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Height units are transliterated: cm → 센티미터, ft → 피트, in → 인치. Numbers use sino.",
+            "example": "175 cm → 백칠십오 센티미터."
+          },
+          {
+            "id": "weight",
+            "label": "Weight",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "kg", "ko": "킬로그램" },
+                  { "en": "g", "ko": "그램" },
+                  { "en": "lb", "ko": "파운드" },
+                  { "en": "oz", "ko": "온스" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "weight_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Weight units are transliterated: kg → 킬로그램, g → 그램, lb → 파운드, oz → 온스. Numbers use sino.",
+            "example": "65 kg → 육십오 킬로그램."
+          },
+          {
+            "id": "temperature",
+            "label": "Temperature",
+            "variables": {
+              "value": { "type": "number", "min": 1, "max": 100, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "°C", "ko": "도" },
+                  { "en": "°F", "ko": "도" }
+                ]
+              },
+              "sign": {
+                "type": "choice",
+                "values": [
+                  { "en": "-", "ko": "영하" },
+                  { "en": "", "ko": ["", "영상"] }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "temperature_unit",
+                "question": "{sign.en}{value}{unit.en}",
+                "answer": "{sign.ko} {value} {unit.ko}"
+              }
+            ],
+            "explanation": "Both °C and °F use 도. Negative temperatures use 영하 (below zero) before the number. Positive temperatures can say 영상 (above zero) or nothing — both are correct.",
+            "example": "-5°C → 영하 오 도. 25°C → 이십오 도 or 영상 이십오 도."
+          },
+          {
+            "id": "volume",
+            "label": "Volume",
+            "variables": {
+              "value": { "type": "number", "min": 0, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "mL", "ko": "밀리리터" },
+                  { "en": "L", "ko": "리터" },
+                  { "en": "cups", "ko": "컵" },
+                  { "en": "tbsp", "ko": "큰술" },
+                  { "en": "tsp", "ko": "작은술" },
+                  { "en": "fl oz", "ko": "액량 온스" },
+                  { "en": "gal", "ko": "갤런" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "volume_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Volume units are transliterated: mL → 밀리리터, L → 리터, cups → 컵, tbsp → 큰술, tsp → 작은술. Numbers use sino.",
+            "example": "350 mL → 삼백오십 밀리리터."
+          },
+          {
+            "id": "data_volume",
+            "label": "Data volume",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "KB", "ko": "킬로바이트" },
+                  { "en": "MB", "ko": "메가바이트" },
+                  { "en": "GB", "ko": "기가바이트" },
+                  { "en": "TB", "ko": "테라바이트" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "data_volume_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Storage units are transliterated: KB → 킬로바이트, MB → 메가바이트, GB → 기가바이트, TB → 테라바이트. Numbers use sino.",
+            "example": "32 GB → 삼십이 기가바이트."
+          },
+          {
+            "id": "distance",
+            "label": "Distance / Length",
+            "variables": {
+              "value": { "type": "number", "min": 0, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "mm", "ko": "밀리미터" },
+                  { "en": "cm", "ko": "센티미터" },
+                  { "en": "m", "ko": "미터" },
+                  { "en": "km", "ko": "킬로미터" },
+                  { "en": "in", "ko": "인치" },
+                  { "en": "ft", "ko": "피트" },
+                  { "en": "yd", "ko": "야드" },
+                  { "en": "mi", "ko": "마일" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "distance_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Distance units are transliterated: mm → 밀리미터, cm → 센티미터, m → 미터, km → 킬로미터, in → 인치, ft → 피트, mi → 마일. Numbers use sino.",
+            "example": "5 km → 오 킬로미터."
+          },
+          {
+            "id": "area",
+            "label": "Area",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "m²", "ko": "제곱미터" },
+                  { "en": "km²", "ko": "제곱킬로미터" },
+                  { "en": "sq ft", "ko": "제곱피트" },
+                  { "en": "acre", "ko": "에이커" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "area_unit",
+                "question": "{value} {unit.en}",
+                "answer": "{value} {unit.ko}"
+              }
+            ],
+            "explanation": "Square units use 제곱 before the transliterated unit: m² → 제곱미터, km² → 제곱킬로미터. Numbers use sino.",
+            "example": "84 m² → 팔십사 제곱미터."
+          }
+        ]
+      },
+  
+      {
+        "id": "rate_measurements",
+        "label": "Rate-Based Measurements / Units",
+        "subcategories": [
+          {
+            "id": "speed",
+            "label": "Speed",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "km/h", "koTemplate": "시속 {value} 킬로미터" },
+                  { "en": "mph", "koTemplate": "시속 {value} 마일" },
+                  { "en": "m/s", "koTemplate": "초속 {value} 미터" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "speed_rate",
+                "question": "{value} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ],
+            "explanation": "Speed uses 시속 (per hour) before km/h and mph, and 초속 (per second) before m/s. The number comes between the rate word and the unit.",
+            "example": "60 km/h → 시속 육십 킬로미터."
+          },
+          {
+            "id": "data_rate",
+            "label": "Data rate",
+            "variables": {
+              "value": { "type": "number", "min": 1, "decimal": true, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "Mbps", "koTemplate": "초당 {value} 메가비트" },
+                  { "en": "MB/s", "koTemplate": "초당 {value} 메가바이트" },
+                  { "en": "GB/s", "koTemplate": "초당 {value} 기가바이트" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "data_rate",
+                "question": "{value} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ],
+            "explanation": "Data rate uses 초당 (per second) before the transliterated unit. Mbps → 메가비트, MB/s → 메가바이트, GB/s → 기가바이트. Numbers use sino.",
+            "example": "100 Mbps → 초당 백 메가비트."
+          },
+          {
+            "id": "price_per_unit",
+            "label": "Price per unit",
+            "variables": {
+              "amount": { "type": "int", "min": 100, "step": 100, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "per person", "koTemplate": "한 명당 {amount} 원" },
+                  { "en": "per item", "koTemplate": "한 개당 {amount} 원" },
+                  { "en": "per bottle", "koTemplate": "한 병당 {amount} 원" },
+                  { "en": "per hour", "koTemplate": ["한 시간당 {amount} 원", "한 시간에 {amount} 원"] },
+                  { "en": "per day", "koTemplate": ["하루당 {amount} 원", "하루에 {amount} 원"] }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "price_per_unit",
+                "question": "₩{amount} {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ],
+            "explanation": "당 means 'per' and attaches to the unit: 명당 (per person), 개당 (per item), 시간당 (per hour). For time units, 에 is also natural: 한 시간에, 하루에. Amount uses sino numbers + 원.",
+            "example": "₩5,000 per person → 한 명당 오천 원."
+          },
+          {
+            "id": "frequency_per_time",
+            "label": "Frequency per time",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 20, "system": "native" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "per day", "koTemplate": "하루에 {count} 번" },
+                  { "en": "per week", "koTemplate": "일주일에 {count} 번" },
+                  { "en": "per month", "koTemplate": "한 달에 {count} 번" },
+                  { "en": "per year", "koTemplate": "일 년에 {count} 번" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "frequency_per_time",
+                "question": "{count} times {unit.en}",
+                "answer": "{unit.koTemplate}"
+              }
+            ],
+            "explanation": "[Time period]에 [native count] 번 means '[count] times per [period]'. Time words: 하루 (1 day), 일주일 (1 week), 한 달 (1 month), 일 년 (1 year). Counts use native numbers.",
+            "example": "3 times per week → 일주일에 세 번."
+          }
+        ]
+      },
+      {
+        "id": "counters_and_numbered_labels",
+        "label": "Counters and Numbered Labels",
+        "subcategories":[
+          {
+            "id": "counters",
+            "label": "Counters",
+            "explanation": "Native numbers come before the counter word. Common counters: 명 (people), 권 (books), 마리 (animals), 병 (bottles), 개 (general items), 장 (flat objects like paper/tickets), 대 (machines/vehicles), 잔 (cups/glasses).",
+            "example": "5 people → 다섯 명. 3 books → 세 권. 2 cats → 두 마리.",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "native" },
+              "counter": {
+                "type": "choice",
+                "values": [
+                    {
+                      "ko": "명",
+                      "examples": ["people", "friends", "students", "customers", "guests", "employees", "children"]
+                    },
+                    {
+                      "ko": "권",
+                      "examples": ["books", "textbooks", "novels", "notebooks", "magazines", "comic books"]
+                    },
+                    {
+                      "ko": "마리",
+                      "examples": ["dogs", "cats", "pigs", "birds", "fish", "rabbits", "horses", "chickens"]
+                    },
+                    {
+                      "ko": "병",
+                      "examples": ["water bottles", "beer bottles", "wine bottles", "soju bottles", "soda bottles", "juice bottles"]
+                    },
+                    {
+                      "ko": "채",
+                      "examples": ["houses", "buildings", "apartments", "villas"]
+                    },
+                    {
+                      "ko": "세트",
+                      "examples": ["sets", "meal sets", "gift sets", "card sets"]
+                    },
+                    {
+                      "ko": "잔",
+                      "examples": ["cups of coffee", "glasses of water", "cups of tea", "glasses of beer", "glasses of wine"]
+                    },
+                    {
+                      "ko": "개",
+                      "examples": ["items", "apples", "bags", "chairs", "cookies", "eggs"]
+                    },
+                    {
+                      "ko": "장",
+                      "examples": ["sheets of paper", "tickets", "photos", "cards", "pages", "receipts"]
+                    },
+                    {
+                      "ko": "쌍",
+                      "examples": ["pairs of shoes", "pairs of socks", "pairs of gloves"]
+                    },
+                    {
+                      "ko": "대",
+                      "examples": ["cars", "machines", "computers", "buses", "cameras", "phones", "bicycles"]
+                    },
+                    {
+                      "ko": "벌",
+                      "examples": ["outfits", "suits", "uniforms", "sets of clothes"]
+                    },
+                    {
+                      "ko": "조각",
+                      "examples": ["slices of cake", "pieces of pizza", "pieces of fruit", "pieces of bread", "pieces of meat"]
+                    },
+                    {
+                      "ko": "그릇",
+                      "examples": ["bowls of rice", "bowls of soup", "bowls of noodles", "bowls of cereal"]
+                    },
+                    { "examples": ["pills"], "ko": "알" },
+                    { "examples": ["tablets"], "ko": "정" },
+                    { "examples": ["seats"], "ko": "자리" },
+                    { "examples": ["orders of..."], "ko": "인분"}
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "counter_standard",
+                "question": "{count} {counter.examples}",
+                "answer": "{count} {counter.ko}"
+              }
+            ]
+          },
+          {
+            "id": "numbered_labels",
+            "label": "Numbered Labels",
+            "explanation": "Numbered labels use sino numbers. Common labels: 호선 (subway line), 번 출구 (exit), 편 (flight), 번 창구 (counter), 학년 (school grade), 반 (class), 점 (points/score), 주년 (anniversary), 세대 (generation).",
+            "example": "Subway Line 2 → 이 호선. Exit 5 → 오 번 출구. 5 points → 오 점. 1st anniversary → 일 주년. 3rd generation → 삼 세대.",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 12, "system": "sino" },
+              "counter": {
+                "type": "choice",
+                "values": [
+                  { "en": "Subway Line", "ko": "호선" },
+                  { "en": "Exit", "ko": "번 출구" },
+                  { "en": "Gate", "ko": "번 게이트" },
+                  { "en": "Bus Route", "ko": "번 버스" },
+                  { "en": "Flight", "ko": "편" },
+                  { "en": "Counter", "ko": "번 창구" },
+                  { "en": "(School) Grade", "ko": "학년", "ordinal": true },
+                  { "en": "Class", "ko": "반" },
+                  { "en": "points", "ko": "점", "countFirst": true },
+                  { "en": "anniversary", "ko": "주년", "ordinal": true },
+                  { "en": "generation", "ko": "세대", "ordinal": true }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "numbered_labels_standard",
+                "question": "{counter.en} {count}",
+                "answer": "{count} {counter.ko}"
+              },
+              {
+                "id": "numbered_labels_count_first",
+                "countFirst": true,
+                "question": "{count} {counter.en}",
+                "answer": "{count} {counter.ko}"
+              },
+              {
+                "id": "numbered_labels_ordinal",
+                "ordinal": true,
+                "question": "{count|ord} {counter.en}",
+                "answer": "{count} {counter.ko}"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fractions_percents_ratios",
+        "label": "Fractions / Percents / Ratios",
+        "subcategories": [
+          {
+            "id": "fraction",
+            "label": "Fractions",
+            "variables": {
+              "numerator": { "type": "int", "min": 1, "max": 20, "system": "sino" },
+              "denominator": { "type": "int", "min": 2, "max": 20, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "fraction",
+                "question": "{numerator}/{denominator}",
+                "answer": "{denominator} 분의 {numerator}"
+              }
+            ],
+            "explanation": "Fractions are said denominator-first: [denominator] 분의 [numerator]. Both use sino numbers. 분의 literally means 'parts of'.",
+            "example": "3/4 → 사 분의 삼. 1/2 → 이 분의 일."
+          },
+          {
+            "id": "percent",
+            "label": "Percents",
+            "variables": {
+              "value": { "type": "number", "min": 0, "max": 1000, "decimal": true, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "percent",
+                "question": "{value}%",
+                "answer": "{value} 퍼센트"
+              }
+            ],
+            "explanation": "Percentages use 퍼센트 after the sino number. There is no special word for 'percent' — just say the number then 퍼센트.",
+            "example": "75% → 칠십오 퍼센트. 12.5% → 십이 점 오 퍼센트."
+          },
+          {
+            "id": "ratio",
+            "label": "Ratios",
+            "variables": {
+              "a": { "type": "int", "min": 1, "max": 20, "system": "sino" },
+              "b": { "type": "int", "min": 0, "max": 20, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "ratio",
+                "question": "{a} : {b} (ratio)",
+                "answer": "{a} 대 {b}"
+              },
+              {
+                "id": "ratio_score",
+                "question": "{a} - {b} (score)",
+                "answer": "{a} 대 {b}"
+              }
+            ],
+            "explanation": "Ratios use 대 (literally 'against/versus') between two sino numbers. Pattern: [A] 대 [B]. Also used for sports scores.",
+            "example": "3 : 1  → 삼 대 일. 2 : 5 → 이 대 오. Score of 3 to 0 → 삼 대 영."
+          }
+        ]
+      },
+      {
+        "id": "rankings_times",
+        "label": "Rankings / Times",
+        "subcategories": [
+          {
+            "id": "times_beon",
+            "label": "Times / 번",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "times_beon",
+                "question": "{count} times",
+                "answer": ["{count} 번", "{count|sino} 번"]
+              }
+            ],
+            "explanation": "번 means 'time(s)' (as in occurrences). Native numbers are more common in speech, but sino numbers are also accepted.",
+            "example": "3 times → 세 번 or 삼 번. 10 times → 열 번 or 십 번."
+          },
+          {
+            "id": "ordinal_beonjjae",
+            "label": "Ordinal / 번째",
+            "variables": {
+              "position": { "type": "int", "min": 2, "max": 99, "system": "native" }
+            },
+            "templates": [
+              {
+                "id": "ordinal_beonjjae_first",
+                "question": "1st",
+                "answer": "첫 번째"
+              },            
+              {
+                "id": "ordinal_beonjjae",
+                "question": "{position|ord}",
+                "answer": "{position} 번째"
+              }
+            ],
+            "explanation": "번째 makes ordinal numbers. 1st is always 첫 번째 (special form). All other ordinals use native numbers + 번째.",
+            "example": "1st → 첫 번째. 2nd → 두 번째. 5th → 다섯 번째."
+          },
+          {
+            "id": "ranking",
+            "label": "Ranking",
+            "variables": {
+              "rank": { "type": "int", "min": 1, "max": 30, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "ranking_deung",
+                "question": "{rank|ord} place (in a competition/contest)",
+                "answer": "{rank} 등"
+              },
+              {
+                "id": "race_deung",
+                "question": "{rank|ord} place (in a marathon)",
+                "answer": "{rank} 등"
+              },
+              {
+                "id": "class_deung",
+                "question": "{rank|ord} place (rank in a class)",
+                "answer": "{rank} 등"
+              },
+              {
+                "id": "ranking_wi",
+                "question": "{rank|ord} (on a leaderboard)",
+                "answer": "{rank} 위"
+              },
+              {
+                "id": "chart_wi",
+                "question": "{rank|ord} (on a chart)",
+                "answer": "{rank} 위"
+              },
+              {
+                "id": "world_ranking_wi",
+                "question": "{rank|ord} (in world rankings)",
+                "answer": "{rank} 위"
+              }
+            ],
+            "explanation": "등 means 'place' in a competition or ordering. Common for races, contests, class rank, and informal placements. Uses sino numbers. 위 means 'rank' on a chart, leaderboard, or formal ranking. Uses sino numbers. Often paired with 차트, 랭킹, or 순위. More formal than 등.",
+            "example": "1st place → 일 등. 3rd place → 삼 등. 1st on the chart → 일 위. 5th in the rankings → 오 위"
+          }
+        ]
+      },
+      {
+        "id": "durations",
+        "label": "Durations",
+        "subcategories": [
+          {
+            "id": "time_durations",
+            "label": "Hours / minutes / seconds",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 120 },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "hours", "ko": "시간", "system": "native" },
+                  { "en": "minutes", "ko": "분", "system": "sino" },
+                  { "en": "seconds", "ko": "초", "system": "sino" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "time_duration",
+                "question": "{count} {unit.en}",
+                "answer": "{count} {unit.ko}"
+              }
+            ],
+            "explanation": "Hours use native numbers (한 시간, 두 시간, 세 시간…). Minutes and seconds use sino numbers (십오 분, 삼십 초…).",
+            "example": "2 hours → 두 시간. 45 minutes → 사십오 분. 30 seconds → 삼십 초."
+          },
+          {
+            "id": "day_durations",
+            "label": "Day durations",
+            "variables": {
+              "days": {
+                "type": "int",
+                "min": 2,
+                "max": 30,
+                "system": "sino"
+              }
+            },
+            "templates": [
+              {
+                "id": "day_duration_one",
+                "question": "1 day",
+                "answer": ["하루", "일 일"]
+              },
+              {
+                "id": "day_duration_two",
+                "question": "2 days",
+                "answer": ["이틀", "이 일"]
+              },
+              {
+                "id": "day_duration_three",
+                "question": "3 days",
+                "answer": ["사흘", "삼 일"]
+              },
+              {
+                "id": "day_duration_four",
+                "question": "4 days",
+                "answer": ["나흘", "사 일"]
+              },
+              {
+                "id": "day_duration",
+                "question": "{days} days",
+                "answer": "{days} 일"
+              }
+            ],
+            "explanation": "Days 1–4 have special native Korean words: 하루 (1 day), 이틀 (2 days), 사흘 (3 days), 나흘 (4 days). From 5 onwards, sino numbers + 일 are used. The native words are still accepted alongside sino forms for 1–4.",
+            "example": "1 day → 하루. 3 days → 사흘 or 삼 일. 7 days → 칠 일."
+          },
+          {
+            "id": "calendar_durations",
+            "label": "Weeks / months / years",
+            "variables": {
+              "count": { "type": "int", "min": 1, "max": 99, "system": "sino" },
+              "unit": {
+                "type": "choice",
+                "values": [
+                  { "en": "weeks", "ko": "주" },
+                  { "en": "months", "ko": "개월" },
+                  { "en": "years", "ko": "년" }
+                ]
+              }
+            },
+            "templates": [
+              {
+                "id": "calendar_duration",
+                "question": "{count} {unit.en}",
+                "answer": "{count} {unit.ko}"
+              },
+              {
+                "id": "calendar_duration_months",
+                "question": "{count} months",
+                "answer": ["{count|native} 달", "{count} 개월"]
+              }
+            ],
+            "explanation": "Weeks and years use sino numbers: 주 (weeks), 년 (years). Months accept native + 달 (한 달, 두 달…) or sino + 개월 (삼 개월, 육 개월…). 개월 is typical for durations; 달 is common in everyday speech.",
+            "example": "3 weeks → 삼 주. 6 months → 여섯 달 or 육 개월. 2 years → 이 년."
+          }
+        ]
+      },
+  
+      {
+        "id": "floors_room_numbers",
+        "label": "Floors / Room Numbers",
+        "subcategories": [
+          {
+            "id": "floors",
+            "label": "Floors",
+            "variables": {
+              "floor": { "type": "int", "min": 1, "max": 15, "system": "sino" },
+              "floorPrefix": {
+                "type": "choice",
+                "values": [
+                  { "en": "B", "ko": "지하" },
+                  { "en": "", "ko": "" }
+                ]
+              } 
+            },
+            "templates": [
+              {
+                "id": "floor_number",
+                "question": "{floorPrefix.en}{floor}F",
+                "answer": "{floorPrefix.ko} {floor} 층"
+              }
+            ],
+            "explanation": "층 means 'floor'. Above-ground floors: sino number + 층. Underground floors: 지하 + sino number + 층.",
+            "example": "3F → 삼 층. B2 → 지하 이 층."
+          },
+          {
+            "id": "room_numbers",
+            "label": "Room numbers",
+            "variables": {
+              "room": { "type": "int", "min": 101, "max": 3005, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "room_number",
+                "question": "Room {room}",
+                "answer": "{room} 호"
+              }
+            ],
+            "explanation": "호 means 'room' or 'unit number'. Uses standard sino whole-number reading for typical room/apartment numbers.",
+            "example": "Room 305 → 삼백오 호. Unit 1402 → 천사백이 호."
+          }
+        ]
+      },
+      {
+        "id": "hotel_stays",
+        "label": "Hotel stays / nights and days",
+        "variables": {
+          "nights": { "type": "int", "min": 1, "max": 30, "system": "sino" },
+          "days": {
+            "type": "derivedAdd",
+            "source": "nights",
+            "amount": 1,
+            "system": "sino"
+          }
+        },
+        "templates": [
+          {
+            "id": "nights_days",
+            "question": "{nights} nights, {days} days",
+            "answer": "{nights|ko} 박 {days|ko} 일"
+          }
+        ],
+        "explanation": "Hotel stays use X 박 Y 일 (X nights, Y days). 박 = nights, 일 = days. The number of days is always nights + 1. Both use sino numbers.",
+        "example": "3 nights, 4 days → 삼 박 사 일. 1 night, 2 days → 일 박 이 일."
+      },
+      {
+        "id": "math",
+        "label": "Math",
+        "subcategories": [
+          {
+            "id": "addition",
+            "label": "Addition",
+            "variables": {
+              "a": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+              "b": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+              "c": { "type": "derived", "op": "add", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "add_eq",
+                "question": "{a} + {b} = {c}",
+                "answer": "{a} 더하기 {b}{particle} {c}"
+              }
+            ],
+            "explanation": "더하기 means 'plus'. Structure: [A] 더하기 [B]는/은 [C]. 는 follows vowel-ending syllables; 은 follows consonant-ending syllables — the topic particle attaches to B.",
+            "example": "3 + 5 = 8 → 삼 더하기 오는 팔."
+          },
+          {
+            "id": "subtraction",
+            "label": "Subtraction",
+            "variables": {
+              "a": { "type": "int", "min": 10, "max": 99, "system": "sino" },
+              "b": { "type": "int", "min": 1, "max": 9, "system": "sino" },
+              "c": { "type": "derived", "op": "sub", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "sub_eq",
+                "question": "{a} - {b} = {c}",
+                "answer": "{a} 빼기 {b}{particle} {c}"
+              }
+            ],
+            "explanation": "빼기 means 'minus'. Structure: [A] 빼기 [B]는/은 [C]. The topic particle 는/은 attaches to B based on whether B ends in a vowel or consonant.",
+            "example": "10 - 3 = 7 → 십 빼기 삼은 칠."
+          },
+          {
+            "id": "multiplication",
+            "label": "Multiplication",
+            "variables": {
+              "a": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "b": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "c": { "type": "derived", "op": "mul", "sources": ["a", "b"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "b" }
+            },
+            "templates": [
+              {
+                "id": "mul_eq",
+                "question": "{a} × {b} = {c}",
+                "answer": "{a} 곱하기 {b}{particle} {c}"
+              }
+            ],
+            "explanation": "곱하기 means 'times / multiplied by'. Structure: [A] 곱하기 [B]는/은 [C]. The topic particle 는/은 attaches to B.",
+            "example": "4 × 7 = 28 → 사 곱하기 칠은 이십팔."
+          },
+          {
+            "id": "division",
+            "label": "Division",
+            "variables": {
+              "divisor": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "quotient": { "type": "int", "min": 2, "max": 9, "system": "sino" },
+              "dividend": { "type": "derived", "op": "mul", "sources": ["divisor", "quotient"], "system": "sino" },
+              "particle": { "type": "topicMarker", "source": "divisor" }
+            },
+            "templates": [
+              {
+                "id": "div_eq",
+                "question": "{dividend} ÷ {divisor} = {quotient}",
+                "answer": "{dividend} 나누기 {divisor}{particle} {quotient}"
+              }
+            ],
+            "explanation": "나누기 means 'divided by'. Structure: [A] 나누기 [B]는/은 [C]. The topic particle 는/은 attaches to the divisor B.",
+            "example": "12 ÷ 3 = 4 → 십이 나누기 삼은 사."
+          }
+        ]
+      },
+      {
+        "id": "ranges",
+        "label": "more than / less than / between",
+        "subcategories": [
+          {
+            "id": "more_than",
+            "label": "More than / at least",
+            "variables": {
+              "n": { "type": "int", "min": 1, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "at_least",
+                "question": "at least {n}",
+                "answer": "{n} 이상"
+              },
+              {
+                "id": "more_than_strict",
+                "question": "more than {n} (strict)",
+                "answer": "{n} 초과"
+              }
+            ],
+            "explanation": "이상 means at least (≥). 초과 means strictly more than (>). Both use sino numbers.",
+            "example": "at least 5 → 오 이상. more than 10 (strict) → 십 초과."
+          },
+          {
+            "id": "less_than",
+            "label": "Less than / at most",
+            "variables": {
+              "n": { "type": "int", "min": 1, "system": "sino" }
+            },
+            "templates": [
+              {
+                "id": "at_most",
+                "question": "at most {n}",
+                "answer": "{n} 이하"
+              },
+              {
+                "id": "less_than_strict",
+                "question": "less than {n} (strict)",
+                "answer": "{n} 미만"
+              }
+            ],
+            "explanation": "이하 means at most (≤). 미만 means strictly less than (<). Both use sino numbers.",
+            "example": "at most 20 → 이십 이하. less than 10 (strict) → 십 미만."
+          },
+          {
+            "id": "between",
+            "label": "Between",
+            "variables": {
+              "a": { "type": "int", "min": 1, "max": 99, "system": "sino" },
+              "offset": { "type": "int", "min": 1, "max": 50, "system": "sino" },
+              "b": { "type": "derived", "op": "add", "sources": ["a", "offset"], "system": "sino" },
+              "aMarker": { "type": "objectMarker", "source": "a" }
+            },
+            "templates": [
+              {
+                "id": "between_range",
+                "question": "between {a} and {b}",
+                "answer": ["{a}{aMarker} {b} 사이", "{a}부터 {b} 사이"]
+              }
+            ],
+            "explanation": "사이 means between. All numbers use sino. For the particle form, attach 와 to a vowel-final word and 과 to a consonant-final word.",
+            "example": "between 3 and 7 → 삼과 칠 사이. between 60 and 65 → 육십과 육십오 사이."
+          }
+        ]
+      },
+      {
+        "id": "time_particles",
+        "label": "Time particles",
+        "variables": {
+          "n": { "type": "int", "min": 1, "max": 120},
+          "unit": {
+            "type": "choice",
+            "values": [
+              { "en": "years", "ko": "년", "system": "sino" },
+              { "en": "months", "ko": "개월", "system": "sino" },
+              { "en": "weeks", "ko": "주", "system": "sino" },
+              { "en": "days", "ko": "일", "system": "sino" },
+              { "en": "hours", "ko": "시간", "system": "native" },
+              { "en": "minutes", "ko": "분", "system": "sino" },
+              { "en": "seconds", "ko": "초", "system": "sino" }
+            ]
+          } 
+        },
+        "templates": [
+          {
+            "id": "after",
+            "question": "{n} {unit.en} later",
+            "answer": [
+              "{n|dayDuration} {unit|dayKo} 후",
+              "{n|dayDuration} {unit|dayKo} 뒤",
+              "{n} {unit.ko} 후",
+              "{n} {unit.ko} 뒤",
+              "{n|monthNative} 달 후",
+              "{n|monthNative} 달 뒤",
+              "{n|monthSino} 개월 후",
+              "{n|monthSino} 개월 뒤"
+            ]
+          },
+          {
+            "id": "ago_before",
+            "question": "{n} {unit.en} ago",
+            "answer": [
+              "{n|dayDuration} {unit|dayKo} 전",
+              "{n} {unit.ko} 전",
+              "{n|monthNative} 달 전",
+              "{n|monthSino} 개월 전"
+            ]
+          },
+          {
+            "id": "within",
+            "question": "within {n} {unit.en} (i.e. i must do it within {n} {unit.en})",
+            "answer": [
+              "{n|dayDuration} {unit|dayKo} 안에",
+              "{n} {unit.ko} 안에",
+              "{n|monthNative} 달 안에",
+              "{n|monthSino} 개월 안에"
+            ]
+          },
+          {
+            "id": "in_time_result",
+            "question": "in {n} {unit.en} (i.e. i did it in {n} {unit.en})",
+            "answer": [
+              "{n|dayDuration} {unit|dayKo} 만에",
+              "{n} {unit.ko} 만에",
+              "{n|monthNative} 달 만에",
+              "{n|monthSino} 개월 만에"
+            ]
+          }
+        ],
+        "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
+        "example": "3 hours later → 세 시간 뒤. 2 days ago → 이틀 전 or 이 일 전. 3 months later → 세 달 뒤 or 삼 개월 뒤."
+      }
+    ]
+  }

@@ -20,6 +20,7 @@ import {
   generateIntervalTransposition,
   generateRelativeIntervalQuestion,
   generateGuessScaleQuestion,
+  generateGuessScaleNotesQuestion,
   buildChordDisplay,
   formatRomanNumeral,
 } from '../utils/chordLogic';
@@ -48,12 +49,20 @@ const Game = () => {
   const enabledScaleTypesRef = useRef(config.enabledScaleTypes || ['major']);
   const [includeBorrowed, setIncludeBorrowed] = useState(config.includeBorrowed || false);
   const includeBorrowedRef = useRef(config.includeBorrowed || false);
+  const [includeSecondaryDominants, setIncludeSecondaryDominants] = useState(config.includeSecondaryDominants || false);
+  const includeSecondaryDominantsRef = useRef(config.includeSecondaryDominants || false);
   const [include7ths, setInclude7ths] = useState(config.include7ths || false);
   const include7thsRef = useRef(config.include7ths || false);
 
+  // guess-scale sub-mode: 'chords' (default) or 'notes'
+  const [guessScaleSubmode, setGuessScaleSubmode] = useState(config.guessScaleSubmode || 'chords');
+  const guessScaleSubmodeRef = useRef(config.guessScaleSubmode || 'chords');
+
   useEffect(() => { enabledScaleTypesRef.current = enabledScaleTypes; }, [enabledScaleTypes]);
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
+  useEffect(() => { includeSecondaryDominantsRef.current = includeSecondaryDominants; }, [includeSecondaryDominants]);
   useEffect(() => { include7thsRef.current = include7ths; }, [include7ths]);
+  useEffect(() => { guessScaleSubmodeRef.current = guessScaleSubmode; }, [guessScaleSubmode]);
 
   // Quality + note/degree: both start unset; answering completes when both are chosen (any order)
   const [selectedQuality, setSelectedQuality] = useState(null);
@@ -131,6 +140,7 @@ const Game = () => {
     const scaleTypes = enabledScaleTypesRef.current;
     const borrowed = includeBorrowedRef.current;
     const sevenths = include7thsRef.current;
+    const secDom = includeSecondaryDominantsRef.current;
 
     if (config.mode === 'interval-transpose') {
       return { ...generateIntervalTransposition(), type: 'interval-transpose' };
@@ -143,30 +153,34 @@ const Game = () => {
       return { ...generateRandomNotePair(), type: 'interval' };
     }
     if (config.mode === 'guess-scale') {
+      const submode = guessScaleSubmodeRef.current || 'chords';
+      if (submode === 'notes') {
+        return generateGuessScaleNotesQuestion(scaleTypes);
+      }
       return generateGuessScaleQuestion(scaleTypes, sevenths);
     }
     if (config.mode === 'number-to-chord') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths);
+      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
     }
     if (config.mode === 'chord-to-number') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths);
+      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
     }
     if (config.mode === 'transposition') {
       const randomScaleType = getRandomScaleType();
       if (config.targetScaleSelection === 'random') {
         const src = randomRoot();
         const tgt = getRandomDifferentRoot(src);
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
       } else {
         const src = config.sourceRoot || 'C';
         const tgt = config.targetRoot || 'D';
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
       }
     }
     return null;
@@ -225,6 +239,9 @@ const Game = () => {
       return buildChordDisplay(ALL_NOTES[q.correctNoteIndex], q.correctQuality);
     }
     if (q.type === 'chord-to-number') {
+      if (q.isSecondaryDominant && q.secondaryDominantLabel) {
+        return q.secondaryDominantLabel;
+      }
       if (q.correctAnswerQuality === 'flat') {
         return formatRomanNumeral(q.correctDegree, 'major', true);
       }
@@ -232,7 +249,7 @@ const Game = () => {
     }
     if (q.type === 'interval' || q.type === 'interval-relative') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
-    if (q.type === 'guess-scale') return q.correctScale?.rootNote || '';
+    if (q.type === 'guess-scale' || q.type === 'guess-scale-notes') return q.correctScale?.rootNote || '';
     return '';
   };
 
@@ -315,7 +332,7 @@ const Game = () => {
   const handleScaleRootAnswer = (noteIndex) => {
     if (!gameState.isGameActive || gameState.feedback) return;
     const q = gameState.currentQuestion;
-    if (!q || q.type !== 'guess-scale') return;
+    if (!q || (q.type !== 'guess-scale' && q.type !== 'guess-scale-notes')) return;
     const selectedNote = ALL_NOTES[noteIndex];
     const isCorrect = selectedNote === q.correctScale?.rootNote;
     submitAnswer(isCorrect);
@@ -366,13 +383,29 @@ const Game = () => {
 
   // Handle settings changes - FIX: regenerate question when scale type changes in preselected mode
   const handleSettingsChange = (newSettings) => {
+    if ('guessScaleSubmode' in newSettings) {
+      setGuessScaleSubmode(newSettings.guessScaleSubmode);
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+        const scaleTypes = enabledScaleTypesRef.current;
+        const sevenths = include7thsRef.current;
+        const newQuestion = newSettings.guessScaleSubmode === 'notes'
+          ? generateGuessScaleNotesQuestion(scaleTypes)
+          : generateGuessScaleQuestion(scaleTypes, sevenths);
+        if (newQuestion) {
+          setGameState(prev => ({ ...prev, currentQuestion: newQuestion, feedback: null }));
+        }
+      }
+    }
     if ('enabledScaleTypes' in newSettings) {
       setEnabledScaleTypes(newSettings.enabledScaleTypes);
       
       // For guess-scale mode, regenerate when scale types change (untimed only)
       if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
         const sevenths = include7thsRef.current;
-        const newQuestion = generateGuessScaleQuestion(newSettings.enabledScaleTypes, sevenths);
+        const submode = guessScaleSubmodeRef.current;
+        const newQuestion = submode === 'notes'
+          ? generateGuessScaleNotesQuestion(newSettings.enabledScaleTypes)
+          : generateGuessScaleQuestion(newSettings.enabledScaleTypes, sevenths);
         if (newQuestion) {
           setGameState(prev => ({
             ...prev,
@@ -388,11 +421,12 @@ const Game = () => {
           const root = gameState.currentScale.rootNote;
           const borrowed = includeBorrowedRef.current;
           const sevenths = include7thsRef.current;
+          const secDom = includeSecondaryDominantsRef.current;
           let newQuestion;
           if (config.mode === 'number-to-chord') {
-            newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed, sevenths);
+            newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed, sevenths, secDom);
           } else if (config.mode === 'chord-to-number') {
-            newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed, sevenths);
+            newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed, sevenths, secDom);
           }
           if (newQuestion) {
             setGameState(prev => ({
@@ -414,11 +448,14 @@ const Game = () => {
     if ('includeBorrowed' in newSettings) {
       setIncludeBorrowed(newSettings.includeBorrowed);
     }
+    if ('includeSecondaryDominants' in newSettings) {
+      setIncludeSecondaryDominants(newSettings.includeSecondaryDominants);
+    }
     if ('include7ths' in newSettings) {
       setInclude7ths(newSettings.include7ths);
       
-      // For guess-scale mode, regenerate when 7ths setting changes (untimed only)
-      if (config.mode === 'guess-scale' && config.timerMode === 'untimed') {
+      // For guess-scale mode (chords only), regenerate when 7ths setting changes (untimed only)
+      if (config.mode === 'guess-scale' && config.timerMode === 'untimed' && guessScaleSubmodeRef.current !== 'notes') {
         const scaleTypes = enabledScaleTypesRef.current;
         const newQuestion = generateGuessScaleQuestion(scaleTypes, newSettings.include7ths);
         if (newQuestion) {
@@ -433,16 +470,17 @@ const Game = () => {
       else if (!newSettings.include7ths && gameState.currentQuestion?.is7th) {
         const scale = gameState.currentScale || { rootNote: 'C', scaleType: 'major' };
         const borrowed = includeBorrowedRef.current;
+        const secDom = includeSecondaryDominantsRef.current;
         let newQuestion;
         if (config.mode === 'number-to-chord') {
-          newQuestion = generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, false);
+          newQuestion = generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, false, secDom);
         } else if (config.mode === 'chord-to-number') {
-          newQuestion = generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, false);
+          newQuestion = generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, false, secDom);
         } else if (config.mode === 'transposition') {
           const src = gameState.sourceScale || { rootNote: 'C', scaleType: 'major' };
           const tgt = gameState.targetScale || { rootNote: 'D', scaleType: 'major' };
           const randomScaleType = getRandomScaleType();
-          newQuestion = generateTranspositionQuestion(src.rootNote, randomScaleType, tgt.rootNote, randomScaleType, borrowed, false);
+          newQuestion = generateTranspositionQuestion(src.rootNote, randomScaleType, tgt.rootNote, randomScaleType, borrowed, false, secDom);
         }
         if (newQuestion) {
           setGameState(prev => ({
@@ -459,11 +497,13 @@ const Game = () => {
   const handleScaleRootChange = (newRoot) => {
     const scaleType = gameState.currentScale?.scaleType || 'major';
     const borrowed = includeBorrowedRef.current;
+    const sevenths = include7thsRef.current;
+    const secDom = includeSecondaryDominantsRef.current;
     let newQuestion;
     if (config.mode === 'number-to-chord') {
-      newQuestion = generateNumberToChordQuestion(newRoot, scaleType, borrowed);
+      newQuestion = generateNumberToChordQuestion(newRoot, scaleType, borrowed, sevenths, secDom);
     } else {
-      newQuestion = generateChordToNumberQuestion(newRoot, scaleType, borrowed);
+      newQuestion = generateChordToNumberQuestion(newRoot, scaleType, borrowed, sevenths, secDom);
     }
     setGameState(prev => ({
       ...prev,
@@ -476,11 +516,13 @@ const Game = () => {
   const handleScaleTypeChange = (newScaleType) => {
     const root = gameState.currentScale?.rootNote || 'C';
     const borrowed = includeBorrowedRef.current;
+    const sevenths = include7thsRef.current;
+    const secDom = includeSecondaryDominantsRef.current;
     let newQuestion;
     if (config.mode === 'number-to-chord') {
-      newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed);
+      newQuestion = generateNumberToChordQuestion(root, newScaleType, borrowed, sevenths, secDom);
     } else {
-      newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed);
+      newQuestion = generateChordToNumberQuestion(root, newScaleType, borrowed, sevenths, secDom);
     }
     setGameState(prev => ({
       ...prev,
@@ -495,7 +537,7 @@ const Game = () => {
     if (config.targetScaleSelection !== 'preselected') return;
     const scaleType = getRandomScaleType();
     const tgtRoot = gameState.targetScale?.rootNote || 'D';
-    const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current);
+    const newQ = generateTranspositionQuestion(newRoot, scaleType, tgtRoot, scaleType, includeBorrowedRef.current, include7thsRef.current, includeSecondaryDominantsRef.current);
     setGameState(prev => ({
       ...prev,
       sourceScale: { rootNote: newRoot, scaleType },
@@ -509,7 +551,7 @@ const Game = () => {
     const srcRoot = gameState.sourceScale?.rootNote || 'C';
     if (newRoot === srcRoot) return; // Prevent setting target same as source
     const scaleType = getRandomScaleType();
-    const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current);
+    const newQ = generateTranspositionQuestion(srcRoot, scaleType, newRoot, scaleType, includeBorrowedRef.current, include7thsRef.current, includeSecondaryDominantsRef.current);
     setGameState(prev => ({
       ...prev,
       targetScale: { rootNote: newRoot, scaleType },
@@ -533,13 +575,14 @@ const Game = () => {
   // Quality options - show 7ths only when enabled AND question is a 7th question
   const show7thOptions = include7ths && q.is7th;
   const qualityOptions = isDegreeMode
-    ? ['major', 'minor', 'dim', 'aug', 'flat']
+    ? [...['major', 'minor', 'dim', 'aug', 'flat'], ...(includeSecondaryDominants ? ['secondary'] : [])]
     : show7thOptions
       ? ['maj7', 'min7', 'dom7', 'halfdim7', 'dim7', 'aug7']
       : ['major', 'minor', 'dim', 'aug'];
   const qualityLabels = {
     major: 'Major', minor: 'Minor', dim: 'Dim', aug: 'Aug', flat: '\u266D Flat',
-    maj7: 'Maj7', min7: 'm7', dom7: '7', halfdim7: 'ø7', dim7: '°7', aug7: 'Aug7'
+    maj7: 'Maj7', min7: 'm7', dom7: '7', halfdim7: 'ø7', dim7: '°7', aug7: 'Aug7',
+    secondary: 'V/'
   };
 
   const displayScale = q.scale || q.sourceScale || gameState.currentScale;
@@ -691,7 +734,7 @@ const Game = () => {
              config.mode === 'chord-to-number' ? 'Select the roman numeral for' :
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
-             config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale:` :
+             config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale — ${q?.type === 'guess-scale-notes' ? 'identify the root from these notes' : 'identify the root from these chords'}:` :
              'Transpose this chord'}
           </p>
           <div
@@ -710,13 +753,20 @@ const Game = () => {
                 <div className="text-xl font-medium text-[#002FA7] mb-1">{q.direction === 'up' ? '\u2191 UP' : '\u2193 DOWN'}</div>
                 <div className="text-lg font-medium text-[#9CA3AF]">{q.intervalFullName}</div>
               </div>
-            ) : q.type === 'guess-scale' ? (
+            ) : (q.type === 'guess-scale' || q.type === 'guess-scale-notes') ? (
               <div className="flex flex-wrap justify-center gap-3 md:gap-4 px-4">
-                {q.chords.map((chord, idx) => (
-                  <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
-                    {chord.display}
-                  </span>
-                ))}
+                {q.type === 'guess-scale-notes'
+                  ? q.notes.map((note, idx) => (
+                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
+                        {note}
+                      </span>
+                    ))
+                  : q.chords.map((chord, idx) => (
+                      <span key={idx} className="text-2xl md:text-4xl font-bold text-[#1A1A1A]">
+                        {chord.display}
+                      </span>
+                    ))
+                }
               </div>
             ) : (
               <span className={`${questionTextClass(getQuestionText())} font-bold text-[#1A1A1A]`}>
@@ -883,7 +933,7 @@ const Game = () => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={{ enabledScaleTypes, includeBorrowed, include7ths }}
+        settings={{ enabledScaleTypes, includeBorrowed, includeSecondaryDominants, include7ths, guessScaleSubmode }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
         showScaleTypePool={

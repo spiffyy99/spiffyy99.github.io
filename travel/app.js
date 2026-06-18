@@ -7,12 +7,55 @@
 (function () {
   const $ = (id) => document.getElementById(id);
 
+  // Small, non-blocking toast notification (auto-dismisses).
+  function showToast(message, type = "info", durationMs = 6000) {
+    let container = document.getElementById("toastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toastContainer";
+      container.style.cssText =
+        "position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;";
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    const accent =
+      type === "warn" ? "#f59e0b" : type === "error" ? "#ef4444" : "#3b82f6";
+    toast.style.cssText =
+      "background:var(--card,#fff);color:var(--text,#111);border:1px solid var(--border,#e5e5e5);border-left:3px solid " +
+      accent +
+      ";border-radius:8px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,0.15);font-size:13px;line-height:1.4;opacity:0;transform:translateY(-8px);transition:opacity 220ms ease,transform 220ms ease;pointer-events:auto;";
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateY(0)";
+    });
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-8px)";
+      setTimeout(() => toast.remove(), 260);
+    }, durationMs);
+  }
+
   const STORAGE_KEYS = {
-    geo: "travel:geoCache:v1",
-    airport: "travel:airportCache:v1",
-    flight: "travel:flightCache:v1",
+    geo: "travel:geoCache:v2",      // Bumped version to invalidate old caches
+    airport: "travel:airportCache:v2",
+    flight: "travel:flightCache:v2",
+  };
+  
+  // Cache expiration times (in milliseconds)
+  const CACHE_TTL = {
+    geo: 24 * 60 * 60 * 1000,        // 24 hours for geocoding
+    airport: 24 * 60 * 60 * 1000,    // 24 hours for airport lookups
+    flight: 7 * 24 * 60 * 60 * 1000, // 7 days for flight durations
+    route: 60 * 60 * 1000,           // 1 hour for route calculations (in-memory)
   };
   const SELECTED_LOCATION_META = new WeakMap();
+  
+  // Airport graph data - loaded from airport_graph.json
+  let airportGraph = null; // Object keyed by IATA code
+  let airportsArray = null; // Array version for search
+  let cityToAirportsMap = null; // Map of city name -> array of IATA codes
 
   // Travel block model with configurable threshold
   // - travelDayThresholdH: user-set threshold (in hours) for what requires a travel day
@@ -23,19 +66,25 @@
   // - travelDays: number of calendar days consumed by travel (0 = no dedicated travel day)
   // - ptoOffsets: which travel day indices require PTO (if weekday and not holiday)
   // - noTravelDay: true if flight doesn't need a dedicated travel day
-  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8) {
+  // tzShift = locationUtcOffset(to) - locationUtcOffset(from).
+  // Eastward flights add hours to the arrival day (worse); westward subtract (better).
+  // The effective hours consumed in the destination arrival day = spilloverHours + tzShift.
+  // We compare that against the user's threshold, not just the raw spillover.
+  function travelBlockModel(durationHours, redeyeOK, travelDayThresholdH = 3, redeyeOvernightH = 8, tzShift = 0) {
     // Always avoid dedicated travel days when flight time is under the user's threshold.
     if (durationHours < travelDayThresholdH) {
       return { travelDays: 0, ptoOffsets: [], noTravelDay: true, isRedeye: redeyeOK };
     }
 
     // If red-eye is allowed, split into overnight + next-day spillover.
-    // ONLY use red-eye if it actually saves a travel day (spillover within threshold).
-    // If spillover exceeds threshold, we'd need a travel day anyway, so skip the red-eye
-    // and just do a regular daytime flight on a dedicated travel day.
+    // ONLY use red-eye if the time consumed on the arrival day fits within the threshold.
+    // Going east (positive tzShift) means you lose hours; going west you gain them.
     if (redeyeOK) {
       const spilloverHours = Math.max(0, durationHours - redeyeOvernightH);
-      if (spilloverHours <= travelDayThresholdH) {
+      // effectiveSpillover = hours of the destination day consumed by the remaining flight.
+      // Clamp to 0 for westward flights where the plane "arrives" before dest midnight.
+      const effectiveSpillover = Math.max(0, spilloverHours + tzShift);
+      if (effectiveSpillover <= travelDayThresholdH) {
         // Red-eye saves a travel day - use it
         return {
           travelDays: 0,
@@ -46,11 +95,13 @@
           travelDayOnNextDay: false,
         };
       }
-      // Spillover exceeds threshold: red-eye doesn't help, fall through to regular travel day logic
+      // Effective spillover exceeds threshold: red-eye doesn't help, use a dedicated travel day
     }
 
     // Most flights, including typical long-haul, should use one travel day.
-    if (durationHours <= 20) {
+    // For layover flights, total journey time can be 20-24h but still fits in one travel day
+    // (you depart morning, arrive evening/night same day or early next morning)
+    if (durationHours <= 24) {
       return {
         travelDays: 1,
         ptoOffsets: [0],
@@ -87,11 +138,14 @@
     return Math.max(0.75, airborneHours + groundTimeHours);
   }
 
-  function splitFlightHours(durationHours, isRedeye, redeyeOvernightH = 8) {
+  function splitFlightHours(durationHours, isRedeye, redeyeOvernightH = 8, tzShift = 0) {
     if (!Number.isFinite(durationHours)) return { nightHours: 0, dayHours: 0 };
     if (!isRedeye) return { nightHours: 0, dayHours: durationHours };
     const nightHours = Math.min(durationHours, redeyeOvernightH);
-    return { nightHours, dayHours: Math.max(0, durationHours - nightHours) };
+    const rawDayHours = Math.max(0, durationHours - nightHours);
+    // Add timezone shift: flying east means the arrival day starts that many hours earlier
+    // in local time, consuming more of the arrival day even if the raw flight spillover is 0.
+    return { nightHours, dayHours: Math.max(0, rawDayHours + tzShift) };
   }
   
   function isWestwardFlight(fromLon, toLon) {
@@ -101,6 +155,82 @@
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
     return diff < 0;
+  }
+
+  // --- Timezone helpers ---
+
+  // Rough UTC offset from longitude (15° per hour). Accurate to ±1h for most airports.
+  function lonToUtcOffsetHours(lon) {
+    if (lon == null || !Number.isFinite(lon)) return 0;
+    return Math.round(lon / 15);
+  }
+
+  // Precise UTC offset from an IANA timezone name using Intl (browser-only, handles DST).
+  function tzNameToUtcOffsetHours(tzName) {
+    if (!tzName) return null;
+    try {
+      const parts = new Intl.DateTimeFormat('en', {
+        timeZone: tzName,
+        timeZoneName: 'shortOffset',
+      }).formatToParts(new Date());
+      const tzPart = parts.find(p => p.type === 'timeZoneName');
+      if (tzPart) {
+        if (tzPart.value === 'GMT') return 0;
+        const match = tzPart.value.match(/GMT([+-])(\d+)(?::(\d+))?/);
+        if (match) {
+          const sign = match[1] === '+' ? 1 : -1;
+          const h = parseInt(match[2], 10);
+          const m = parseInt(match[3] || '0', 10);
+          return sign * (h + m / 60);
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // Abbreviated timezone label for display (e.g. "JST", "EST", "UTC+5:30").
+  function tzDisplayLabel(loc) {
+    const offsetHours = locationUtcOffset(loc);
+    const sign = offsetHours >= 0 ? '+' : '−';
+    const absH = Math.abs(Math.floor(offsetHours));
+    const mPart = Math.round(Math.abs(offsetHours - Math.floor(offsetHours)) * 60);
+    const offsetStr = mPart ? `${absH}:${String(mPart).padStart(2,'0')}` : `${absH}`;
+    if (loc?.timezone) {
+      try {
+        const abbr = new Intl.DateTimeFormat('en', {
+          timeZone: loc.timezone,
+          timeZoneName: 'short',
+        }).formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value;
+        if (abbr && abbr !== `GMT${sign}${offsetStr}` && abbr !== `GMT`) {
+          return `${abbr} (UTC${offsetHours >= 0 ? '+' : ''}${offsetStr})`;
+        }
+      } catch (e) {}
+    }
+    return `UTC${offsetHours >= 0 ? '+' : ''}${offsetStr}`;
+  }
+
+  // UTC offset for a location object (tries timezone name, falls back to longitude).
+  // Airport graph uses compact field "g" for longitude; also handles full "longitude" field.
+  function locationUtcOffset(loc) {
+    const fromTz = tzNameToUtcOffsetHours(loc?.timezone);
+    if (fromTz != null) return fromTz;
+    const lon = loc?.airport?.g ?? loc?.airport?.longitude;
+    return lonToUtcOffsetHours(lon);
+  }
+
+  // How many calendar days to advance currentDate after a travel block.
+  // For travelDays=1 the answer depends on timezone offset delta (handles dateline crossings).
+  function computeFlightCalDayAdvance(fromLoc, toLoc, durationHours, model) {
+    if (model.noTravelDay) return 0;      // redeye case advances separately
+    if (model.travelDays >= 2) return model.travelDays;
+    if (model.travelDays === 0) return 0;
+    // travelDays === 1: derive from timezone offset
+    const fromOffset = locationUtcOffset(fromLoc);
+    const toOffset = locationUtcOffset(toLoc);
+    const departureHour = 12; // assume noon local departure
+    const arrivalLocal = departureHour + durationHours + (toOffset - fromOffset);
+    const calDays = Math.floor(arrivalLocal / 24);
+    return Math.max(0, Math.min(calDays, 1));
   }
 
   function haversineKm(lat1, lon1, lat2, lon2) {
@@ -142,17 +272,20 @@
   // Holiday definitions are keyed by "type" so we can compute per year.
   // Fixed-date holidays apply observed-day rules (Sat->Fri, Sun->Mon).
   const DEFAULT_HOLIDAYS = [
-    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1, tooltip: "Jan 1. Observed Mon if Sun, Fri if Sat." },
-    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3, tooltip: "3rd Monday in January." },
-    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3, tooltip: "3rd Monday in February." },
-    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1, tooltip: "Last Monday in May." },
-    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19, tooltip: "June 19. Observed Mon if Sun, Fri if Sat." },
-    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4, tooltip: "July 4. Observed Mon if Sun, Fri if Sat." },
-    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1, tooltip: "1st Monday in September." },
-    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11, tooltip: "Nov 11. Observed Mon if Sun, Fri if Sat." },
-    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4, tooltip: "4th Thursday in November." },
-    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25, tooltip: "Dec 25. Observed Mon if Sun, Fri if Sat." },
+    { id: "new_years", name: "New Year's Day", type: "fixed_observed", month: 0, day: 1, defaultOn: true, tooltip: "Jan 1. Observed Mon if Sun, Fri if Sat." },
+    { id: "mlk", name: "Martin Luther King Jr. Day", type: "nth_weekday", month: 0, weekday: 1, nth: 3, defaultOn: true, tooltip: "3rd Monday in January." },
+    { id: "presidents", name: "Presidents Day", type: "nth_weekday", month: 1, weekday: 1, nth: 3, defaultOn: true, tooltip: "3rd Monday in February." },
+    { id: "memorial", name: "Memorial Day", type: "last_weekday", month: 4, weekday: 1, defaultOn: true, tooltip: "Last Monday in May." },
+    { id: "juneteenth", name: "Juneteenth", type: "fixed_observed", month: 5, day: 19, defaultOn: true, tooltip: "June 19. Observed Mon if Sun, Fri if Sat." },
+    { id: "independence", name: "Independence Day", type: "fixed_observed", month: 6, day: 4, defaultOn: true, tooltip: "July 4. Observed Mon if Sun, Fri if Sat." },
+    { id: "labor", name: "Labor Day", type: "nth_weekday", month: 8, weekday: 1, nth: 1, defaultOn: true, tooltip: "1st Monday in September." },
+    { id: "veterans", name: "Veterans Day", type: "fixed_observed", month: 10, day: 11, defaultOn: true, tooltip: "Nov 11. Observed Mon if Sun, Fri if Sat." },
+    { id: "thanksgiving", name: "Thanksgiving", type: "nth_weekday", month: 10, weekday: 4, nth: 4, defaultOn: true, tooltip: "4th Thursday in November." },
+    { id: "christmas", name: "Christmas Day", type: "fixed_observed", month: 11, day: 25, defaultOn: true, tooltip: "Dec 25. Observed Mon if Sun, Fri if Sat." },
   ];
+
+  // Active holidays for the selected country — replaced when holidays.json loads.
+  let ACTIVE_HOLIDAYS = DEFAULT_HOLIDAYS;
 
   function observedDateForFixed(day) {
     // Federal observed rules:
@@ -164,6 +297,25 @@
     if (dow === 6) d.setDate(d.getDate() - 1);
     if (dow === 0) d.setDate(d.getDate() + 1);
     return d;
+  }
+
+  // Anonymous Gregorian algorithm for Easter Sunday.
+  function computeEasterForYear(year) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month, day);
   }
 
   function computeHolidayDateForYear(holiday, year) {
@@ -183,14 +335,53 @@
 
     if (holiday.type === "last_weekday") {
       // last weekday in month
-      const lastOfMonth = new Date(year, holiday.month + 1, 0); // last day of month
+      const lastOfMonth = new Date(year, holiday.month + 1, 0);
       const desired = holiday.weekday;
       const delta = (lastOfMonth.getDay() - desired + 7) % 7;
       const dayNum = lastOfMonth.getDate() - delta;
       return new Date(year, holiday.month, dayNum);
     }
 
-    throw new Error("Unknown holiday type");
+    // Sat and Sun both shift to following Monday (CA/UK style).
+    if (holiday.type === "fixed_next_monday") {
+      const d = new Date(year, holiday.month, holiday.day);
+      const dow = d.getDay();
+      if (dow === 0) d.setDate(d.getDate() + 1);
+      else if (dow === 6) d.setDate(d.getDate() + 2);
+      return d;
+    }
+
+    // Only Sunday shifts to following Monday (SG style).
+    if (holiday.type === "fixed_sun_to_monday") {
+      const d = new Date(year, holiday.month, holiday.day);
+      if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+      return d;
+    }
+
+    // Offset in days from Easter Sunday (e.g. -2 = Good Friday, +1 = Easter Monday).
+    if (holiday.type === "easter_offset") {
+      const easter = computeEasterForYear(year);
+      const d = new Date(easter);
+      d.setDate(d.getDate() + (holiday.offset || 0));
+      return d;
+    }
+
+    // Last specified weekday on or before a given date (e.g. Victoria Day = last Mon before May 25).
+    if (holiday.type === "before_date") {
+      const d = new Date(year, holiday.month, holiday.day);
+      const delta = (d.getDay() - holiday.weekday + 7) % 7;
+      d.setDate(d.getDate() - delta);
+      return d;
+    }
+
+    // Pre-calculated dates by year (for lunar/Islamic calendar holidays).
+    if (holiday.type === "lookup") {
+      const iso = holiday.dates && holiday.dates[String(year)];
+      if (!iso) return null;
+      return parseISODate(iso);
+    }
+
+    throw new Error("Unknown holiday type: " + holiday.type);
   }
 
   function buildPtoOffSet({ windowStartISO, windowEndISO, enabledHolidayIds, extraPtoOffDates }) {
@@ -204,10 +395,10 @@
 
     // Default holiday offs.
     for (let y = startYear; y <= endYear; y++) {
-      for (const holiday of DEFAULT_HOLIDAYS) {
+      for (const holiday of ACTIVE_HOLIDAYS) {
         if (!enabledHolidayIds.has(holiday.id)) continue;
         const d = computeHolidayDateForYear(holiday, y);
-        if (d >= windowStart && d <= windowEnd) ptoOff.add(isoDate(d));
+        if (d && d >= windowStart && d <= windowEnd) ptoOff.add(isoDate(d));
       }
     }
 
@@ -230,12 +421,12 @@
     const holidayMap = new Map();
     
     for (let y = startYear; y <= endYear; y++) {
-      for (const holiday of DEFAULT_HOLIDAYS) {
+      for (const holiday of ACTIVE_HOLIDAYS) {
         if (!enabledHolidayIds.has(holiday.id)) continue;
         
         const observedDate = computeHolidayDateForYear(holiday, y);
+        if (!observedDate) continue;
         if (observedDate >= windowStart && observedDate <= windowEnd) {
-          // Check if this is an observed date (different from actual date for fixed holidays)
           let isObserved = false;
           if (holiday.type === "fixed_observed") {
             const actualDate = new Date(y, holiday.month, holiday.day);
@@ -266,22 +457,37 @@
 
   // ---- Geocoding + nearest airport ----
 
-  async function cachedJson(cacheKey, cacheObj, key, mustHaveKeys, fetchFn) {
-    if (cacheObj[key]) {
+  // Check if a cached entry is still valid (not expired)
+  function isCacheEntryValid(entry, ttlMs) {
+    if (!entry || !entry._timestamp) return false;
+    return (Date.now() - entry._timestamp) < ttlMs;
+  }
+
+  async function cachedJson(cacheKey, cacheObj, key, mustHaveKeys, fetchFn, ttlMs = CACHE_TTL.geo) {
+    const entry = cacheObj[key];
+    
+    // Check if we have a valid cached entry
+    if (entry && isCacheEntryValid(entry, ttlMs)) {
       let hasAllKeys = true;
       if (mustHaveKeys) {
-        for (const key of mustHaveKeys) {
-          if (!cacheObj[key] || isNullOrEmpty(cacheObj[key])) {
+        for (const k of mustHaveKeys) {
+          if (entry[k] == null || String(entry[k]).trim() === "") {
             hasAllKeys = false;
+            break;
           }
         }
       } 
       if (hasAllKeys) {
-        return cacheObj[key];
+        return entry;
       }
     }
+    
+    // Fetch fresh data
     const value = await fetchFn();
+    // Add timestamp for expiration checking
+    value._timestamp = Date.now();
     cacheObj[key] = value;
+    
     try {
       localStorage.setItem(cacheKey, JSON.stringify(cacheObj));
     } catch {
@@ -292,11 +498,37 @@
 
   function loadCache(storageKey) {
     try {
-      return JSON.parse(localStorage.getItem(storageKey) || "{}");
+      const data = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      // Clean up expired entries on load
+      const now = Date.now();
+      const ttl = storageKey.includes('geo') ? CACHE_TTL.geo : 
+                  storageKey.includes('airport') ? CACHE_TTL.airport : 
+                  CACHE_TTL.flight;
+      for (const key of Object.keys(data)) {
+        if (data[key]?._timestamp && (now - data[key]._timestamp) > ttl) {
+          delete data[key];
+        }
+      }
+      return data;
     } catch {
       return {};
     }
   }
+  
+  // Clear all travel-related caches (useful for debugging)
+  // Note: routeCache and routeCacheTimestamps are defined later in the file
+  function clearAllCaches() {
+    localStorage.removeItem(STORAGE_KEYS.geo);
+    localStorage.removeItem(STORAGE_KEYS.airport);
+    localStorage.removeItem(STORAGE_KEYS.flight);
+    // Clear in-memory route caches if they exist
+    if (typeof routeCache !== 'undefined') routeCache.clear();
+    if (typeof routeCacheTimestamps !== 'undefined') routeCacheTimestamps.clear();
+    console.log('All travel caches cleared');
+  }
+  
+  // Expose to window for manual cache clearing if needed
+  window.clearTravelCaches = clearAllCaches;
 
   async function geocodeCity(cityName, geoCache) {
     const key = `geo:${cityName.toLowerCase().trim()}`;
@@ -314,11 +546,52 @@
         longitude: first.longitude,
         country: first.country,
         name: first.name,
+        timezone: first.timezone || null,
       };
     });
   }
 
+  // Find the best airport near given coords using local airport graph.
+  // Prefers major hubs (large size, many routes) over geographically closest small airports.
+  // Returns null if nothing found within radius.
+  function findBestAirportNearCoords(latitude, longitude, maxKm = 100) {
+    if (!airportGraph) return null;
+    const candidates = [];
+    for (const code in airportGraph) {
+      const ap = airportGraph[code];
+      if (!ap || ap.t == null || ap.g == null) continue;
+      const dist = haversineKm(latitude, longitude, ap.t, ap.g);
+      if (dist <= maxKm) candidates.push({ code, ap, dist });
+    }
+    if (!candidates.length) return null;
+    // Score: lower is better. Prioritize large hubs with many routes.
+    // size weight: L=0, M=10. Routes count subtracted (more = better).
+    // Distance adds a small penalty (1 per 25km) so we don't pick a far hub when a similarly good closer one exists.
+    candidates.sort((a, b) => {
+      const sizeA = a.ap.s === "L" ? 0 : a.ap.s === "M" ? 10 : 20;
+      const sizeB = b.ap.s === "L" ? 0 : b.ap.s === "M" ? 10 : 20;
+      const routesA = (a.ap.r || []).length;
+      const routesB = (b.ap.r || []).length;
+      const scoreA = sizeA - Math.min(routesA, 200) * 0.5 + a.dist / 25;
+      const scoreB = sizeB - Math.min(routesB, 200) * 0.5 + b.dist / 25;
+      return scoreA - scoreB;
+    });
+    const best = candidates[0];
+    return {
+      iataCode: best.code,
+      icaoCode: null,
+      name: best.ap.n,
+      city: best.ap.c || "",
+      latitude: best.ap.t,
+      longitude: best.ap.g,
+    };
+  }
+
   async function nearestAirport({ latitude, longitude, rangeMeters, airportCache }) {
+    // First try local graph (smarter: prefers major hubs over closest tiny airports)
+    const local = findBestAirportNearCoords(latitude, longitude, 100);
+    if (local) return local;
+
     const key = `near:${latitude.toFixed(4)},${longitude.toFixed(4)}:${rangeMeters || 500000}`;
     const cacheObj = airportCache;
     return cachedJson(STORAGE_KEYS.airport, cacheObj, key, ["iataCode", "icaoCode", "name", "city"], async () => {
@@ -333,6 +606,18 @@
       const data = await res.json();
       const airport = data?.data;
       if (!airport?.iataCode) throw new Error("No airport found");
+      // If returned IATA exists in graph, prefer the graph's data (more reliable city/coords)
+      if (airportGraph && airportGraph[airport.iataCode]) {
+        const ap = airportGraph[airport.iataCode];
+        return {
+          iataCode: ap.i,
+          icaoCode: airport.icaoCode,
+          name: ap.n,
+          city: ap.c || "",
+          latitude: ap.t,
+          longitude: ap.g,
+        };
+      }
       return {
         iataCode: airport.iataCode,
         icaoCode: airport.icaoCode,
@@ -344,14 +629,34 @@
     });
   }
 
+  // Title-case a typed city input so "jakarta" -> "Jakarta", "new york" -> "New York".
+  function titleCaseTypedCity(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+    // If user typed something like "Foo, Country", drop the country tail.
+    const left = s.split(",")[0].trim();
+    return left
+      .split(/\s+/)
+      .map((w) => {
+        if (!w) return w;
+        // Preserve all-caps tokens (e.g. "NYC", "USA").
+        if (/^[A-Z]{2,}$/.test(w)) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      })
+      .join(" ");
+  }
+
   function isIataToken(token) {
     // Strict MVP: exactly 3 letters.
     return /^[A-Za-z]{3}$/.test(String(token).trim());
   }
 
   function inferCityFromAirportName(airportName = "") {
-    for (const airport of airportsDB) {
-      if (airport.n === airportName) return airport.c;
+    // Check in loaded airports array
+    if (airportsArray) {
+      for (const airport of airportsArray) {
+        if (airport.n === airportName) return airport.c;
+      }
     }
     const cleaned = String(airportName || "")
       .replace(/\s*\([^)]*\)\s*/g, " ")
@@ -414,7 +719,29 @@
 
     if (isIataToken(raw)) {
       const code = raw.toUpperCase();
+      
+      // First try local airport graph
+      if (airportGraph && airportGraph[code]) {
+        const ap = airportGraph[code];
+        const airport = {
+          iataCode: ap.i,
+          name: ap.n,
+          city: ap.c || "",
+          latitude: ap.t,
+          longitude: ap.g,
+        };
+        return {
+          displayName: ap.n || ap.i,
+          cityName: preferredCity || ap.c || inferCityFromAirportName(ap.n || ""),
+          country: preferredCountry || ap.o || "",
+          airport,
+          timezone: null,
+        };
+      }
+      
+      // Fall back to external API
       const key = `iata:${code}`;
+      const airportFromDb = airportsDB?.find?.((ap) => String(ap.iataCode || "").toUpperCase() === code);
       const cachedAirport = await cachedJson(STORAGE_KEYS.airport, airportCache, key, ["displayName", "cityName", "country"], async () => {
         const url = `https://www.iatageo.com/v2/airports/iata/${encodeURIComponent(code)}`;
         const res = await fetch(url);
@@ -422,19 +749,21 @@
         const payload = await res.json();
         const data = payload?.data;
         if (!data?.iataCode || !data?.coordinates) throw new Error("No airport found for IATA code");
+        const localCity = airportFromDb?.city || airportFromDb?.municipality || airportFromDb?.cityName || "";
         const airport = {
           iataCode: data.iataCode,
           icaoCode: data.icaoCode,
           name: data.name,
-          city: data.city || data.municipality || "",
+          city: data.city || data.municipality || localCity || "",
           latitude: data.coordinates.latitude,
           longitude: data.coordinates.longitude,
         };
         return {
           displayName: data.name || data.iataCode,
-          cityName: preferredCity || data.city || data.municipality || inferCityFromAirportName(data.name || ""),
+          cityName: preferredCity || data.city || data.municipality || localCity || inferCityFromAirportName(data.name || ""),
           country: preferredCountry || data.country || "",
           airport,
+          timezone: null,
         };
       });
       return cachedAirport;
@@ -449,16 +778,22 @@
     });
 
     const typedCityGuess = normalizeTypedCity(raw);
+    const titledTyped = titleCaseTypedCity(typedCityGuess || raw);
     const airportLike = looksAirportLikeInput(raw);
+    // For typed (non-IATA) city inputs, the user's typed text is the canonical
+    // city name. Geocoders can return sub-districts ("Sunda Kelapa" for "jakarta"),
+    // and "nearest airport" can return an airport whose city differs from the typed
+    // city. Trust the user.
     return {
-      displayName: geo.name || typedCityGuess || raw,
+      displayName: geo.name || titledTyped || raw,
       cityName: preferredCity
         ? preferredCity
         : airportLike
-        ? (airport?.city || airport?.municipality || geo.name || typedCityGuess || raw)
-        : (geo.name || typedCityGuess || airport?.city || airport?.municipality || raw),
+        ? (airport?.city || airport?.municipality || titledTyped || geo.name || raw)
+        : (titledTyped || geo.name || airport?.city || airport?.municipality || raw),
       country: preferredCountry || geo.country || "",
       airport,
+      timezone: geo.timezone || null,
     };
   }
 
@@ -551,13 +886,55 @@
   }
 
   function estimateLegDistanceKm(airportA, airportB) {
+    if (!airportA?.latitude || !airportB?.latitude) {
+      console.warn('Missing airport coordinates', { airportA, airportB });
+      return 5000; // Default fallback distance
+    }
     return haversineKm(airportA.latitude, airportA.longitude, airportB.latitude, airportB.longitude);
   }
   
+  // Basic duration estimate based on distance (used as fallback)
   function estimateLegDurationHours(airportA, airportB) {
+    if (!airportA?.latitude || !airportB?.latitude) {
+      console.warn('Missing airport coordinates for duration', { airportA, airportB });
+      return 8; // Default fallback duration
+    }
     const distanceKm = estimateLegDistanceKm(airportA, airportB);
     const westward = isWestwardFlight(airportA.longitude, airportB.longitude);
-    return getDurationHoursFromDistanceKm(distanceKm, westward);
+    return Math.max(getDurationHoursFromDistanceKm(distanceKm, westward), 0.75);
+  }
+  
+  // Route-aware duration estimate that considers connections
+  // Returns: { hours: number, route: object, isDirect: boolean, note: string }
+  async function estimateLegDurationWithRoute(airportA, airportB) {
+    const fromIata = airportA?.iataCode;
+    const toIata = airportB?.iataCode;
+    
+    // Ensure airport graph is loaded
+    if (!airportGraph) {
+      await loadAirportsDB();
+    }
+    
+    // If we still don't have IATA codes or graph, fall back to direct estimate
+    if (!fromIata || !toIata || !airportGraph) {
+      const hours = estimateLegDurationHours(airportA, airportB);
+      return { hours, route: null, isDirect: true, note: "" };
+    }
+    
+    const route = computeBestRoute(fromIata, toIata);
+    
+    if (route.estimatedHours != null) {
+      return {
+        hours: route.estimatedHours,
+        route,
+        isDirect: route.isDirect,
+        note: route.note || ""
+      };
+    }
+    
+    // Fallback to direct estimate if route computation failed
+    const hours = estimateLegDurationHours(airportA, airportB);
+    return { hours, route: null, isDirect: true, note: "" };
   }
 
   function buildLegs(home, orderedCities, returnDest) {
@@ -573,7 +950,7 @@
     return legs;
   }
 
-  function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
+  async function simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest }) {
     // Produce day-by-day entries + PTO required + heuristic flight hours.
     const days = [];
     let currentDate = parseISODate(startISO);
@@ -584,14 +961,21 @@
     for (let legIdx = 0; legIdx < legs.length; legIdx++) {
       const leg = legs[legIdx];
 
-      const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
+      // Use route-aware duration estimation
+      const durationResult = await estimateLegDurationWithRoute(leg.from.airport, leg.to.airport);
+      const durationHours = durationResult.hours;
+      const routeInfo = durationResult.route;
+      const isDirect = durationResult.isDirect;
+      const routeNote = durationResult.note;
+      
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
+      const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
       
       // If noTravelDay, we don't add separate travel day entries
       // The flight happens overnight or same-day alongside other activities
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH, tzShift);
       
       if (model.noTravelDay) {
         // For outbound leg from home, we need to note the departure
@@ -604,30 +988,39 @@
           const fromLabel = leg.from.cityName || leg.from.displayName;
           
           // Build departure day label - only show what happens on THIS day
+          // Include connection info or "direct" label
+          const connectionNote = isDirect ? ", direct" : (routeNote ? ` [${routeNote}]` : "");
           let flightNote;
           if (model.isRedeye && nightHours > 0) {
             // Red-eye: show total flight time and overnight portion for departure day
-            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`;
+            flightNote = ` (evening work, then red-eye to ${toLabel} ~${formatHours(durationHours)}${connectionNote}, ${formatHours(nightHours)} overnight)`;
           } else {
-            flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)})`;
+            flightNote = ` (work, then evening flight to ${toLabel} ~${formatHours(durationHours)}${connectionNote})`;
           }
           
-          days.push({
-            dateISO: isoDate(d),
-            kind: "travel",
-            label: `${fromLabel} → ${toLabel}${flightNote}`,
-            ptoRequired: false,
-            workPlusFly: true,
-            noTravelDay: true,
-            isRedeyeTravel: !!model.isRedeye,
-            flightDurationHours: durationHours,
-            // For departure day, we show overnight portion in the label, not in the generic display
-            nightHours: 0, // Don't show split in generic renderer
-            dayHours: 0,
-            isDepartureDay: true,
-            hasNextDaySpillover: model.isRedeye && dayHours > 0,
-            spilloverHours: dayHours,
-          });
+        days.push({
+          dateISO: isoDate(d),
+          kind: "travel",
+          label: `${fromLabel} → ${toLabel}${flightNote}`,
+          ptoRequired: false,
+          workPlusFly: true,
+          noTravelDay: true,
+          isRedeyeTravel: !!model.isRedeye,
+          flightDurationHours: durationHours,
+          // For departure day, we show overnight portion in the label, not in the generic display
+          nightHours: 0, // Don't show split in generic renderer
+          dayHours: 0,
+          isDepartureDay: true,
+          hasNextDaySpillover: model.isRedeye && dayHours > 0,
+          spilloverHours: dayHours,
+          fromIata: leg.from.airport?.iataCode,
+          toIata: leg.to.airport?.iataCode,
+          fromCityName: fromLabel,
+          toCityName: toLabel,
+          routeInfo,
+          isDirect,
+          routeNote,
+        });
           
           // Red-eye arrives the next calendar day - add an arrival row if there's spillover
           if (model.isRedeye) {
@@ -663,24 +1056,28 @@
             days[days.length - 1].departureFlightDurationHours = durationHours;
             days[days.length - 1].departureNightHours = nightHours;
           } else {
-            // No previous day, create a departure day
-            days.push({
-              dateISO: isoDate(currentDate),
-              kind: "travel",
-              label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
-              ptoRequired: false,
-              workPlusFly: true,
-              noTravelDay: true,
-              isRedeyeTravel: true,
-              flightDurationHours: durationHours,
-              nightHours: 0,
-              dayHours: 0,
-              isDepartureDay: true,
-              departureNightHours: nightHours,
-            });
-          }
-          currentDate = addDays(currentDate, 1);
+        // No previous day, create a departure day
+          days.push({
+            dateISO: isoDate(currentDate),
+            kind: "travel",
+            label: `${fromCity} → ${departTo} (evening departure; ~${formatHours(durationHours)}, ${formatHours(nightHours)} overnight)`,
+            ptoRequired: false,
+            workPlusFly: true,
+            noTravelDay: true,
+            isRedeyeTravel: true,
+            flightDurationHours: durationHours,
+            nightHours: 0,
+            dayHours: 0,
+            isDepartureDay: true,
+            departureNightHours: nightHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: departTo,
+          });
         }
+        currentDate = addDays(currentDate, 1);
+      }
         
         // Add travel day entries - these are the "next day" spillover days
         for (let t = 0; t < model.travelDays; t++) {
@@ -706,13 +1103,14 @@
               travelLabel = `Travel: ${fromCity} → ${toCity}`;
             }
           } else {
-            // Multi-day travel - clarify which day
+            // Multi-day travel - clarify which day and include connection info
+            const connectionNote = isDirect ? ", direct" : (routeNote ? ` [${routeNote}]` : "");
             if (t === 0) {
-              travelLabel = `Travel Day 1: Depart ${fromCity}`;
+              travelLabel = `Travel Day 1: Depart ${fromCity} → ${toCity} (~${formatHours(durationHours)} total${connectionNote})`;
             } else if (t === model.travelDays - 1) {
               travelLabel = `Travel Day ${t + 1}: Arrive ${toCity}`;
             } else {
-              travelLabel = `Travel Day ${t + 1}: ${fromCity} → ${toCity}`;
+              travelLabel = `Travel Day ${t + 1}: In transit`;
             }
           }
           
@@ -723,9 +1121,8 @@
           let arrivalSpilloverHours = 0;
           
           if (model.travelDayOnNextDay && t === 0) {
-            // This is the arrival day after a red-eye departure
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours; // The remaining portion after overnight
+            arrivalSpilloverHours = dayHours; // raw remaining flight time after midnight origin tz
           } else if (!model.isRedeye) {
             // Regular daytime flight
             displayDayHours = durationHours;
@@ -741,34 +1138,46 @@
             dayHours: displayDayHours,
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: toCity,
             noTravelDay: false,
             isRedeyeTravel,
             isArrivalDay,
             arrivalSpilloverHours,
+            routeInfo,
+            isDirect,
+            routeNote,
           });
         }
-        currentDate = addDays(currentDate, model.travelDays);
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
+        currentDate = addDays(currentDate, calDayAdvance);
       }
 
       // After travel, if the arrival is a destination city (not the final return), add stay days.
       if (leg.type !== "return") {
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
         // Check if there's spillover from the previous travel leg (red-eye with no dedicated travel day)
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
         const fromLabel = leg.from.cityName || leg.from.displayName;
         const toLabel = leg.to.cityName || leg.to.displayName;
-        
+        const destTzLabel = tzDisplayLabel(leg.to);
+
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          let ptoRequired = isWeekday(d) && !off;
+          // If westward TZ gain causes travel day and first city day to share the same date,
+          // PTO was already counted on the travel row — avoid double-counting.
+          const sameAsTravelDay = calDayAdvance === 0 && s === 0 && model.travelDays > 0;
+          let ptoRequired = isWeekday(d) && !off && !sameAsTravelDay;
           let workPlusFly = false;
           
           let cityLabel = formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country);
           let arrivalSpillover = 0;
           let arrivalFlightDuration = 0;
           
-          // If this is the first day in this city and there's pending spillover from a red-eye
+          // If this is the first day in this city and there's pending spillover from a red-eye,
+          // show the raw remaining flight time (hours after midnight in origin tz).
           if (s === 0 && pendingSpillover > 0) {
             arrivalSpillover = pendingSpillover;
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
@@ -783,6 +1192,7 @@
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityTzLabel: destTzLabel,
           });
           tripDays++;
         }
@@ -894,8 +1304,23 @@
     let total = 0;
     for (const leg of legs) {
       const durationHours = estimateLegDurationHours(leg.from.airport, leg.to.airport);
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
-      total += model.travelDays;
+      const fromLon = leg.from.airport?.g ?? leg.from.airport?.longitude;
+      const toLon = leg.to.airport?.g ?? leg.to.airport?.longitude;
+      const tzShift = lonToUtcOffsetHours(toLon) - lonToUtcOffsetHours(fromLon);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
+      // Use timezone-aware calendar day advance (accounts for dateline crossings).
+      let calDayAdvance;
+      if (model.noTravelDay) {
+        calDayAdvance = model.isRedeye ? 1 : 0;
+      } else if (model.travelDays >= 2) {
+        calDayAdvance = model.travelDays;
+      } else {
+        const fromOffset = lonToUtcOffsetHours(leg.from.airport?.longitude);
+        const toOffset = lonToUtcOffsetHours(leg.to.airport?.longitude);
+        const arrivalLocal = 12 + durationHours + (toOffset - fromOffset);
+        calDayAdvance = Math.max(0, Math.min(Math.floor(arrivalLocal / 24), 1));
+      }
+      total += calDayAdvance;
       if (leg.type !== "return") total += leg.to.stayDays;
     }
     return total;
@@ -960,7 +1385,7 @@
     return bestRoute;
   }
 
-  function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest, dateConstraint }) {
+  async function optimizeOrderAndDates({ home, cities, windowStartISO, windowEndISO, redeyeOK, ptoOffSet, objective, travelDayThresholdH = 3, redeyeOvernightH = 8, returnDest, dateConstraint }) {
     const n = cities.length;
     if (n === 0) return null;
 
@@ -976,7 +1401,7 @@
         const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
         const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
         for (const startISO of candidatesCapped) {
-          const sim = simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
+          const sim = await simulateItinerary({ home, orderedCities, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
           best = compareItineraries(best, sim, objective);
         }
       }
@@ -987,7 +1412,7 @@
       const startCandidates = generateStartCandidates({ windowStartISO, windowEndISO, totalCalendarDaysNeeded: totalDaysNeeded, dateConstraint });
       const candidatesCapped = capCandidates(startCandidates, START_CANDIDATE_CAP);
       for (const startISO of candidatesCapped) {
-        const sim = simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
+        const sim = await simulateItinerary({ home, orderedCities: route, startISO, redeyeOK, ptoOffSet, travelDayThresholdH, redeyeOvernightH, returnDest });
         best = compareItineraries(best, sim, objective);
       }
     }
@@ -1007,22 +1432,465 @@
     });
   }
 
-  // City/airport autocomplete using airports.json database + Open-Meteo geocoding
+  // City/airport autocomplete using airport_graph.json database + Open-Meteo geocoding
   let autocompleteDebounce = null;
-  let airportsDB = null; // Will be loaded on first use
   
   async function loadAirportsDB() {
-    if (airportsDB) return airportsDB;
+    if (airportGraph) return airportsArray;
     try {
-      const res = await fetch('./airports.json');
+      const res = await fetch('./airport_graph.json');
       if (!res.ok) throw new Error('Failed to load airports database');
-      airportsDB = await res.json();
-      console.log(`Loaded ${airportsDB.length} airports`);
-      return airportsDB;
+      airportGraph = await res.json();
+      // Convert to array for search compatibility
+      airportsArray = Object.values(airportGraph);
+      console.log(`Loaded ${airportsArray.length} airports from graph`);
+      // Build city mapping
+      buildCityToAirportsMap();
+      return airportsArray;
     } catch (e) {
-      console.error('Could not load airports.json:', e);
+      console.error('Could not load airport_graph.json:', e);
+      airportGraph = {};
+      airportsArray = [];
       return [];
     }
+  }
+
+  // Build city -> airports mapping from airports database using city names and proximity
+  function buildCityToAirportsMap() {
+    if (cityToAirportsMap || !airportsArray) return cityToAirportsMap;
+    
+    cityToAirportsMap = new Map();
+    
+    // First pass: group by exact city name
+    for (const ap of airportsArray) {
+      if (!ap.i || !ap.c) continue;
+      
+      // Normalize city name for grouping
+      const cityKey = ap.c.toLowerCase().trim();
+      
+      if (!cityToAirportsMap.has(cityKey)) {
+        cityToAirportsMap.set(cityKey, new Set());
+      }
+      cityToAirportsMap.get(cityKey).add(ap.i);
+    }
+    
+    // Second pass: for each airport, find nearby airports (within 75km) and add them to same city groups
+    // This handles cases like Newark (EWR) serving New York even though it's technically in NJ
+    const PROXIMITY_KM = 75;
+    
+    for (const ap of airportsArray) {
+      if (!ap.i || !ap.t || !ap.g) continue;
+      
+      const lat = parseFloat(ap.t);
+      const lon = parseFloat(ap.g);
+      if (isNaN(lat) || isNaN(lon)) continue;
+      
+      // Find all airports within proximity
+      const nearbyAirports = [];
+      for (const other of airportsArray) {
+        if (!other.i || other.i === ap.i || !other.t || !other.g) continue;
+        
+        const otherLat = parseFloat(other.t);
+        const otherLon = parseFloat(other.g);
+        if (isNaN(otherLat) || isNaN(otherLon)) continue;
+        
+        const dist = haversineKm(lat, lon, otherLat, otherLon);
+        if (dist <= PROXIMITY_KM) {
+          nearbyAirports.push(other.i);
+        }
+      }
+      
+      // Add nearby airports to this airport's city group
+      if (nearbyAirports.length > 0 && ap.c) {
+        const cityKey = ap.c.toLowerCase().trim();
+        const citySet = cityToAirportsMap.get(cityKey);
+        if (citySet) {
+          for (const nearbyCode of nearbyAirports) {
+            citySet.add(nearbyCode);
+          }
+        }
+      }
+    }
+    
+    // Convert Sets to Arrays for easier use
+    for (const [city, airportSet] of cityToAirportsMap) {
+      cityToAirportsMap.set(city, Array.from(airportSet));
+    }
+    
+    return cityToAirportsMap;
+  }
+  
+  // Get all airports that could serve a city (by name or by proximity to given airport)
+  function getAirportsForCity(cityName, airportIata) {
+    const airports = new Set();
+    
+    // Always include the primary airport
+    if (airportIata) airports.add(airportIata);
+    
+    // Look up by city name
+    if (cityName && cityToAirportsMap) {
+      const cityKey = cityName.toLowerCase().trim();
+      const cityAirports = cityToAirportsMap.get(cityKey);
+      if (cityAirports) {
+        for (const code of cityAirports) {
+          airports.add(code);
+        }
+      }
+    }
+    
+    // Also look up by the city of the given airport (handles cases where cityName might differ)
+    if (airportIata && airportGraph && cityToAirportsMap) {
+      const ap = airportGraph[airportIata];
+      if (ap && ap.c) {
+        const apCityKey = ap.c.toLowerCase().trim();
+        const apCityAirports = cityToAirportsMap.get(apCityKey);
+        if (apCityAirports) {
+          for (const code of apCityAirports) {
+            airports.add(code);
+          }
+        }
+      }
+    }
+    
+    return Array.from(airports);
+  }
+  
+  // ---- Route computation using airport_graph.json ----
+  
+  // Compute the best route between two airports (direct or 1-stop)
+  // Returns: { type, legs, estimatedHours, hub?, isDirect, note }
+  // Cache for computed routes to reuse for reverse trips (with expiration)
+  const routeCache = new Map();
+  const routeCacheTimestamps = new Map();
+  
+  function isRouteCacheValid(cacheKey) {
+    const timestamp = routeCacheTimestamps.get(cacheKey);
+    if (!timestamp) return false;
+    return (Date.now() - timestamp) < CACHE_TTL.route;
+  }
+  
+  function computeBestRoute(fromIata, toIata) {
+    if (!airportGraph) {
+      return { type: "error", reason: "Airport graph not loaded", estimatedHours: null };
+    }
+    
+    // Check cache first (for reverse route reuse)
+    const cacheKey = `${fromIata}-${toIata}`;
+    const reverseCacheKey = `${toIata}-${fromIata}`;
+    
+    if (routeCache.has(cacheKey) && isRouteCacheValid(cacheKey)) {
+      return routeCache.get(cacheKey);
+    }
+    
+    // Check if we have the reverse route cached - if so, just reverse it
+    if (routeCache.has(reverseCacheKey) && isRouteCacheValid(reverseCacheKey)) {
+      const reverseRoute = routeCache.get(reverseCacheKey);
+      const result = reverseRouteResult(reverseRoute, fromIata, toIata);
+      routeCache.set(cacheKey, result);
+      routeCacheTimestamps.set(cacheKey, Date.now());
+      return result;
+    }
+    
+    const start = airportGraph[fromIata];
+    const end = airportGraph[toIata];
+    
+    if (!start || !end) {
+      return { type: "invalid", reason: "Missing airport in graph", estimatedHours: null };
+    }
+    
+    if (fromIata === toIata) {
+      return { type: "same_airport", legs: [fromIata], estimatedHours: 0, isDirect: true, note: "direct" };
+    }
+    
+    const startRoutes = new Set(start.r || []);
+    const endRoutes = new Set(end.r || []); // For checking bidirectional routes
+    
+    // Calculate direct distance for reference
+    const directDistanceKm = haversineKm(start.t, start.g, end.t, end.g);
+    const isWestward = isWestwardFlight(start.g, end.g);
+    const directHours = getDurationHoursFromDistanceKm(directDistanceKm, isWestward);
+    
+    // Check for direct flight (either direction means route exists)
+    if (startRoutes.has(toIata) || endRoutes.has(fromIata)) {
+      const result = {
+        type: "direct",
+        legs: [fromIata, toIata],
+        estimatedHours: directHours,
+        distanceKm: directDistanceKm,
+        isDirect: true,
+        note: "direct"
+      };
+      routeCache.set(cacheKey, result);
+      routeCacheTimestamps.set(cacheKey, Date.now());
+      return result;
+    }
+    
+    // Check if there's a direct flight from a nearby airport in the same city
+    const fromCityAirports = getAirportsForCity(start.c, fromIata);
+    const toCityAirports = getAirportsForCity(end.c, toIata);
+    
+    // Prioritize large airports first
+    const sortBySize = (a, b) => {
+      const sizeA = airportGraph[a]?.s === "L" ? 0 : airportGraph[a]?.s === "M" ? 1 : 2;
+      const sizeB = airportGraph[b]?.s === "L" ? 0 : airportGraph[b]?.s === "M" ? 1 : 2;
+      return sizeA - sizeB;
+    };
+    fromCityAirports.sort(sortBySize);
+    toCityAirports.sort(sortBySize);
+    
+    for (const fromAlt of fromCityAirports) {
+      if (fromAlt === fromIata) continue;
+      const fromAltAp = airportGraph[fromAlt];
+      if (!fromAltAp) continue;
+      const fromAltRoutes = new Set(fromAltAp.r || []);
+      
+      for (const toAlt of toCityAirports) {
+        const toAltAp = airportGraph[toAlt];
+        if (!toAltAp) continue;
+        const toAltRoutes = new Set(toAltAp.r || []);
+        
+        // Check both directions for route existence
+        if (fromAltRoutes.has(toAlt) || toAltRoutes.has(fromAlt)) {
+          const altDistKm = haversineKm(fromAltAp.t, fromAltAp.g, toAltAp.t, toAltAp.g);
+          const altWestward = isWestwardFlight(fromAltAp.g, toAltAp.g);
+          const result = {
+            type: "direct_alt",
+            legs: [fromAlt, toAlt],
+            estimatedHours: getDurationHoursFromDistanceKm(altDistKm, altWestward),
+            distanceKm: altDistKm,
+            isDirect: true,
+            note: `direct via ${fromAlt}→${toAlt}`,
+            altFrom: fromAlt,
+            altTo: toAlt
+          };
+          routeCache.set(cacheKey, result);
+          routeCacheTimestamps.set(cacheKey, Date.now());
+          return result;
+        }
+      }
+    }
+    
+    // No direct flight - find best 1-stop connection
+    // Strategy: check hubs reachable from origin that can reach destination
+    // Prioritize large airports as hubs
+    let best = null;
+    
+    // Get all potential hubs from origin's routes, sorted by size (L first, then M)
+    const potentialHubs = (start.r || [])
+      .filter(code => {
+        const hub = airportGraph[code];
+        return hub && (hub.s === "L" || hub.s === "M");
+      })
+      .sort((a, b) => {
+        const hubA = airportGraph[a];
+        const hubB = airportGraph[b];
+        // Large airports first, then by degree (more connections = better hub)
+        if (hubA.s !== hubB.s) return hubA.s === "L" ? -1 : 1;
+        return (hubB.d || 0) - (hubA.d || 0);
+      });
+    
+    for (const hubCode of potentialHubs) {
+      if (hubCode === toIata) continue;
+      
+      const hub = airportGraph[hubCode];
+      const hubRoutes = new Set(hub.r || []);
+      
+      // Check if hub can reach destination (either direction)
+      if (!hubRoutes.has(toIata) && !endRoutes.has(hubCode)) continue;
+      
+      const leg1DistKm = haversineKm(start.t, start.g, hub.t, hub.g);
+      const leg2DistKm = haversineKm(hub.t, hub.g, end.t, end.g);
+      
+      // Path stretch: how inefficient is this compared to direct?
+      const stretch = (leg1DistKm + leg2DistKm) / directDistanceKm;
+      
+      // Large hubs get more tolerance than medium hubs
+      const maxStretch = hub.s === "L" ? 1.8 : 1.5;
+      if (stretch > maxStretch) continue;
+      
+      // On long routes, reject very tiny first hops (but be more lenient)
+      if (directDistanceKm > 5000 && leg1DistKm < 300) continue;
+      
+      const leg1Westward = isWestwardFlight(start.g, hub.g);
+      const leg2Westward = isWestwardFlight(hub.g, end.g);
+      const leg1Hours = getDurationHoursFromDistanceKm(leg1DistKm, leg1Westward);
+      const leg2Hours = getDurationHoursFromDistanceKm(leg2DistKm, leg2Westward);
+      
+      // Layover time: 2.5h for large hubs, 2h for medium
+      const layoverHours = hub.s === "L" ? 2.5 : 2.0;
+      
+      const estimatedHours = leg1Hours + layoverHours + leg2Hours;
+      
+      // Prefer shorter total time, smaller detour, and stronger hubs
+      const hubBonus = Math.min((hub.d || 0) / 200, 0.5);
+      const score = estimatedHours + (stretch - 1.0) * 3 - hubBonus;
+      
+      const candidate = {
+        type: "one_stop",
+        hub: hubCode,
+        hubName: hub.c || hub.n,
+        legs: [fromIata, hubCode, toIata],
+        estimatedHours,
+        leg1Hours,
+        leg2Hours,
+        layoverHours,
+        distanceKm: leg1DistKm + leg2DistKm,
+        stretch,
+        score,
+        isDirect: false,
+        note: `via ${hubCode}`
+      };
+      
+      if (!best || candidate.score < best.score) {
+        best = candidate;
+      }
+    }
+    
+    if (best) {
+      routeCache.set(cacheKey, best);
+      routeCacheTimestamps.set(cacheKey, Date.now());
+      return best;
+    }
+
+    // No one-stop found through origin's listed routes. This commonly happens
+    // when the origin airport has limited international service (e.g. LGA).
+    // For long-haul (anything beyond a plausible nonstop ~14000km), search ALL
+    // large hubs in the graph geometrically — picking the hub with the smallest
+    // detour. This avoids absurd "direct" estimates for impossible routes like
+    // NYC->Jakarta.
+    const NONSTOP_PLAUSIBLE_KM = 14000;
+    if (directDistanceKm > NONSTOP_PLAUSIBLE_KM) {
+      let geomBest = null;
+      for (const hubCode in airportGraph) {
+        if (hubCode === fromIata || hubCode === toIata) continue;
+        const hub = airportGraph[hubCode];
+        if (!hub || hub.s !== "L") continue;
+        // Hub must be a real international gateway (lots of routes).
+        if (!hub.r || hub.r.length < 30) continue;
+        const leg1Km = haversineKm(start.t, start.g, hub.t, hub.g);
+        const leg2Km = haversineKm(hub.t, hub.g, end.t, end.g);
+        if (leg1Km < 500 || leg2Km < 500) continue;
+        const stretch = (leg1Km + leg2Km) / directDistanceKm;
+        if (stretch > 1.35) continue;
+        const leg1Hours = getDurationHoursFromDistanceKm(leg1Km, isWestwardFlight(start.g, hub.g));
+        const leg2Hours = getDurationHoursFromDistanceKm(leg2Km, isWestwardFlight(hub.g, end.g));
+        const layoverHours = 3.0;
+        const estHours = leg1Hours + layoverHours + leg2Hours;
+        const score = estHours + (stretch - 1.0) * 4;
+        const candidate = {
+          type: "one_stop",
+          hub: hubCode,
+          hubName: hub.c || hub.n,
+          legs: [fromIata, hubCode, toIata],
+          estimatedHours: estHours,
+          leg1Hours,
+          leg2Hours,
+          layoverHours,
+          distanceKm: leg1Km + leg2Km,
+          stretch,
+          score,
+          isDirect: false,
+          note: `via ${hubCode} (estimated)`,
+        };
+        if (!geomBest || candidate.score < geomBest.score) geomBest = candidate;
+      }
+      if (geomBest) {
+        routeCache.set(cacheKey, geomBest);
+        routeCacheTimestamps.set(cacheKey, Date.now());
+        return geomBest;
+      }
+    }
+
+    // True no-route: keep an estimate but never call it "direct". For routes
+    // exceeding plausible nonstop range, add a synthetic layover so we don't
+    // report impossible nonstop times.
+    const noRouteHours = directDistanceKm > NONSTOP_PLAUSIBLE_KM
+      ? directHours * 1.15 + 3.0
+      : directHours;
+    const result = {
+      type: "no_route",
+      legs: [fromIata, toIata],
+      estimatedHours: noRouteHours,
+      distanceKm: directDistanceKm,
+      isDirect: false,
+      note: "connection required"
+    };
+    routeCache.set(cacheKey, result);
+    routeCacheTimestamps.set(cacheKey, Date.now());
+    return result;
+  }
+  
+  // Reverse a route result for the return trip
+  function reverseRouteResult(route, fromIata, toIata) {
+    if (!route) return null;
+    
+    // For direct routes, just swap and recalculate
+    if (route.isDirect) {
+      const start = airportGraph[fromIata];
+      const end = airportGraph[toIata];
+      if (!start || !end) return route;
+      
+      const distKm = haversineKm(start.t, start.g, end.t, end.g);
+      const westward = isWestwardFlight(start.g, end.g);
+      
+      return {
+        ...route,
+        legs: route.legs.slice().reverse(),
+        estimatedHours: getDurationHoursFromDistanceKm(distKm, westward),
+        distanceKm: distKm
+      };
+    }
+    
+    // For one-stop routes, reverse the legs and recalculate times
+    if (route.type === "one_stop" && route.hub) {
+      const start = airportGraph[fromIata];
+      const hub = airportGraph[route.hub];
+      const end = airportGraph[toIata];
+      
+      if (!start || !hub || !end) return route;
+      
+      const leg1DistKm = haversineKm(start.t, start.g, hub.t, hub.g);
+      const leg2DistKm = haversineKm(hub.t, hub.g, end.t, end.g);
+      
+      const leg1Westward = isWestwardFlight(start.g, hub.g);
+      const leg2Westward = isWestwardFlight(hub.g, end.g);
+      const leg1Hours = getDurationHoursFromDistanceKm(leg1DistKm, leg1Westward);
+      const leg2Hours = getDurationHoursFromDistanceKm(leg2DistKm, leg2Westward);
+      
+      const layoverHours = hub.s === "L" ? 2.5 : 2.0;
+      const estimatedHours = leg1Hours + layoverHours + leg2Hours;
+      
+      return {
+        ...route,
+        legs: [fromIata, route.hub, toIata],
+        estimatedHours,
+        leg1Hours,
+        leg2Hours,
+        distanceKm: leg1DistKm + leg2DistKm
+      };
+    }
+    
+    return route;
+  }
+  
+  // Check if a direct flight exists between two locations (simplified for display)
+  // Returns: { isDirect: boolean, note: string, route: object }
+  function checkDirectFlightAvailable(fromCityName, fromIata, toCityName, toIata) {
+    if (!airportGraph) {
+      return { isDirect: null, note: "", route: null };
+    }
+    
+    const route = computeBestRoute(fromIata, toIata);
+    
+    if (route.type === "direct" || route.type === "direct_alt") {
+      return { isDirect: true, note: route.note || "direct", route };
+    }
+    
+    if (route.type === "one_stop") {
+      return { isDirect: false, note: route.note || "connection required", route };
+    }
+    
+    return { isDirect: false, note: "connection likely", route };
   }
   
   function searchAirports(query, airports, limit = 6) {
@@ -1072,6 +1940,12 @@
           matched = true;
         }
       }
+      // Keyword alias match — secondary metro name (e.g. NRT → "tokyo", EWR → "new york")
+      // Priority 4: shows after the primary city airport but before partial city matches
+      if (!matched && ap.ka && ap.ka.some(kw => kw === q || kw.startsWith(q))) {
+        priority = 4;
+        matched = true;
+      }
       
       // Airport name match (only if not already matched)
       if (!matched && ap.n && ap.n.toLowerCase().includes(q)) {
@@ -1110,7 +1984,7 @@
     return inferCityFromAirportName(ap.n);
   }
   
-  function setupCityAutocomplete(input, container) {
+  function setupCityAutocomplete(input, container, { onSelect } = {}) {
     let listEl = null;
     let selectedIndex = -1;
     let results = [];
@@ -1194,6 +2068,7 @@
         country: selectedCountry,
         iata: selectedIata,
       });
+      if (onSelect) onSelect({ city: selectedCity, country: selectedCountry });
       hideList();
     }
     
@@ -1381,7 +2256,7 @@
 
   function renderHolidayDefaults(container) {
     container.innerHTML = "";
-    for (const holiday of DEFAULT_HOLIDAYS) {
+    for (const holiday of ACTIVE_HOLIDAYS) {
       const item = document.createElement("div");
       item.className = "holidayItem";
       if (holiday.tooltip) {
@@ -1390,7 +2265,7 @@
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = true;
+      checkbox.checked = holiday.defaultOn !== false;
       checkbox.dataset.holidayId = holiday.id;
       checkbox.id = `holiday_${holiday.id}`;
 
@@ -1481,17 +2356,32 @@
       const detailsTd = document.createElement("td");
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
+        // Use pre-computed route info if available, otherwise check
+        let connectionNote = "";
+        if (day.routeNote !== undefined) {
+          // Show "direct" for direct flights, or the connection info for connections
+          connectionNote = day.isDirect ? ", direct" : ` [${day.routeNote}]`;
+        } else {
+          const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
+          if (directStatus.isDirect === true) {
+            connectionNote = ", direct";
+          } else if (directStatus.isDirect === false && directStatus.note) {
+            connectionNote = ` [${directStatus.note}]`;
+          }
+        }
         
         // Check if this is an arrival day with spillover from previous night's red-eye
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          // Show the remaining portion of the flight
-          detailsTd.textContent = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (day.isDepartureDay) {
           // Departure day - label already contains the flight info
           detailsTd.textContent = day.label;
+        } else if (day.label.includes('~')) {
+          // Label already contains flight time (multi-day travel first day)
+          detailsTd.textContent = day.label;
         } else if (!day.noTravelDay && !day.isArrivalDay) {
           // Regular travel day (full day flight, not a red-eye spillover)
-          detailsTd.textContent = `${day.label} (~${flightTime})`;
+          detailsTd.textContent = `${day.label} (~${flightTime}${connectionNote})`;
         } else {
           detailsTd.textContent = day.label;
         }
@@ -1503,7 +2393,7 @@
         if (fromCity) {
           detailsTd.textContent = `${fromCity} → ${day.label} (~${flightTime}; ${spillover} remaining). Day 1 in ${day.label.split(" (")[0]}`;
         } else {
-          detailsTd.textContent = `${day.label} (arrival; ${spillover} remaining from flight)`;
+          detailsTd.textContent = `${day.label} (arrival; ${spillover} remaining)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         // City day with evening departure - show both daytime and overnight portions
@@ -1546,6 +2436,14 @@
       } else {
         // This should rarely happen - only for edge cases
         ptoTd.textContent = "No (Weekend)";
+      }
+
+      // Timezone badge for city rows
+      if (day.kind === "city" && day.cityTzLabel) {
+        const tzSpan = document.createElement("span");
+        tzSpan.className = "tz-badge";
+        tzSpan.textContent = ` · ${day.cityTzLabel}`;
+        detailsTd.appendChild(tzSpan);
       }
 
       tr.appendChild(dateTd);
@@ -1660,10 +2558,14 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       let details = day.label;
       if (day.kind === "travel" && day.flightDurationHours) {
         const flightTime = formatHours(day.flightDurationHours);
+        const directStatus = checkDirectFlightAvailable(day.fromCityName, day.fromIata, day.toCityName, day.toIata);
+        const directSuffix = directStatus.note ? `, ${directStatus.note}` : "";
         if (day.isArrivalDay && day.arrivalSpilloverHours > 0) {
-          details = `${day.label} (~${flightTime}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
+          details = `${day.label} (~${flightTime}${directSuffix}; ${formatHours(day.arrivalSpilloverHours)} remaining)`;
         } else if (!day.isDepartureDay && !day.noTravelDay && !day.isArrivalDay) {
-          details = `${day.label} (~${flightTime})`;
+          details = `${day.label} (~${flightTime}${directSuffix})`;
+        } else if (day.isDepartureDay && directStatus.note) {
+          details = day.label.replace(/\)$/, `${directSuffix})`);
         }
       } else if (day.kind === "city" && day.arrivalSpilloverHours > 0) {
         const flightTime = formatHours(day.arrivalFlightDurationHours);
@@ -1672,7 +2574,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
         if (fromCity) {
           details = `${fromCity} → ${day.label} (~${flightTime}; ${spillover} remaining). Day 1 in ${day.label.split(" (")[0]}`;
         } else {
-          details = `${day.label} (arrival; ${spillover} remaining from flight)`;
+          details = `${day.label} (arrival; ${spillover} remaining)`;
         }
       } else if (day.kind === "city" && day.departureFlightDurationHours) {
         const flightTime = formatHours(day.departureFlightDurationHours);
@@ -1786,6 +2688,7 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     const destinationsContainer = $("destinations");
     const addDestinationBtn = $("addDestinationBtn");
     const holidayDefaults = $("holidayDefaults");
+    const holidayCountrySelect = $("holidayCountry");
     const extraPtoOffContainer = $("extraPtoOffDays");
     const addExtraPtoOffBtn = $("addExtraPtoOffBtn");
     const redeyeCheckbox = $("redeyeOk");
@@ -1818,6 +2721,16 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       setTheme(!isDark);
     });
     
+    // Clear cache button
+    // Clear cache button
+    const clearCacheBtn = $("clearCacheBtn");
+    if (clearCacheBtn) {
+      clearCacheBtn.addEventListener("click", () => {
+        clearAllCaches();
+        alert("Cache cleared! Refresh the page for a fresh start.");
+      });
+    }
+    
     // Set default dates
     const today = new Date();
     const todayISO = isoDate(today);
@@ -1827,15 +2740,58 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     
     const startDateInput = $("startDate");
     const endDateInput = $("endDate");
-    startDateInput.min = todayISO;
-    endDateInput.min = todayISO;
-    startDateInput.value = todayISO;
-    endDateInput.value = oneMonthISO;
+    const dateRangeInput = $("dateRange");
+    
+    // Initialize Flatpickr for date range selection
+    let dateRangePicker = null;
+    if (dateRangeInput && typeof flatpickr !== 'undefined') {
+      dateRangePicker = flatpickr(dateRangeInput, {
+        mode: "range",
+        dateFormat: "M j, Y",
+        minDate: "today",
+        defaultDate: [todayISO, oneMonthISO],
+        allowInput: false,
+        onChange: function(selectedDates, dateStr) {
+          if (selectedDates.length === 2) {
+            startDateInput.value = isoDate(selectedDates[0]);
+            endDateInput.value = isoDate(selectedDates[1]);
+          } else if (selectedDates.length === 1) {
+            startDateInput.value = isoDate(selectedDates[0]);
+            endDateInput.value = "";
+          }
+        },
+        onReady: function() {
+          // Set initial values
+          startDateInput.value = todayISO;
+          endDateInput.value = oneMonthISO;
+        }
+      });
+    } else {
+      // Fallback if Flatpickr not loaded - convert hidden inputs back to date inputs
+      startDateInput.type = "date";
+      endDateInput.type = "date";
+      startDateInput.min = todayISO;
+      endDateInput.min = todayISO;
+      startDateInput.value = todayISO;
+      endDateInput.value = oneMonthISO;
+      if (dateRangeInput) dateRangeInput.parentElement.style.display = "none";
+    }
 
     const specificDateInput = $("specificDate");
     if (specificDateInput) {
-      specificDateInput.min = todayISO;
-      specificDateInput.value = oneMonthISO;
+      // Also use Flatpickr for specific date if available
+      if (typeof flatpickr !== 'undefined') {
+        flatpickr(specificDateInput, {
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "M j, Y",
+          minDate: "today",
+          defaultDate: oneMonthISO
+        });
+      } else {
+        specificDateInput.min = todayISO;
+        specificDateInput.value = oneMonthISO;
+      }
     }
 
     // Return city toggle
@@ -1862,13 +2818,13 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
 
     // Date mode + DOW toggle
     const dateModeSelect = $("dateMode");
-    const startDateField = $("startDateField");
-    const endDateField = $("endDateField");
+    const dateRangeField = $("dateRangeField");
     const dowToggle = $("dowToggle");
     const dowDirectionField = $("dowDirectionField");
     const dowDayField = $("dowDayField");
     const specificDirectionField = $("specificDirectionField");
     const specificDateField = $("specificDateField");
+    const dateChangerDiv = $("dateChangerDiv")
 
     function syncDateModeFields() {
       const mode = dateModeSelect ? dateModeSelect.value : "range";
@@ -1876,11 +2832,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       const isSpecific = mode === "specific";
       const dowActive = dowDirectionField && dowDirectionField.style.display !== "none";
       
-      if (startDateField) startDateField.style.display = isRange ? "" : "none";
-      if (endDateField) endDateField.style.display = isRange ? "" : "none";
-      if (dowToggle) dowToggle.style.visibility = isRange ? "visible" : "hidden";
-      if (dowDirectionField) dowDirectionField.style.display = isRange && dowActive ? "" : "none";
-      if (dowDayField) dowDayField.style.display = isRange && dowActive ? "" : "none";
+      if (dateRangeField) dateRangeField.style.display = isRange ? "" : "none";
+      if (dowToggle) {
+        dowToggle.style.display = isRange ? "" : "none";
+        // Hide the whole row (not just the button) to avoid a blank gap in non-range modes
+        if (dowToggle.parentElement) dowToggle.parentElement.style.display = isRange ? "" : "none";
+        dateChangerDiv.style.marginBottom = isRange ? "1em" : "0";
+      }
+      if (dowDirectionField) dowDirectionField.style.display = (isRange && dowActive) ? "" : "none";
+      if (dowDayField) dowDayField.style.display = (isRange && dowActive) ? "" : "none";
       if (specificDirectionField) specificDirectionField.style.display = isSpecific ? "" : "none";
       if (specificDateField) specificDateField.style.display = isSpecific ? "" : "none";
     }
@@ -1903,7 +2863,15 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
     const homeCityInput = $("homeCity");
     const homeCityField = homeCityInput.parentElement;
     homeCityField.style.position = "relative";
-    setupCityAutocomplete(homeCityInput, homeCityField);
+    setupCityAutocomplete(homeCityInput, homeCityField, {
+      onSelect: ({ country }) => {
+        const code = countryCodeFromName(country);
+        if (code && holidayCountrySelect && holidayCountrySelect.value !== code) {
+          holidayCountrySelect.value = code;
+          refreshHolidays();
+        }
+      },
+    });
 
     function syncRedeyeOvernightVisibility() {
       if (!redeyeOvernightField || !redeyeCheckbox) return;
@@ -1914,59 +2882,223 @@ function renderSummary(best, flightTotalHours, home, orderedCities, returnDest) 
       redeyeCheckbox.addEventListener("change", syncRedeyeOvernightVisibility);
     }
 
-    // Permission-free fallback based on browser timezone, e.g.
-    // "America/Los_Angeles" -> "Los Angeles".
-    function guessCityFromTimezone() {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-        const parts = tz.split("/");
-        const last = parts[parts.length - 1] || "";
-        const city = last.replace(/_/g, " ").trim();
-        return city || null;
-      } catch {
-        return null;
+    // Always start with an empty home field — never persist or guess from
+    // timezone. Browsers may try to autofill this; clear it explicitly.
+    homeCityInput.value = "";
+    delete homeCityInput.dataset.selectedCity;
+    delete homeCityInput.dataset.selectedCountry;
+    delete homeCityInput.dataset.selectedIata;
+    SELECTED_LOCATION_META.delete(homeCityInput);
+
+    // Holiday country: default to US, then update to whatever location we
+    // detect. Never inferred from timezone.
+    if (holidayCountrySelect) {
+      holidayCountrySelect.value = "US";
+      refreshHolidays();
+    }
+
+    // Helper to apply a detected location to the form.
+    function applyDetectedLocation({ city, country }) {
+      if (city && !homeCityInput.value.trim()) {
+        homeCityInput.value = city;
+      }
+      if (country && holidayCountrySelect) {
+        const code = countryCodeFromName(country);
+        if (code && holidayCountrySelect.value !== code) {
+          holidayCountrySelect.value = code;
+          refreshHolidays();
+        }
       }
     }
 
-    const tzCity = guessCityFromTimezone();
-    if (tzCity && !homeCityInput.value.trim()) {
-      homeCityInput.value = tzCity;
+    // Return the city name of the nearest airport within ~200 km of (lat, lon),
+    // or null if none found.  Uses the already-loaded airportsArray (fields: t=lat, g=lon, c=city).
+    function nearestAirportCity(lat, lon) {
+      if (!airportsArray) return null;
+      let best = null, bestDist = Infinity;
+      for (const ap of airportsArray) {
+        if (ap.t == null || ap.g == null) continue;
+        const dlat = ap.t - lat, dlon = ap.g - lon;
+        const dist = dlat * dlat + dlon * dlon;
+        if (dist < bestDist) { bestDist = dist; best = ap; }
+      }
+      // 4 deg² ≈ 200 km radius at mid-latitudes
+      return bestDist <= 4 ? (best?.c || null) : null;
     }
-    
-    // Attempt geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            // Reverse geocode to get city name
-            const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(
-              lat
-            )}&longitude=${encodeURIComponent(lon)}&language=en&format=json`;
-            const res = await fetch(url);
-            if (res.ok) {
-              const data = await res.json();
-              const place = data?.results?.[0];
-              const city = place?.name || place?.admin1 || place?.country;
-              if (city) {
-                homeCityInput.value = city;
-              }
-            }
-          } catch (e) {
-            // Silent fail - user can enter manually
+
+    async function reverseGeocode(lat, lon) {
+      const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(
+        lat
+      )}&longitude=${encodeURIComponent(lon)}&language=en&format=json`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Reverse geocode failed (${res.status})`);
+      const data = await res.json();
+      const place = data?.results?.[0];
+      return {
+        city: place?.name || place?.admin1 || place?.country || "",
+        country: place?.country || "",
+      };
+    }
+
+    async function detectByIp() {
+      // Free IP geolocation, no auth required.
+      const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
+      if (!res.ok) throw new Error(`IP lookup failed (${res.status})`);
+      const data = await res.json();
+      const city = data?.city || data?.region || "";
+      const country = data?.country || "";
+      if (!city && !country) throw new Error("IP lookup returned no location");
+      return { city, country };
+    }
+
+    async function detectLocation() {
+      // 1) Try the browser's Geolocation API.
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              maximumAge: 0,
+              timeout: 8000,
+              enableHighAccuracy: false,
+            });
+          });
+          if (homeCityInput.value.trim()) return; // user already typed
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          // Use the smart hub-aware airport lookup (in-memory, instant) to get the
+          // canonical city name for the region (e.g. "New York" for JFK/LGA/EWR,
+          // not "Queens" or "Jamaica" that a borough-level reverse geocoder returns).
+          const bestAirport = findBestAirportNearCoords(lat, lon, 100);
+          if (bestAirport?.city) {
+            // Apply city immediately — no network round-trip needed.
+            applyDetectedLocation({ city: bestAirport.city, country: '' });
+            // Fetch country in the background for the holiday-country selector.
+            try {
+              const { country } = await reverseGeocode(lat, lon);
+              if (country) applyDetectedLocation({ city: bestAirport.city, country });
+            } catch (_) {}
+          } else {
+            // Airport graph not yet loaded or no airport within 100 km — fall back to
+            // reverse geocode for both city and country.
+            const { city, country } = await reverseGeocode(lat, lon);
+            applyDetectedLocation({ city, country });
           }
-        },
-        () => {
-          // Silent fail - user denied or error
+          return;
+        } catch (err) {
+          // Fall through to IP-based fallback. Capture reason for the toast
+          // if both methods fail.
+          var browserGeoError = err;
         }
-      );
+      } else {
+        var browserGeoError = new Error("Geolocation not supported in this browser");
+      }
+
+      // 2) IP-based fallback (works inside iframes / when permission denied).
+      try {
+        if (homeCityInput.value.trim()) return;
+        const loc = await detectByIp();
+        applyDetectedLocation(loc);
+        return;
+      } catch (ipErr) {
+        // Both failed — give the user a clear, brief, non-blocking notification.
+        let reason = "Couldn't detect your location";
+        if (browserGeoError) {
+          if (browserGeoError.code === 1 /* PERMISSION_DENIED */) {
+            reason = "Location permission denied — please type your home city";
+          } else if (browserGeoError.code === 2 /* POSITION_UNAVAILABLE */) {
+            reason = "Location unavailable — please type your home city";
+          } else if (browserGeoError.code === 3 /* TIMEOUT */) {
+            reason = "Location request timed out — please type your home city";
+          } else if (browserGeoError.message) {
+            reason = `Couldn't auto-detect your location — please type it`;
+          }
+        }
+        showToast(reason, "warn", 6000);
+      }
     }
+
+    detectLocation();
 
     // Render initial destination row (state is read from DOM on add/remove).
     renderDestinations(destinationsContainer, [{ city: "", stayDays: null }]);
 
+    // ---- Holiday country setup ----
+
+    let holidaysDB = null;
+
+    async function loadHolidaysDB() {
+      if (holidaysDB) return holidaysDB;
+      try {
+        const res = await fetch("./holidays.json");
+        if (res.ok) holidaysDB = await res.json();
+      } catch (e) { /* fall through to defaults */ }
+      return holidaysDB;
+    }
+
+    function countryCodeFromName(countryName) {
+      const n = (countryName || "").toLowerCase();
+    
+      if (n.includes("united states") || n.includes("usa") || n.includes("u.s.a")  || n.includes("america")) return "US";
+      if (n.includes("canada")) return "CA";
+      if (n.includes("united kingdom") || n.includes("britain") ||
+          n.includes("england") || n.includes("scotland") || n.includes("wales")) return "GB";
+      if (n.includes("singapore")) return "SG";
+      if (n.includes("aus")) return "AU";
+      if (n.includes("new zealand") || n.includes("nz")) return "NZ";
+      if (n.includes("ireland")) return "IE";
+      if (n.includes("germany")) return "DE";
+      if (n.includes("netherlands") || n.includes("holland")) return "NL";
+      if (n.includes("france")) return "FR";
+      if (n.includes("sweden")) return "SE";
+    
+      return null;
+    }
+    
+    function countryCodeFromTimezone() {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        if (tz === "Asia/Singapore") return "SG";
+        if (tz === "Europe/London" || tz === "Europe/Belfast") return "GB";
+        const caZones = new Set([
+          "America/Toronto", "America/Vancouver", "America/Winnipeg",
+          "America/Edmonton", "America/Halifax", "America/Regina",
+          "America/St_Johns", "America/Moncton", "America/Thunder_Bay", "America/Iqaluit",
+        ]);
+        if (caZones.has(tz)) return "CA";
+        if (tz.startsWith("America/")) return "US";
+        if (tz.startsWith("Australia/")) return "AU";
+        if (tz.startsWith("Pacific/Auckland")) return "NZ"; 
+        if (tz.startsWith("Europe/Dublin")) return "IE";
+        if (tz.startsWith("Europe/Berlin") || tz.startsWith("Europe/Frankfurt") || tz.startsWith("Europe/Munich")) return "DE";
+        if (tz.startsWith("Europe/Amsterdam")) return "NL";
+        if (tz.startsWith("Europe/Paris")) return "FR";
+        if (tz.startsWith("Europe/Stockholm")) return "SE";
+      } catch (e) {}
+    
+      return "US"; 
+    }
+
+    async function refreshHolidays() {
+      const code = (holidayCountrySelect && holidayCountrySelect.value) || "US";
+      const db = await loadHolidaysDB();
+      if (db && db[code]) {
+        ACTIVE_HOLIDAYS = db[code].holidays;
+      } else {
+        ACTIVE_HOLIDAYS = DEFAULT_HOLIDAYS;
+      }
+      renderHolidayDefaults(holidayDefaults);
+    }
+
+    // Holiday country defaults to US and is later overridden by detectLocation().
+    // Never inferred from timezone.
+    if (holidayCountrySelect) {
+      holidayCountrySelect.addEventListener("change", refreshHolidays);
+    }
     renderHolidayDefaults(holidayDefaults);
+    
+    // Pre-load airport graph data (includes routes)
+    loadAirportsDB();
+
     renderExtraPtoDays(extraPtoOffContainer, 0);
 
 addDestinationBtn.addEventListener("click", () => {
@@ -2052,8 +3184,10 @@ addDestinationBtn.addEventListener("click", () => {
         startDateISO = $("startDate").value;
         endDateISO = $("endDate").value;
         const dowDirectionEl = $("dowDirection");
+        const dowDayField = $("dowDayField");
         const dowDayEl = $("dowDay");
-        const dowFieldsVisible = dowDirectionEl && dowDirectionEl.style.display !== "none";
+        // DOW constraint applies only when the toggle is expanded under "date range" mode
+        const dowFieldsVisible = dowDayField && dowDayField.style.display !== "none";
         if (dowFieldsVisible) {
           const dowDirection = (dowDirectionEl && dowDirectionEl.value) || "depart";
           const dowDay = parseInt((dowDayEl && dowDayEl.value) ?? "1", 10);
@@ -2210,6 +3344,7 @@ addDestinationBtn.addEventListener("click", () => {
           cityName: homeCityName,
           country: homeResolved.country,
           airport: homeResolved.airport,
+          timezone: homeResolved.timezone || null,
         };
 
         const rawCities = [];
@@ -2228,6 +3363,7 @@ addDestinationBtn.addEventListener("click", () => {
             country: resolved.country,
             stayDays: d.stayDays,
             airport: resolved.airport,
+            timezone: resolved.timezone || null,
             _inputCity: d.city,
           });
         }
@@ -2353,6 +3489,7 @@ addDestinationBtn.addEventListener("click", () => {
             cityName: rcCityName,
             country: rcResolved.country,
             airport: rcResolved.airport,
+            timezone: rcResolved.timezone || null,
           };
         }
 
@@ -2363,7 +3500,7 @@ addDestinationBtn.addEventListener("click", () => {
           extraPtoOffDates: extraPtoInputs,
         });
 
-        const best = optimizeOrderAndDates({
+        const best = await optimizeOrderAndDates({
           home,
           cities,
           windowStartISO: startDateISO,
@@ -2520,8 +3657,9 @@ addDestinationBtn.addEventListener("click", () => {
       if (!Number.isFinite(durationHours)) return null;
       totalFlightHoursHeuristic += durationHours;
 
-      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH);
-      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH);
+      const tzShift = locationUtcOffset(leg.to) - locationUtcOffset(leg.from);
+      const model = travelBlockModel(durationHours, redeyeOK, travelDayThresholdH, redeyeOvernightH, tzShift);
+      const { nightHours, dayHours } = splitFlightHours(durationHours, !!model.isRedeye, redeyeOvernightH, tzShift);
 
       if (model.noTravelDay) {
         if (leg.type === "outbound" && days.length === 0) {
@@ -2550,6 +3688,10 @@ addDestinationBtn.addEventListener("click", () => {
             isDepartureDay: true,
             hasNextDaySpillover: model.isRedeye && dayHours > 0,
             spilloverHours: dayHours,
+            fromIata: leg.from.airport?.iataCode,
+            toIata: leg.to.airport?.iataCode,
+            fromCityName: fromLabel,
+            toCityName: toLabel,
           });
           if (model.isRedeye) currentDate = addDays(currentDate, 1);
         } else if (days.length > 0) {
@@ -2586,6 +3728,10 @@ addDestinationBtn.addEventListener("click", () => {
               dayHours: 0,
               isDepartureDay: true,
               departureNightHours: nightHours,
+              fromIata: leg.from.airport?.iataCode,
+              toIata: leg.to.airport?.iataCode,
+              fromCityName: fromCity,
+              toCityName: departTo,
             });
           }
           currentDate = addDays(currentDate, 1);
@@ -2625,7 +3771,7 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalSpilloverHours = 0;
           if (model.travelDayOnNextDay && t === 0) {
             isArrivalDay = true;
-            arrivalSpilloverHours = dayHours;
+            arrivalSpilloverHours = dayHours; // raw remaining flight time after midnight origin tz
           }
           
           days.push({
@@ -2638,24 +3784,30 @@ addDestinationBtn.addEventListener("click", () => {
             dayHours: 0,
             fromIata: leg.from.airport?.iataCode,
             toIata: leg.to.airport?.iataCode,
+            fromCityName: fromCity,
+            toCityName: toCity,
             noTravelDay: false,
             isRedeyeTravel,
             isArrivalDay,
             arrivalSpilloverHours,
           });
         }
-        currentDate = addDays(currentDate, model.travelDays);
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
+        currentDate = addDays(currentDate, calDayAdvance);
       }
 
       if (leg.type !== "return") {
+        const calDayAdvance = computeFlightCalDayAdvance(leg.from, leg.to, durationHours, model);
         const lastDayEntry = days.length > 0 ? days[days.length - 1] : null;
         const pendingSpillover = lastDayEntry?.hasNextDaySpillover ? lastDayEntry.spilloverHours : 0;
         const fromLabel = leg.from.cityName || leg.from.displayName;
-        
+        const destTzLabel = tzDisplayLabel(leg.to);
+
         for (let s = 0; s < leg.to.stayDays; s++) {
           const d = addDays(currentDate, s);
           const off = ptoOffSet.has(isoDate(d));
-          let ptoRequired = isWeekday(d) && !off;
+          const sameAsTravelDay = calDayAdvance === 0 && s === 0 && model.travelDays > 0;
+          let ptoRequired = isWeekday(d) && !off && !sameAsTravelDay;
           let workPlusFly = false;
           
           let cityLabel = formatCityLabel(leg.to.cityName || leg.to.displayName, leg.to.country);
@@ -2663,7 +3815,7 @@ addDestinationBtn.addEventListener("click", () => {
           let arrivalFlightDuration = 0;
           
           if (s === 0 && pendingSpillover > 0) {
-            arrivalSpillover = pendingSpillover;
+            arrivalSpillover = pendingSpillover; // raw remaining flight time
             arrivalFlightDuration = lastDayEntry?.flightDurationHours || 0;
           }
 
@@ -2676,6 +3828,7 @@ addDestinationBtn.addEventListener("click", () => {
             arrivalSpilloverHours: arrivalSpillover,
             arrivalFlightDurationHours: arrivalFlightDuration,
             arrivalFromCity: s === 0 && pendingSpillover > 0 ? fromLabel : null,
+            cityTzLabel: destTzLabel,
           });
           tripDays++;
         }

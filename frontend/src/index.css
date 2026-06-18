@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+    :root {
+        --background: 43 26% 99%;
+        --foreground: 0 0% 10%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 10%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 10%;
+        --primary: 223 100% 33%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 220 14% 96%;
+        --secondary-foreground: 0 0% 10%;
+        --muted: 220 14% 96%;
+        --muted-foreground: 0 0% 61%;
+        --accent: 9 100% 60%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 220 13% 91%;
+        --input: 220 13% 91%;
+        --ring: 223 100% 33%;
+        --radius: 0.125rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .animate-pulse {
+        animation: pulse 0.3s ease-in-out;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+}
+
+/* ===== DARK MODE ===== */
+html.dark {
+    background-color: #0F0F14;
+}
+
+.dark .bg-\[\#FDFBF7\] { background-color: #0F0F14 !important; }
+.dark .bg-white { background-color: #1A1A24 !important; }
+.dark .bg-\[\#F3F4F6\] { background-color: #15151F !important; }
+
+.dark .text-\[\#1A1A1A\] { color: #E5E7EB !important; }
+.dark .text-\[\#9CA3AF\] { color: #7B8494 !important; }
+.dark .text-\[\#002FA7\] { color: #5B8AFF !important; }
+.dark .text-\[\#002FA7\]\/70 { color: rgba(91, 138, 255, 0.7) !important; }
+
+.dark .border-\[\#E5E7EB\] { border-color: #2D2D3A !important; }
+.dark .border { border-color: #2D2D3A; }
+.dark .border-\[\#002FA7\]:not(.bg-\[\#002FA7\]) { border-color: #5B8AFF !important; }
+
+.dark .hover\:bg-blue-50:hover { background-color: rgba(0, 47, 167, 0.15) !important; }
+.dark .hover\:border-\[\#002FA7\]\/50:hover { border-color: rgba(91, 138, 255, 0.5) !important; }
+.dark .hover\:text-\[\#002FA7\]:hover { color: #5B8AFF !important; }
+.dark .hover\:border-\[\#002FA7\]:hover { border-color: #5B8AFF !important; }
+.dark .hover\:border-\[\#1A1A1A\]:hover { border-color: #E5E7EB !important; }
+.dark .hover\:bg-\[\#002FA7\]\/5:hover { background-color: rgba(0, 47, 167, 0.2) !important; }
+
+.dark .bg-\[\#002FA7\]\/5 { background-color: rgba(0, 47, 167, 0.15) !important; }
+.dark .bg-\[\#E5E7EB\] { background-color: #3D3D4A !important; }
+
+.dark .bg-green-100 { background-color: rgba(5, 150, 105, 0.15) !important; }
+.dark .bg-red-100 { background-color: rgba(255, 59, 48, 0.15) !important; }
+
+.dark select, .dark option { background-color: #1A1A24; color: #E5E7EB; }
+
+.dark .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; }
+.dark .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5) !important; }
+.dark .shadow-\[4px_4px_0px_0px_rgba\(0\,0\,0\,1\)\] { box-shadow: 4px 4px 0px 0px rgba(255, 255, 255, 0.1) !important; }
+.dark .hover\:shadow-\[2px_2px_0px_0px_rgba\(0\,0\,0\,1\)\]:hover { box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 0.1) !important; }
+.dark .bg-black\/50 { background-color: rgba(0, 0, 0, 0.7) !important; }
+
+/* Fix icon visibility in dark mode */
+.dark .text-\[\#002FA7\].group-hover\:text-white { color: #5B8AFF !important; }
+.dark .group:hover .text-\[\#002FA7\].group-hover\:text-white { color: white !important; }
+
+/* Fix button text visibility in dark mode - note buttons */
+.dark button:not(.bg-\[\#002FA7\]) .text-\[10px\],
+.dark button:not(.bg-\[\#002FA7\]).text-\[10px\] { color: #E5E7EB; }
+.dark button:not(.bg-\[\#002FA7\]) { color: #E5E7EB; }

@@ -7,7 +7,13 @@ const OTHER_MODES = ['dorian', 'phrygian', 'lydian', 'mixolydian'];
 const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, showScaleTypePool = true }) => {
   if (!isOpen) return null;
 
-  const { enabledScaleTypes = ['major'], includeBorrowed = false, include7ths = false } = settings;
+  const {
+    enabledScaleTypes = ['major'],
+    includeBorrowed = false,
+    includeSecondaryDominants = false,
+    include7ths = false,
+    guessScaleSubmode = 'chords'
+  } = settings;
 
   const majorEnabled = enabledScaleTypes.includes('major');
   const naturalMinorEnabled = enabledScaleTypes.includes('naturalMinor');
@@ -116,12 +122,12 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* Borrowed Chords - Not shown for guess-scale mode */}
+          {/* Parallel Minor Chords - Not shown for guess-scale mode */}
           {mode !== 'guess-scale' && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-[#1A1A1A]">Borrowed Chords</h4>
+                  <h4 className="font-bold text-[#1A1A1A]">Parallel Minor Chords</h4>
                   <p className="text-xs text-[#9CA3AF] mt-1">
                     {includeBorrowed
                       ? 'Includes chords from parallel minor'
@@ -144,8 +150,70 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange, mode, show
             </div>
           )}
 
-          {/* 7th Chords - For number-to-chord and guess-scale modes */}
-          {(mode === 'number-to-chord' || mode === 'guess-scale') && (
+          {/* Secondary Dominant Chords - For number-to-chord, chord-to-number, and transposition */}
+          {(mode === 'number-to-chord' || mode === 'chord-to-number' || mode === 'transposition') && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-[#1A1A1A]">Secondary Dominant Chords</h4>
+                  <p className="text-xs text-[#9CA3AF] mt-1">
+                    {includeSecondaryDominants
+                      ? 'Includes secondary dominants (V/ii, V/iii, V/V, etc.)'
+                      : 'Only diatonic scale chords'}
+                  </p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">Only applies for Major, Natural Minor, Harmonic Minor</p>
+                </div>
+                <button
+                  data-testid="settings-secondary-dominants-toggle"
+                  onClick={() => onSettingsChange({ includeSecondaryDominants: !includeSecondaryDominants })}
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${
+                    includeSecondaryDominants ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                    includeSecondaryDominants ? 'translate-x-6' : 'translate-x-0.5'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Clue Type toggle — only for guess-scale mode */}
+          {mode === 'guess-scale' && (
+            <div className="border border-[#E5E7EB] rounded-sm p-4">
+              <h4 className="font-bold text-[#1A1A1A] mb-1">Clue Type</h4>
+              <p className="text-xs text-[#9CA3AF] mb-3">What you see as the clue each round</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  data-testid="settings-clue-chords"
+                  onClick={() => onSettingsChange({ guessScaleSubmode: 'chords' })}
+                  className={`p-3 border-2 rounded-sm text-left transition-all ${
+                    guessScaleSubmode !== 'notes'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-[#1A1A1A]">Chords</div>
+                  <div className="text-xs text-[#9CA3AF]">Diatonic chord names</div>
+                </button>
+                <button
+                  data-testid="settings-clue-notes"
+                  onClick={() => onSettingsChange({ guessScaleSubmode: 'notes' })}
+                  className={`p-3 border-2 rounded-sm text-left transition-all ${
+                    guessScaleSubmode === 'notes'
+                      ? 'border-[#002FA7] bg-[#002FA7]/5'
+                      : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-[#1A1A1A]">Notes</div>
+                  <div className="text-xs text-[#9CA3AF]">Individual scale notes</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 7th Chords - For number-to-chord, and guess-scale in chords sub-mode */}
+          {(mode === 'number-to-chord' || (mode === 'guess-scale' && guessScaleSubmode !== 'notes')) && (
             <div className="border border-[#E5E7EB] rounded-sm p-4">
               <div className="flex items-center justify-between">
                 <div>

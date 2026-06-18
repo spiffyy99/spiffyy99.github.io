@@ -54,6 +54,13 @@ body{
   min-width: 0;
 }
 
+.header-right{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .header-left h1{
   font-size: 28px;
   margin: 0 0 6px;
@@ -61,6 +68,22 @@ body{
 
 .subtitle{
   color: var(--muted);
+}
+
+.clear-cache-btn{
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.clear-cache-btn:hover{
+  background: var(--border);
+  color: var(--text);
 }
 
 .theme-toggle{
@@ -172,7 +195,7 @@ input[type="checkbox"]{
 .checkboxField{
   align-self: stretch;
   justify-content: center;
-  padding-top: 22px;
+  padding-top: 4px;
 }
 
 .checkboxLabel{
@@ -345,6 +368,12 @@ input[type="checkbox"]{
 
 .tableWrap{
   overflow:auto;
+}
+
+.tz-badge {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 table{
@@ -536,5 +565,80 @@ thead th{
   .subtitle {
     font-size: 14px;
   }
+}
+
+/* Flatpickr customization to match app theme */
+.flatpickr-calendar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-weekdays,
+span.flatpickr-weekday {
+  background: var(--card);
+  color: var(--text);
+}
+
+.flatpickr-day {
+  color: var(--text);
+}
+
+.flatpickr-day:hover {
+  background: var(--secondary);
+  border-color: var(--secondary);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.flatpickr-day.inRange {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  box-shadow: -5px 0 0 var(--secondary), 5px 0 0 var(--secondary);
+}
+
+.flatpickr-day.today {
+  border-color: var(--accent);
+}
+
+.flatpickr-day.disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--muted);
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  fill: var(--text);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  fill: var(--accent);
+}
+
+.numInputWrapper span {
+  border-color: var(--border);
+}
+
+.numInputWrapper span:hover {
+  background: var(--secondary);
+}
+
+.flatpickr-current-month input.cur-year {
+  color: var(--text);
+}
+
+#dateRange {
+  cursor: pointer;
+  background: var(--background);
 }
 

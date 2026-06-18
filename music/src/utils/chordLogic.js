@@ -145,6 +145,54 @@ export const BORROWED_CHORD_DEFS = [
   { degree: 6, chordQuality: 'major', answerQuality: 'flat', flat: true },
 ];
 
+// ===== SECONDARY DOMINANT CHORDS =====
+
+// Scales that support secondary dominants
+export const SECONDARY_DOMINANT_SCALES = ['major', 'naturalMinor', 'harmonicMinor'];
+
+// Get all valid secondary dominant chords for a given root and scale type.
+// V/X = major chord a P5 above degree X's root, excluded if already diatonic.
+export const getSecondaryDominants = (rootNote, scaleType) => {
+  if (!SECONDARY_DOMINANT_SCALES.includes(scaleType)) return [];
+
+  const scale = SCALE_TYPES[scaleType];
+  const rootIndex = ALL_NOTES.indexOf(rootNote);
+  if (rootIndex === -1) return [];
+
+  const diatonicChords = Array.from({ length: 7 }, (_, i) => ({
+    noteIndex: (rootIndex + scale.intervals[i]) % 12,
+    quality: scale.qualities[i]
+  }));
+
+  const results = [];
+  for (let targetDeg = 0; targetDeg < 7; targetDeg++) {
+    const targetNoteIndex = (rootIndex + scale.intervals[targetDeg]) % 12;
+    const secDomNoteIndex = (targetNoteIndex + 7) % 12;
+
+    const isDiatonic = diatonicChords.some(
+      c => c.noteIndex === secDomNoteIndex && c.quality === 'major'
+    );
+
+    if (!isDiatonic) {
+      const targetQuality = scale.qualities[targetDeg];
+      results.push({
+        targetDegreeIndex: targetDeg,
+        noteIndex: secDomNoteIndex,
+        quality: 'major',
+        label: 'V/' + formatRomanNumeral(targetDeg, targetQuality, false)
+      });
+    }
+  }
+
+  return results;
+};
+
+const getRandomSecondaryDominant = (rootNote, scaleType) => {
+  const secDoms = getSecondaryDominants(rootNote, scaleType);
+  if (secDoms.length === 0) return null;
+  return secDoms[Math.floor(Math.random() * secDoms.length)];
+};
+
 // ===== DISPLAY FUNCTIONS =====
 
 export const formatRomanNumeral = (degreeIndex, quality, flat = false) => {
@@ -233,10 +281,27 @@ const getRandomBorrowedDef = () => {
 
 // Question generators
 
-export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false) => {
+export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
-  
+
+  // Secondary dominant (25% chance when enabled and valid scale type)
+  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType) && Math.random() < 0.25) {
+    const secDom = getRandomSecondaryDominant(rootNote, scaleType);
+    if (secDom) {
+      return {
+        type: 'number-to-chord',
+        scale: { rootNote, scaleType },
+        romanNumeral: secDom.label,
+        correctNoteIndex: secDom.noteIndex,
+        correctQuality: 'major',
+        isBorrowed: false,
+        isSecondaryDominant: true,
+        is7th: false
+      };
+    }
+  }
+
   if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
@@ -292,10 +357,28 @@ export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false) => {
+export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
-  
+
+  // Secondary dominant (25% chance when enabled and valid scale type)
+  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType) && Math.random() < 0.25) {
+    const secDom = getRandomSecondaryDominant(rootNote, scaleType);
+    if (secDom) {
+      return {
+        type: 'chord-to-number',
+        scale: { rootNote, scaleType },
+        chordDisplay: buildChordDisplay(ALL_NOTES[secDom.noteIndex], 'major'),
+        correctDegree: secDom.targetDegreeIndex,
+        correctAnswerQuality: 'secondary',
+        isSecondaryDominant: true,
+        secondaryDominantLabel: secDom.label,
+        isBorrowed: false,
+        is7th: false
+      };
+    }
+  }
+
   if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
@@ -351,10 +434,33 @@ export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false) => {
+export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
-  
+
+  // Secondary dominant (25% chance when enabled and both scale types support it)
+  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(sourceScaleType) && SECONDARY_DOMINANT_SCALES.includes(targetScaleType) && Math.random() < 0.25) {
+    const sourceDoms = getSecondaryDominants(sourceRoot, sourceScaleType);
+    if (sourceDoms.length > 0) {
+      const sourceDom = sourceDoms[Math.floor(Math.random() * sourceDoms.length)];
+      const targetRootIndex = ALL_NOTES.indexOf(targetRoot);
+      const targetScale = SCALE_TYPES[targetScaleType];
+      const targetDomNoteIndex = (targetRootIndex + targetScale.intervals[sourceDom.targetDegreeIndex] + 7) % 12;
+      return {
+        type: 'transposition',
+        sourceScale: { rootNote: sourceRoot, scaleType: sourceScaleType },
+        targetScale: { rootNote: targetRoot, scaleType: targetScaleType },
+        chordDisplay: buildChordDisplay(ALL_NOTES[sourceDom.noteIndex], 'major'),
+        correctNoteIndex: targetDomNoteIndex,
+        correctQuality: 'major',
+        isSecondaryDominant: true,
+        secondaryDominantLabel: sourceDom.label,
+        isBorrowed: false,
+        is7th: false
+      };
+    }
+  }
+
   if (includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major' && Math.random() < 0.25) {
     const def = getRandomBorrowedDef();
     const sourceBorrowed = getBorrowedChord(sourceRoot, def);
@@ -469,6 +575,90 @@ export const generateGuessScaleQuestion = (enabledScaleTypes, include7ths = fals
       rootNote,
       scaleType,
       name: `${rootNote} ${SCALE_TYPES[scaleType].name}`
+    },
+    correctScaleType: scaleType
+  };
+};
+
+// ===== GUESS THE SCALE (NOTES) LOGIC =====
+
+// Return all combinations of `size` elements chosen from `arr`.
+const getCombinations = (arr, size) => {
+  if (size === 0) return [[]];
+  if (arr.length < size) return [];
+  const [first, ...rest] = arr;
+  const withFirst = getCombinations(rest, size - 1).map(c => [first, ...c]);
+  return [...withFirst, ...getCombinations(rest, size)];
+};
+
+// Fisher-Yates in-place shuffle (returns the array).
+const shuffleInPlace = (arr) => {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// Generate a "Guess the Scale" question using individual notes instead of chords.
+//
+// Strategy: show the MINIMUM number of notes from the scale such that, given
+// the scale type (which the player already sees), only ONE root is consistent
+// with those notes.  We try all combinations of size 1, 2, 3, … until we find
+// a set that uniquely identifies the root, then pick randomly among that size.
+export const generateGuessScaleNotesQuestion = (enabledScaleTypes) => {
+  const scaleTypes = enabledScaleTypes && enabledScaleTypes.length > 0 ? enabledScaleTypes : ['major'];
+  const scaleType = scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+  const rootNote = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+
+  const scale = SCALE_TYPES[scaleType];
+  if (!scale) return null;
+
+  const rootIndex = ALL_NOTES.indexOf(rootNote);
+
+  // For each of the 12 possible roots, compute the set of note indices in this scale type.
+  const noteSetForRoot = (r) => new Set(scale.intervals.map(i => (r + i) % 12));
+  const allRootSets = Array.from({ length: 12 }, (_, r) => noteSetForRoot(r));
+
+  // Notes (as chromatic indices) of the correct scale.
+  const correctNoteIndices = scale.intervals.map(i => (rootIndex + i) % 12);
+
+  // Find the smallest subset of correctNoteIndices that uniquely identifies rootIndex
+  // among all 12 possible roots for this scale type.
+  let selectedIndices = correctNoteIndices; // safe fallback: show all 7
+
+  outer:
+  for (let size = 1; size <= 7; size++) {
+    const combos = getCombinations(correctNoteIndices, size);
+    shuffleInPlace(combos); // randomize so every session looks different
+    for (const combo of combos) {
+      let matchCount = 0;
+      let matchRoot = -1;
+      for (let r = 0; r < 12; r++) {
+        if (combo.every(n => allRootSets[r].has(n))) {
+          matchCount++;
+          matchRoot = r;
+          if (matchCount > 1) break;
+        }
+      }
+      if (matchCount === 1 && matchRoot === rootIndex) {
+        selectedIndices = combo;
+        break outer;
+      }
+    }
+  }
+
+  // Display notes in ascending chromatic order (C, C#, D, … B) so the
+  // root's position doesn't give away the answer.
+  const sortedIndices = [...selectedIndices].sort((a, b) => a - b);
+
+  return {
+    type: 'guess-scale-notes',
+    notes: sortedIndices.map(i => ALL_NOTES[i]),
+    correctScale: {
+      rootNote,
+      scaleType,
+      name: `${rootNote} ${scale.name}`
     },
     correctScaleType: scaleType
   };

@@ -28,8 +28,12 @@ const Setup = () => {
   const [sourceRoot, setSourceRoot] = useState('C');
   const [targetRoot, setTargetRoot] = useState('D');
 
+  // Guess-scale sub-mode: 'chords' (default) or 'notes'
+  const [guessScaleSubmode, setGuessScaleSubmode] = useState('chords');
+
   // Options
   const [includeBorrowed, setIncludeBorrowed] = useState(false);
+  const [includeSecondaryDominants, setIncludeSecondaryDominants] = useState(false);
   const [include7ths, setInclude7ths] = useState(false);
   const [timerMode, setTimerMode] = useState('untimed');
   const [timerDuration, setTimerDuration] = useState('60');
@@ -67,6 +71,7 @@ const Setup = () => {
       mode,
       enabledScaleTypes,
       includeBorrowed,
+      includeSecondaryDominants,
       include7ths,
       timerMode,
       timerDuration: timerMode === 'timed' ? parseInt(timerDuration) : null,
@@ -81,6 +86,7 @@ const Setup = () => {
     } else if (mode === 'guess-scale') {
       // Guess scale mode: always random, just needs enabled scale types and 7ths setting
       gameConfig.scaleSelection = 'random';
+      gameConfig.guessScaleSubmode = guessScaleSubmode;
     } else if (mode !== 'intervals' && mode !== 'interval-transpose') {
       gameConfig.scaleSelection = scaleSelection;
       gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
@@ -340,6 +346,38 @@ const Setup = () => {
             </>
           ) : isGuessScaleMode ? (
             <>
+              {/* Clue Type — chords or notes */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-1">Clue Type</h3>
+                <p className="text-xs text-[#9CA3AF] mb-4">What you'll see as the clue each round</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    data-testid="guess-scale-clue-chords"
+                    onClick={() => setGuessScaleSubmode('chords')}
+                    className={`p-4 border-2 rounded-sm text-left transition-all ${
+                      guessScaleSubmode !== 'notes'
+                        ? 'border-[#002FA7] bg-[#002FA7]/5'
+                        : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Chords</div>
+                    <div className="text-sm text-[#9CA3AF]">Diatonic chord names</div>
+                  </button>
+                  <button
+                    data-testid="guess-scale-clue-notes"
+                    onClick={() => setGuessScaleSubmode('notes')}
+                    className={`p-4 border-2 rounded-sm text-left transition-all ${
+                      guessScaleSubmode === 'notes'
+                        ? 'border-[#002FA7] bg-[#002FA7]/5'
+                        : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Notes</div>
+                    <div className="text-sm text-[#9CA3AF]">Individual scale notes</div>
+                  </button>
+                </div>
+              </div>
+
               {/* Guess the Scale — always random; pool defines which scale types appear */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
                 <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Selection</h3>
@@ -360,31 +398,33 @@ const Setup = () => {
                 </div>
               </div>
 
-              {/* 7th Chords for Guess Scale Mode */}
-              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">7th Chords</h3>
-                <button
-                  data-testid="7th-chords-toggle"
-                  onClick={() => setInclude7ths(!include7ths)}
-                  className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
-                    include7ths ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-[#1A1A1A]">{include7ths ? 'Enabled' : 'Disabled'}</div>
-                      <div className="text-sm text-[#9CA3AF]">
-                        {include7ths
-                          ? 'Chords displayed with 7ths (Maj7, m7, dom7, etc.)'
-                          : 'Chords displayed as triads only'}
+              {/* 7th Chords — only relevant in chords sub-mode */}
+              {guessScaleSubmode !== 'notes' && (
+                <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                  <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">7th Chords</h3>
+                  <button
+                    data-testid="7th-chords-toggle"
+                    onClick={() => setInclude7ths(!include7ths)}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      include7ths ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-[#1A1A1A]">{include7ths ? 'Enabled' : 'Disabled'}</div>
+                        <div className="text-sm text-[#9CA3AF]">
+                          {include7ths
+                            ? 'Chords displayed with 7ths (Maj7, m7, dom7, etc.)'
+                            : 'Chords displayed as triads only'}
+                        </div>
+                      </div>
+                      <div className={`w-12 h-6 rounded-full transition-colors ${include7ths ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${include7ths ? 'translate-x-6' : 'translate-x-0.5'}`} />
                       </div>
                     </div>
-                    <div className={`w-12 h-6 rounded-full transition-colors ${include7ths ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}>
-                      <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${include7ths ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                    </div>
-                  </div>
-                </button>
-              </div>
+                  </button>
+                </div>
+              )}
 
               {/* Timer */}
               <TimerSection />
@@ -527,9 +567,9 @@ const Setup = () => {
                 </div>
               )}
 
-              {/* Borrowed Chords */}
+              {/* Parallel Minor Chords */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Borrowed Chords</h3>
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Parallel Minor Chords</h3>
                 <button
                   data-testid="borrowed-chords-toggle"
                   onClick={() => setIncludeBorrowed(!includeBorrowed)}
@@ -553,6 +593,35 @@ const Setup = () => {
                 </button>
                 <p className="text-xs text-[#9CA3AF] mt-2">Only applies when playing in a major scale</p>
               </div>
+
+              {/* Secondary Dominant Chords */}
+              {(mode === 'number-to-chord' || mode === 'chord-to-number' || mode === 'transposition') && (
+                <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                  <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Secondary Dominant Chords</h3>
+                  <button
+                    data-testid="secondary-dominants-toggle"
+                    onClick={() => setIncludeSecondaryDominants(!includeSecondaryDominants)}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      includeSecondaryDominants ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-[#1A1A1A]">{includeSecondaryDominants ? 'Enabled' : 'Disabled'}</div>
+                        <div className="text-sm text-[#9CA3AF]">
+                          {includeSecondaryDominants
+                            ? 'Includes secondary dominants (V/ii, V/iii, V/V, etc.)'
+                            : 'Only diatonic scale chords'}
+                        </div>
+                      </div>
+                      <div className={`w-12 h-6 rounded-full transition-colors ${includeSecondaryDominants ? 'bg-[#002FA7]' : 'bg-[#E5E7EB]'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mt-0.5 ${includeSecondaryDominants ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                      </div>
+                    </div>
+                  </button>
+                  <p className="text-xs text-[#9CA3AF] mt-2">Only applies for Major, Natural Minor, and Harmonic Minor scales</p>
+                </div>
+              )}
 
               {/* 7th Chords - Only for number-to-chord mode */}
               {mode === 'number-to-chord' && (

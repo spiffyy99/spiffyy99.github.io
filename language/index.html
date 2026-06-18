@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>한국어 숫자 연습 · Korean Number Practice</title>
+  <link rel="stylesheet" href="./style.css?v=20260502g" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-ko">한국어 숫자 연습</span>
+      <span class="brand-en">Korean Number Practice</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="historyToggle" class="icon-btn" aria-label="Toggle history">
+        <span class="gear">≡</span><span class="label">History</span>
+      </button>
+      <button id="settingsToggle" class="icon-btn" aria-label="Toggle settings">
+        <span class="gear">⚙</span><span class="label">Settings</span>
+      </button>
+    </div>
+  </header>
+
+  <aside id="historyPanel" class="settings-panel" hidden>
+    <button id="historyCloseBtn" class="settings-close-btn" aria-label="Close history" type="button">×</button>
+    <div class="settings-section">
+      <h3>Question history</h3>
+      <p id="historyEmpty" class="history-empty">No questions yet — answer some to see them here.</p>
+      <ul id="historyList" class="history-list"></ul>
+    </div>
+  </aside>
+
+  <aside id="settingsPanel" class="settings-panel" hidden>
+    <button id="settingsCloseBtn" class="settings-close-btn" aria-label="Close settings" type="button">×</button>
+    <div class="settings-section">
+      <button id="applyBtn" class="primary-btn">Apply &amp; new question</button>
+    </div>
+    <div class="settings-section">
+      <div class="section-head">
+        <h3>Categories</h3>
+        <div class="section-actions">
+          <button id="selectAllBtn" class="link-btn">Select all</button>
+          <button id="clearAllBtn" class="link-btn">Clear all</button>
+        </div>
+      </div>
+      <div class="number-system-filter">
+        <span class="filter-label">Number system:</span>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="both" /><span>Both</span></label>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="sino" /><span>Sino only</span></label>
+        <label class="filter-pill"><input type="radio" name="systemFilter" value="native" /><span>Native only</span></label>
+      </div>
+      <div id="categoryList" class="category-list"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Progress history</h3>
+      <label class="toggle-row"><input type="radio" name="historyMode" value="all" /><span>Save all-time</span></label>
+      <label class="toggle-row">
+        <input type="radio" name="historyMode" value="limited" />
+        <span>Save last <input type="number" id="historyLimit" min="1" max="10000" class="inline-number" /> questions</span>
+      </label>
+      <button id="clearProgressBtn" type="button" class="ghost-btn full-width-btn">Clear progress</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Options</h3>
+      <label class="toggle-row">
+        <input type="checkbox" id="allowDecimals" checked />
+        <span>Allow decimals (where applicable)</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="allowSound" checked />
+        <span>Enable answer playback voice (writing mode only)</span>
+      </label>
+      <label class="toggle-row">
+        <input type="checkbox" id="showNumberType" checked />
+        <span>Show number system for question (sino/native/digit)</span>
+      </label>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>Max number</span>
+          <span class="slider-value" id="maxDisplay">10,000</span>
+        </div>
+        <input type="range" id="maxPower" min="1" max="9" value="4" step="1" />
+        <div class="slider-ticks">
+          <span>10</span><span>1B</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="loadingState" class="loading">Loading…</div>
+
+    <section id="gameArea" class="game-area" hidden>
+      <div class="mode-switch" role="tablist" aria-label="Question mode">
+        <button id="modeWriteBtn" class="mode-btn active" type="button" role="tab" aria-selected="true">✍ Writing</button>
+        <button id="modeListenBtn" class="mode-btn" type="button" role="tab" aria-selected="false">🎧 Listening</button>
+      </div>
+
+      <div class="meta-row">
+        <span id="categoryBadge" class="badge"></span>
+        <div class="meta-right">
+          <span id="systemBadges" class="system-badges"></span>
+          <button id="helpBtn" class="help-btn" type="button" aria-pressed="false" hidden title="Show explanation">?</button>
+        </div>
+      </div>
+
+      <div id="helpPanel" class="help-panel" hidden>
+        <p id="helpExplanation" class="help-explanation"></p>
+        <p id="helpExample" class="help-example"></p>
+      </div>
+
+      <div class="question-card">
+        <div id="writingPrompt">
+          <div class="prompt-label">Write in Korean. Only 한글, no numbers:</div>
+          <div id="questionDisplay" class="question-display"></div>
+        </div>
+        <div id="listeningPrompt">
+          <div class="prompt-label">Listen and type what you hear (한글 or digits):</div>
+          <button id="replayBtn" class="replay-btn" type="button" aria-label="Play audio">
+            <span class="replay-icon">🔊</span>
+            <span class="replay-label">Play audio</span>
+          </button>
+          <div class="speed-row">
+            <span class="speed-side">Slow</span>
+            <input id="speedSlider" type="range" min="0.5" max="1.5" step="0.05" value="0.85" />
+            <span class="speed-side">Fast</span>
+            <span class="speed-val" id="speedDisplay">0.9×</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="answerForm" class="answer-form" autocomplete="off">
+        <input
+          id="answerInput"
+          type="text"
+          class="answer-input"
+          placeholder="Type the Korean answer…"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button id="submitBtn" type="submit" class="primary-btn">Check</button>
+      </form>
+
+      <div id="feedback" class="feedback" hidden></div>
+
+      <div class="action-row">
+        <button id="showAnswerBtn" type="button" class="ghost-btn">Show answer</button>
+        <button id="skipBtn" type="button" class="ghost-btn">Skip · Next →</button>
+      </div>
+
+      <div class="score-row">
+        <div class="score-item"><span class="score-label">Correct</span><span id="scoreCorrect" class="score-value">0</span></div>
+        <div class="score-item"><span class="score-label">Total</span><span id="scoreTotal" class="score-value">0</span></div>
+        <div class="score-item"><span class="score-label">Accuracy</span><span id="scoreAcc" class="score-value">—</span></div>
+      </div>
+    </section>
+
+    <div id="emptyState" class="empty-state" hidden>
+      <p>No categories selected. Open settings and pick at least one to begin.</p>
+    </div>
+  </main>
+
+  <script src="./app.js?v=20260502g"></script>
+</body>
+</html>
