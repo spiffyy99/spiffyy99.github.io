@@ -13,6 +13,7 @@ import {
   INTERVALS,
   generateSessionId,
   getRandomScale,
+  getApplicableScaleTypes,
   generateNumberToChordQuestion,
   generateChordToNumberQuestion,
   generateTranspositionQuestion,
@@ -47,6 +48,8 @@ const Game = () => {
   // Scale settings
   const [enabledScaleTypes, setEnabledScaleTypes] = useState(config.enabledScaleTypes || ['major']);
   const enabledScaleTypesRef = useRef(config.enabledScaleTypes || ['major']);
+  const [includeRegular, setIncludeRegular] = useState(config.includeRegular !== false);
+  const includeRegularRef = useRef(config.includeRegular !== false);
   const [includeBorrowed, setIncludeBorrowed] = useState(config.includeBorrowed || false);
   const includeBorrowedRef = useRef(config.includeBorrowed || false);
   const [includeSecondaryDominants, setIncludeSecondaryDominants] = useState(config.includeSecondaryDominants || false);
@@ -59,6 +62,7 @@ const Game = () => {
   const guessScaleSubmodeRef = useRef(config.guessScaleSubmode || 'chords');
 
   useEffect(() => { enabledScaleTypesRef.current = enabledScaleTypes; }, [enabledScaleTypes]);
+  useEffect(() => { includeRegularRef.current = includeRegular; }, [includeRegular]);
   useEffect(() => { includeBorrowedRef.current = includeBorrowed; }, [includeBorrowed]);
   useEffect(() => { includeSecondaryDominantsRef.current = includeSecondaryDominants; }, [includeSecondaryDominants]);
   useEffect(() => { include7thsRef.current = include7ths; }, [include7ths]);
@@ -77,7 +81,13 @@ const Game = () => {
   const getInitialScale = () => {
     if (config.mode === 'transposition') return null;
     if (config.scaleSelection === 'random') {
-      return getRandomScale(config.enabledScaleTypes || ['major']);
+      const base = config.enabledScaleTypes || ['major'];
+      const applicable = getApplicableScaleTypes(base, {
+        includeRegular: config.includeRegular !== false,
+        includeBorrowed: config.includeBorrowed,
+        includeSecondaryDominants: config.includeSecondaryDominants,
+      });
+      return getRandomScale(applicable.length > 0 ? applicable : base);
     }
     return { rootNote: config.selectedRoot || 'C', scaleType: config.selectedScaleType || 'major' };
   };
@@ -91,8 +101,14 @@ const Game = () => {
   };
 
   const getRandomScaleType = () => {
-    const scaleTypes = enabledScaleTypesRef.current || ['major'];
-    return scaleTypes[Math.floor(Math.random() * scaleTypes.length)];
+    const base = enabledScaleTypesRef.current || ['major'];
+    const applicable = getApplicableScaleTypes(base, {
+      includeRegular: includeRegularRef.current,
+      includeBorrowed: includeBorrowedRef.current,
+      includeSecondaryDominants: includeSecondaryDominantsRef.current,
+    });
+    const pool = applicable.length > 0 ? applicable : base;
+    return pool[Math.floor(Math.random() * pool.length)];
   };
 
   const getInitialTranspositionState = () => {
@@ -141,6 +157,7 @@ const Game = () => {
     const borrowed = includeBorrowedRef.current;
     const sevenths = include7thsRef.current;
     const secDom = includeSecondaryDominantsRef.current;
+    const regular = includeRegularRef.current;
 
     if (config.mode === 'interval-transpose') {
       return { ...generateIntervalTransposition(), type: 'interval-transpose' };
@@ -163,24 +180,24 @@ const Game = () => {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
+      return generateNumberToChordQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom, regular);
     }
     if (config.mode === 'chord-to-number') {
       const scale = config.scaleSelection === 'random'
         ? getRandomScale(scaleTypes)
         : { rootNote: gameState.currentScale?.rootNote || 'C', scaleType: gameState.currentScale?.scaleType || 'major' };
-      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom);
+      return generateChordToNumberQuestion(scale.rootNote, scale.scaleType, borrowed, sevenths, secDom, regular);
     }
     if (config.mode === 'transposition') {
       const randomScaleType = getRandomScaleType();
       if (config.targetScaleSelection === 'random') {
         const src = randomRoot();
         const tgt = getRandomDifferentRoot(src);
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom, regular);
       } else {
         const src = config.sourceRoot || 'C';
         const tgt = config.targetRoot || 'D';
-        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom);
+        return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom, regular);
       }
     }
     return null;
@@ -444,6 +461,9 @@ const Game = () => {
         }
       }
       // For transposition mode, scale type is randomized, so no need to adjust
+    }
+    if ('includeRegular' in newSettings) {
+      setIncludeRegular(newSettings.includeRegular);
     }
     if ('includeBorrowed' in newSettings) {
       setIncludeBorrowed(newSettings.includeBorrowed);
@@ -933,7 +953,7 @@ const Game = () => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={{ enabledScaleTypes, includeBorrowed, includeSecondaryDominants, include7ths, guessScaleSubmode }}
+        settings={{ enabledScaleTypes, includeRegular, includeBorrowed, includeSecondaryDominants, include7ths, guessScaleSubmode }}
         onSettingsChange={handleSettingsChange}
         mode={config.mode}
         showScaleTypePool={
