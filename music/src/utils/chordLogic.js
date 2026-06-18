@@ -279,14 +279,52 @@ const getRandomBorrowedDef = () => {
   return BORROWED_CHORD_DEFS[Math.floor(Math.random() * BORROWED_CHORD_DEFS.length)];
 };
 
+// Choose which chord source a question should use, honoring the enabled toggles.
+// When regular (diatonic) chords are disabled, only the enabled special sources
+// that apply to the given scale are eligible (so you can focus exclusively on,
+// e.g., secondary dominants). Returns 'regular' | 'borrowed' | 'secDom'.
+const chooseSource = ({ includeRegular = true, canBorrowed = false, canSecDom = false }) => {
+  if (!includeRegular) {
+    const pool = [];
+    if (canSecDom) pool.push('secDom');
+    if (canBorrowed) pool.push('borrowed');
+    if (pool.length === 0) return 'regular'; // defensive fallback
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  if (canSecDom && Math.random() < 0.25) return 'secDom';
+  if (canBorrowed && Math.random() < 0.25) return 'borrowed';
+  return 'regular';
+};
+
+// Given a pool of scale types and the enabled chord-source toggles, return the
+// subset of scale types for which at least one enabled source produces a chord.
+// Regular (diatonic) chords apply to every scale type; parallel-minor (borrowed)
+// only to major; secondary dominants to major/natural minor/harmonic minor.
+// 7ths are a modifier and intentionally do not count as a source here.
+export const getApplicableScaleTypes = (scaleTypes, { includeRegular = true, includeBorrowed = false, includeSecondaryDominants = false } = {}) => {
+  const types = scaleTypes && scaleTypes.length > 0 ? scaleTypes : ['major'];
+  if (includeRegular) return types;
+  return types.filter(
+    st =>
+      (includeBorrowed && st === 'major') ||
+      (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(st))
+  );
+};
+
 // Question generators
 
-export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
+export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false, includeRegular = true) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
 
-  // Secondary dominant (25% chance when enabled and valid scale type)
-  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType) && Math.random() < 0.25) {
+  const source = chooseSource({
+    includeRegular,
+    canBorrowed: includeBorrowed && scaleType === 'major',
+    canSecDom: includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType),
+  });
+
+  // Secondary dominant
+  if (source === 'secDom') {
     const secDom = getRandomSecondaryDominant(rootNote, scaleType);
     if (secDom) {
       return {
@@ -302,7 +340,7 @@ export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrow
     }
   }
 
-  if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
+  if (source === 'borrowed') {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
     
@@ -357,12 +395,18 @@ export const generateNumberToChordQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
+export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false, includeRegular = true) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
 
-  // Secondary dominant (25% chance when enabled and valid scale type)
-  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType) && Math.random() < 0.25) {
+  const source = chooseSource({
+    includeRegular,
+    canBorrowed: includeBorrowed && scaleType === 'major',
+    canSecDom: includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(scaleType),
+  });
+
+  // Secondary dominant
+  if (source === 'secDom') {
     const secDom = getRandomSecondaryDominant(rootNote, scaleType);
     if (secDom) {
       return {
@@ -379,7 +423,7 @@ export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrow
     }
   }
 
-  if (includeBorrowed && scaleType === 'major' && Math.random() < 0.25) {
+  if (source === 'borrowed') {
     const def = getRandomBorrowedDef();
     const borrowed = getBorrowedChord(rootNote, def);
     
@@ -434,12 +478,18 @@ export const generateChordToNumberQuestion = (rootNote, scaleType, includeBorrow
   };
 };
 
-export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false) => {
+export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targetRoot, targetScaleType, includeBorrowed = false, include7ths = false, includeSecondaryDominants = false, includeRegular = true) => {
   // Decide if this will be a 7th chord question (50% chance if enabled)
   const is7thQuestion = include7ths && Math.random() < 0.5;
 
-  // Secondary dominant (25% chance when enabled and both scale types support it)
-  if (includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(sourceScaleType) && SECONDARY_DOMINANT_SCALES.includes(targetScaleType) && Math.random() < 0.25) {
+  const source = chooseSource({
+    includeRegular,
+    canBorrowed: includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major',
+    canSecDom: includeSecondaryDominants && SECONDARY_DOMINANT_SCALES.includes(sourceScaleType) && SECONDARY_DOMINANT_SCALES.includes(targetScaleType),
+  });
+
+  // Secondary dominant
+  if (source === 'secDom') {
     const sourceDoms = getSecondaryDominants(sourceRoot, sourceScaleType);
     if (sourceDoms.length > 0) {
       const sourceDom = sourceDoms[Math.floor(Math.random() * sourceDoms.length)];
@@ -461,7 +511,7 @@ export const generateTranspositionQuestion = (sourceRoot, sourceScaleType, targe
     }
   }
 
-  if (includeBorrowed && sourceScaleType === 'major' && targetScaleType === 'major' && Math.random() < 0.25) {
+  if (source === 'borrowed') {
     const def = getRandomBorrowedDef();
     const sourceBorrowed = getBorrowedChord(sourceRoot, def);
     const targetBorrowed = getBorrowedChord(targetRoot, def);
