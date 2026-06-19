@@ -1404,8 +1404,7 @@
       "id": "age_decades",
       "label": "Age decades",
       "variables": {
-        "decade": { "type": "int", "min": 20, "max": 90, "step": 10, "system": "digit" },
-        "modifier": { "type": "enum", "values": ["", "early", "mid", "late"] }
+        "decade": { "type": "int", "min": 10, "max": 90, "step": 10, "system": "sino" }
       },
       "templates": [
         {
@@ -1414,42 +1413,53 @@
           "answer": "{decade}대"
         },
         {
-          "id": "age_decade_modifier",
-          "question": "{modifier} {decade}s",
-          "answer": [
-            "{decade}대 초반",
-            "{decade}대 중반",
-            "{decade}대 후반"
-          ]
+          "id": "age_decade_early",
+          "question": "early {decade}s",
+          "answer": "{decade}대 초반"
+        },
+        {
+          "id": "age_decade_mid",
+          "question": "mid {decade}s",
+          "answer": "{decade}대 중반"
+        },
+        {
+          "id": "age_decade_late",
+          "question": "late {decade}s",
+          "answer": "{decade}대 후반"
         }
       ],
-      "explanation": "Age decades use 20대/30대 etc. Early/mid/late map to 초반/중반/후반 respectively.",
-      "example": "late 20s -> 20대 후반"
+      "explanation": "Age decades use 20대/30대 style grouping. Early/mid/late map to 초반/중반/후반.",
+      "example": "late 60s -> 60대 후반"
     },
     {
       "id": "year_decades",
       "label": "Year decades",
       "variables": {
-        "year": { "type": "int", "min": 1900, "max": 2020, "step": 10, "system": "sino" },
-        "modifier": { "type": "enum", "values": ["", "early", "mid", "late"] }
+        "decade": { "type": "int", "min": 1900, "max": 2020, "step": 10, "system": "sino" }
       },
       "templates": [
         {
           "id": "year_decade_standard",
-          "question": "the {year}s",
-          "answer": "{year}년대"
+          "question": "the {decade}s",
+          "answer": "{decade}년대"
         },
         {
-          "id": "year_decade_modifier",
-          "question": "{modifier} {year}s",
-          "answer": [
-            "{year}년대 초반",
-            "{year}년대 중반",
-            "{year}년대 후반"
-          ]
+          "id": "year_decade_early",
+          "question": "early {decade}s",
+          "answer": "{decade}년대 초반"
+        },
+        {
+          "id": "year_decade_mid",
+          "question": "mid {decade}s",
+          "answer": "{decade}년대 중반"
+        },
+        {
+          "id": "year_decade_late",
+          "question": "late {decade}s",
+          "answer": "{decade}년대 후반"
         }
       ],
-      "explanation": "Year decades use 1990년대 style. Early/mid/late refer to parts of the decade.",
+      "explanation": "Year decades use 1990년대, 2000년대 etc. Early/mid/late refer to parts of the decade.",
       "example": "early 2000s -> 2000년대 초반"
     }
   ]
