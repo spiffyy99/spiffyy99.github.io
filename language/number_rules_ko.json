@@ -1404,7 +1404,7 @@
       "id": "age_decades",
       "label": "Age decades",
       "variables": {
-        "decade": { "type": "int", "min": 10, "max": 90, "step": 10, "system": "sino" }
+        "decade": { "type": "int", "min": 20, "max": 90, "step": 10, "system": "sino" }
       },
       "templates": [
         {
