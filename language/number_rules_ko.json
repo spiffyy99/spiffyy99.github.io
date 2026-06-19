@@ -1395,6 +1395,64 @@
         ],
         "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
         "example": "3 hours later → 세 시간 뒤. 2 days ago → 이틀 전 or 이 일 전. 3 months later → 세 달 뒤 or 삼 개월 뒤."
-      }
+      },
+{
+  "id": "decades",
+  "label": "Decades",
+  "subcategories": [
+    {
+      "id": "age_decades",
+      "label": "Age decades",
+      "variables": {
+        "decade": { "type": "int", "min": 20, "max": 90, "step": 10, "system": "digit" },
+        "modifier": { "type": "enum", "values": ["", "early", "mid", "late"] }
+      },
+      "templates": [
+        {
+          "id": "age_decade_standard",
+          "question": "{decade}s",
+          "answer": "{decade}대"
+        },
+        {
+          "id": "age_decade_modifier",
+          "question": "{modifier} {decade}s",
+          "answer": [
+            "{decade}대 초반",
+            "{decade}대 중반",
+            "{decade}대 후반"
+          ]
+        }
+      ],
+      "explanation": "Age decades use 20대/30대 etc. Early/mid/late map to 초반/중반/후반 respectively.",
+      "example": "late 20s -> 20대 후반"
+    },
+    {
+      "id": "year_decades",
+      "label": "Year decades",
+      "variables": {
+        "year": { "type": "int", "min": 1900, "max": 2020, "step": 10, "system": "sino" },
+        "modifier": { "type": "enum", "values": ["", "early", "mid", "late"] }
+      },
+      "templates": [
+        {
+          "id": "year_decade_standard",
+          "question": "the {year}s",
+          "answer": "{year}년대"
+        },
+        {
+          "id": "year_decade_modifier",
+          "question": "{modifier} {year}s",
+          "answer": [
+            "{year}년대 초반",
+            "{year}년대 중반",
+            "{year}년대 후반"
+          ]
+        }
+      ],
+      "explanation": "Year decades use 1990년대 style. Early/mid/late refer to parts of the decade.",
+      "example": "early 2000s -> 2000년대 초반"
+    }
+  ]
+}
     ]
   }
