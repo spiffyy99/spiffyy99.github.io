@@ -1402,7 +1402,7 @@
     "{n|monthNative} 달밖에",
     "{n} 시간밖에",
     "{n} 분밖에"
-  ],
+  ]
   }
         ],
         "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration), 밖에 (only, requires a negative verb after). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
