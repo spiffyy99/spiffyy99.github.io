@@ -1391,9 +1391,21 @@
               "{n|monthNative} 달 만에",
               "{n|monthSino} 개월 만에"
             ]
-          }
+          },
+          {
+  "id": "only_duration",
+  "question": "only {n} {unit.en} (i.e. I only have/used {n} {unit.en})",
+  "answer": [
+    "{n} {unit.ko}밖에",
+    "{n|dayDuration} {unit|dayKo}밖에",
+    "{n|monthSino} 개월밖에",
+    "{n|monthNative} 달밖에",
+    "{n} 시간밖에",
+    "{n} 분밖에"
+  ],
+  }
         ],
-        "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
+        "explanation": "Time-relation particles: 뒤/후 (after/later), 전 (ago), 안에 (within), 만에 (accomplished in a duration), 밖에 (only, requires a negative verb after). Days 1–4 use native words (하루, 이틀, 사흘, 나흘) before the particle; sino + 일 is also accepted. Months accept native + 달 or sino + 개월. Hours use native numbers; minutes/seconds use sino.",
         "example": "3 hours later → 세 시간 뒤. 2 days ago → 이틀 전 or 이 일 전. 3 months later → 세 달 뒤 or 삼 개월 뒤."
       },
 {
