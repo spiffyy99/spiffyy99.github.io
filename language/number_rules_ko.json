@@ -943,7 +943,7 @@
     }
   ],
   "explanation": "배 expresses a multiplier. Small numbers are usually said with native numbers (두 배, 세 배, 네 배), while larger numbers typically use sino numbers (십 배, 백 배).",
-  "example": "3 times -> 세 배, 10 times -> 십 배"
+  "example": "2 times as expensive -> 두 배 더 비싸요."
 }
         ]
       },
