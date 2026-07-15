@@ -20,12 +20,12 @@ export const CHORD_NOTE_TYPES = {
   dom9:     { intervals: [0, 2, 4, 7, 10],      label: '9',       suffix: '9',      group: 'ext'   },
   maj9:     { intervals: [0, 2, 4, 7, 11],      label: 'Maj9',    suffix: 'maj9',   group: 'ext'   },
   min9:     { intervals: [0, 2, 3, 7, 10],      label: 'm9',      suffix: 'm9',     group: 'ext'   },
-  min11:    { intervals: [0, 3, 7, 10, 2, 5],   label: 'm11',     suffix: 'm11',    group: '11th'  },
-  dom11:    { intervals: [0, 4, 7, 10, 2, 5],   label: '11',      suffix: '11',     group: '11th'  },
-  maj11:    { intervals: [0, 4, 7, 11, 2, 5],   label: 'Maj11',   suffix: 'maj11',  group: '11th'  },
-  min13:    { intervals: [0, 3, 7, 10, 2, 5, 9],label: 'm13',     suffix: 'm13',    group: '13th'  },
-  dom13:    { intervals: [0, 4, 7, 10, 2, 5, 9],label: '13',      suffix: '13',     group: '13th'  },
-  maj13:    { intervals: [0, 4, 7, 11, 2, 5, 9],label: 'Maj13',   suffix: 'maj13',  group: '13th'  },
+  min11:    { intervals: [0, 3, 7, 10, 2, 5],   label: 'm11',     suffix: 'm11',    group: 'ext'   },
+  dom11:    { intervals: [0, 4, 7, 10, 2, 5],   label: '11',      suffix: '11',     group: 'ext'   },
+  maj11:    { intervals: [0, 4, 7, 11, 2, 5],   label: 'Maj11',   suffix: 'maj11',  group: 'ext'   },
+  min13:    { intervals: [0, 3, 7, 10, 2, 5, 9],label: 'm13',     suffix: 'm13',    group: 'ext'   },
+  dom13:    { intervals: [0, 4, 7, 10, 2, 5, 9],label: '13',      suffix: '13',     group: 'ext'   },
+  maj13:    { intervals: [0, 4, 7, 11, 2, 5, 9],label: 'Maj13',   suffix: 'maj13',  group: 'ext'   },
 };
 
 // Groups of quality types, used for setup toggles
@@ -35,9 +35,7 @@ export const CHORD_NOTE_GROUPS = {
   aug:    ['aug'],
   sus:    ['sus2', 'sus4'],
   '7th':  ['maj7', 'min7', 'dom7'],
-  ext:    ['add9', 'madd9', 'dom9', 'maj9', 'min9'],
-  '11th': ['min11', 'dom11', 'maj11'],
-  '13th': ['min13', 'dom13', 'maj13'],
+  ext:    ['add9', 'madd9', 'dom9', 'maj9', 'min9', 'min11', 'dom11', 'maj11', 'min13', 'dom13', 'maj13'],
 };
 
 // Build a chord display string for types not in chordLogic's QUALITY_SUFFIX

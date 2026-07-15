@@ -74,6 +74,7 @@ const Game = () => {
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [pendingNoteIndex, setPendingNoteIndex] = useState(null);
   const [pendingDegreeIndex, setPendingDegreeIndex] = useState(null);
+  const [selectedProgressionOption, setSelectedProgressionOption] = useState(null);
 
   // Modals
   const [showSettings, setShowSettings] = useState(false);

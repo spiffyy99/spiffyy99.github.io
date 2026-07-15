@@ -676,61 +676,63 @@ const Setup = () => {
               </div>
 
               {/* Chord Types */}
-              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
-                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-1">Chord Types</h3>
-                <p className="text-xs text-[#9CA3AF] mb-3">Choose which chord categories to include — at least one must be selected</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <ScaleCheckbox
-                    label="Major & Minor"
-                    subtitle="major, minor"
-                    checked={enabledChordGroups.includes('basic')}
-                    onChange={() => toggleChordGroup('basic')}
-                    disabled={enabledChordGroups.includes('basic') && enabledChordGroups.length === 1}
-                  />
-                  <ScaleCheckbox
-                    label="Diminished"
-                    subtitle={"dim, \u00f87, \u00b07"}
-                    checked={enabledChordGroups.includes('dim')}
-                    onChange={() => toggleChordGroup('dim')}
-                  />
-                  <ScaleCheckbox
-                    label="Augmented"
-                    subtitle="aug"
-                    checked={enabledChordGroups.includes('aug')}
-                    onChange={() => toggleChordGroup('aug')}
-                  />
-                  <ScaleCheckbox
-                    label="Suspended"
-                    subtitle="sus2, sus4"
-                    checked={enabledChordGroups.includes('sus')}
-                    onChange={() => toggleChordGroup('sus')}
-                  />
-                  <ScaleCheckbox
-                    label="7th Chords"
-                    subtitle="Maj7, m7, dom7"
-                    checked={enabledChordGroups.includes('7th')}
-                    onChange={() => toggleChordGroup('7th')}
-                  />
-                  <ScaleCheckbox
-                    label="Add / Extended (9th)"
-                    subtitle="add9, m(add9), 9, Maj9, m9"
-                    checked={enabledChordGroups.includes('ext')}
-                    onChange={() => toggleChordGroup('ext')}
-                  />
-                  <ScaleCheckbox
-                    label="11th Chords"
-                    subtitle="m11, 11, Maj11"
-                    checked={enabledChordGroups.includes('11th')}
-                    onChange={() => toggleChordGroup('11th')}
-                  />
-                  <ScaleCheckbox
-                    label="13th Chords"
-                    subtitle="m13, 13, Maj13"
-                    checked={enabledChordGroups.includes('13th')}
-                    onChange={() => toggleChordGroup('13th')}
-                  />
-                </div>
-              </div>
+              {(() => {
+                const ALL_CHORD_GROUPS = ['basic', 'dim', 'aug', 'sus', '7th', 'ext'];
+                const allSelected = ALL_CHORD_GROUPS.every(g => enabledChordGroups.includes(g));
+                const selectAll = () => setEnabledChordGroups(ALL_CHORD_GROUPS);
+                const deselectAll = () => setEnabledChordGroups(['basic']);
+                return (
+                  <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A]">Chord Types</h3>
+                      <div className="flex gap-3">
+                        <button onClick={selectAll} className="text-xs text-[#002FA7] font-semibold hover:underline">Select all</button>
+                        <button onClick={deselectAll} className="text-xs text-[#9CA3AF] font-semibold hover:underline">Deselect all</button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#9CA3AF] mb-3">Choose which chord categories to include — at least one must be selected</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <ScaleCheckbox
+                        label="Major & Minor"
+                        subtitle="major, minor"
+                        checked={enabledChordGroups.includes('basic')}
+                        onChange={() => toggleChordGroup('basic')}
+                        disabled={enabledChordGroups.includes('basic') && enabledChordGroups.length === 1}
+                      />
+                      <ScaleCheckbox
+                        label="Diminished"
+                        subtitle={"dim, \u00f87, \u00b07"}
+                        checked={enabledChordGroups.includes('dim')}
+                        onChange={() => toggleChordGroup('dim')}
+                      />
+                      <ScaleCheckbox
+                        label="Augmented"
+                        subtitle="aug"
+                        checked={enabledChordGroups.includes('aug')}
+                        onChange={() => toggleChordGroup('aug')}
+                      />
+                      <ScaleCheckbox
+                        label="Suspended"
+                        subtitle="sus2, sus4"
+                        checked={enabledChordGroups.includes('sus')}
+                        onChange={() => toggleChordGroup('sus')}
+                      />
+                      <ScaleCheckbox
+                        label="7th Chords"
+                        subtitle="Maj7, m7, dom7"
+                        checked={enabledChordGroups.includes('7th')}
+                        onChange={() => toggleChordGroup('7th')}
+                      />
+                      <ScaleCheckbox
+                        label="Extensions (9th–13th)"
+                        subtitle="add9, 9, Maj9, m9, m11, 11, Maj11, m13, 13, Maj13"
+                        checked={enabledChordGroups.includes('ext')}
+                        onChange={() => toggleChordGroup('ext')}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Display Options */}
               <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
