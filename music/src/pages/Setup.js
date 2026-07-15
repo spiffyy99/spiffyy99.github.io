@@ -39,6 +39,11 @@ const Setup = () => {
   const [timerMode, setTimerMode] = useState('untimed');
   const [timerDuration, setTimerDuration] = useState('60');
 
+  // chord-from-notes options
+  const [enabledChordGroups, setEnabledChordGroups] = useState(['basic']);
+  const [includeInversions, setIncludeInversions] = useState(false);
+  const [omitNotes, setOmitNotes] = useState(false);
+
   // Interval recognition sub-mode
   // - absolute: two actual notes, identify the interval between them
   // - relative: scale type + two scale degrees (1-7), identify the interval between degrees
@@ -90,6 +95,28 @@ const Setup = () => {
       // Guess scale mode: always random, just needs enabled scale types and 7ths setting
       gameConfig.scaleSelection = 'random';
       gameConfig.guessScaleSubmode = guessScaleSubmode;
+    } else if (mode === 'chord-progression') {
+      const progTypes = [];
+      if (majorEnabled) progTypes.push('major');
+      if (naturalMinorEnabled) progTypes.push('naturalMinor');
+      if (harmonicMinorEnabled) progTypes.push('harmonicMinor');
+      const validProgTypes = progTypes.length > 0 ? progTypes : ['major'];
+      gameConfig.enabledScaleTypes = validProgTypes;
+      gameConfig.scaleSelection = scaleSelection;
+      gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
+      gameConfig.selectedScaleType = scaleSelection === 'random'
+        ? null
+        : (validProgTypes.includes(selectedScaleType) ? selectedScaleType : validProgTypes[0]);
+    } else if (mode === 'chord-from-notes') {
+      gameConfig.scaleSelection = scaleSelection;
+      gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
+      gameConfig.selectedScaleType = scaleSelection === 'random'
+        ? null
+        : ensureValidScaleType(selectedScaleType);
+      gameConfig.enabledScaleTypes = getEnabledScaleTypes();
+      gameConfig.enabledChordGroups = enabledChordGroups;
+      gameConfig.includeInversions = includeInversions;
+      gameConfig.omitNotes = omitNotes;
     } else if (mode !== 'intervals' && mode !== 'interval-transpose') {
       gameConfig.scaleSelection = scaleSelection;
       gameConfig.selectedRoot = scaleSelection === 'random' ? null : selectedRoot;
@@ -114,15 +141,22 @@ const Setup = () => {
     if (mode === 'intervals') return 'Interval Recognition';
     if (mode === 'interval-transpose') return 'Interval Transposition';
     if (mode === 'guess-scale') return 'Guess the Scale';
+    if (mode === 'chord-progression') return 'Chord Progression';
+    if (mode === 'chord-from-notes') return 'Chord from Notes';
     return 'Unknown Mode';
   };
 
   const isNonIntervalMode = mode !== 'intervals' && mode !== 'interval-transpose';
   const isGuessScaleMode = mode === 'guess-scale';
+  const isChordProgressionMode = mode === 'chord-progression';
+  const isChordFromNotesMode = mode === 'chord-from-notes';
 
   // Modes that expose the unified "Chord Types" panel
   const isChordSourceMode =
     mode === 'number-to-chord' || mode === 'chord-to-number' || mode === 'transposition';
+
+  // Count of functional-harmony scale types enabled (for chord-progression)
+  const progEnabledCount = [majorEnabled, naturalMinorEnabled, harmonicMinorEnabled].filter(Boolean).length;
 
   // The set of scale types the chosen chord sources will actually be tested against.
   const getChordSourcePool = () => {
@@ -166,6 +200,16 @@ const Setup = () => {
   const toggleOtherModes = () => {
     if (otherModesEnabled && enabledCount === 1) return;
     setOtherModesEnabled(!otherModesEnabled);
+  };
+
+  const toggleChordGroup = (group) => {
+    setEnabledChordGroups(prev => {
+      if (prev.includes(group)) {
+        if (prev.length === 1) return prev;
+        return prev.filter(g => g !== group);
+      }
+      return [...prev, group];
+    });
   };
 
   // Compact switch row: title + info tooltip on the left, toggle on the right.
@@ -481,6 +525,217 @@ const Setup = () => {
               )}
 
               {/* Timer */}
+              <TimerSection />
+            </>
+          ) : isChordProgressionMode ? (
+            <>
+              {/* Scale Selection */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Selection</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setScaleSelection('random')}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      scaleSelection === 'random' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Random Key</div>
+                    <div className="text-sm text-[#9CA3AF]">New random key for each question</div>
+                  </button>
+                  <button
+                    onClick={() => setScaleSelection('preselected')}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      scaleSelection === 'preselected' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Fixed Key</div>
+                    <div className="text-sm text-[#9CA3AF]">Practice one specific key</div>
+                  </button>
+                </div>
+                {scaleSelection === 'random' && (
+                  <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
+                    <h4 className="text-lg font-medium tracking-tight text-[#1A1A1A] mb-1">Scale types in pool</h4>
+                    <p className="text-xs text-[#9CA3AF] mb-3">Functional harmony works in these scales — at least one must be selected</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && progEnabledCount === 1} />
+                      <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && progEnabledCount === 1} />
+                      <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && progEnabledCount === 1} />
+                    </div>
+                  </div>
+                )}
+                {scaleSelection === 'preselected' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
+                      <RootSelect value={selectedRoot} onChange={(e) => setSelectedRoot(e.target.value)} testId="root-selector" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Scale Type</label>
+                      <select
+                        value={selectedScaleType}
+                        onChange={(e) => setSelectedScaleType(e.target.value)}
+                        className="w-full p-3 border-2 border-[#E5E7EB] rounded-sm focus:border-[#002FA7] focus:outline-none text-lg"
+                      >
+                        <option value="major">{SCALE_TYPES.major.name}</option>
+                        <option value="naturalMinor">{SCALE_TYPES.naturalMinor.name}</option>
+                        <option value="harmonicMinor">{SCALE_TYPES.harmonicMinor.name}</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chord Sources */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-1">Chord Sources</h3>
+                <p className="text-xs text-[#9CA3AF] mb-2">Which progression types to practice</p>
+                <div className="divide-y divide-[#E5E7EB]">
+                  <SwitchRow
+                    label="Diatonic Chords"
+                    description="Standard progressions within the scale (e.g. IV\u2192V\u2192I)."
+                    checked={includeRegular}
+                    onChange={() => setIncludeRegular(!includeRegular)}
+                    testId="regular-chords-toggle"
+                  />
+                  <SwitchRow
+                    label="Secondary Dominants"
+                    description="V/ii, V/iii, V/V, V/vi etc. — each resolves to its target only (e.g. A major \u2192 G in C major)."
+                    checked={includeSecondaryDominants}
+                    onChange={() => setIncludeSecondaryDominants(!includeSecondaryDominants)}
+                    testId="secondary-dominants-toggle"
+                  />
+                  <SwitchRow
+                    label="Parallel Minor (Borrowed)"
+                    description="\u266Div, \u266DVII, \u266DVI, \u266DIII borrowed from the parallel minor. Major keys only."
+                    checked={includeBorrowed}
+                    onChange={() => setIncludeBorrowed(!includeBorrowed)}
+                    testId="borrowed-chords-toggle"
+                  />
+                </div>
+              </div>
+
+              <TimerSection />
+            </>
+          ) : isChordFromNotesMode ? (
+            <>
+              {/* Scale Selection */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-4">Scale Selection</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setScaleSelection('random')}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      scaleSelection === 'random' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Random Key</div>
+                    <div className="text-sm text-[#9CA3AF]">New random key for each question</div>
+                  </button>
+                  <button
+                    onClick={() => setScaleSelection('preselected')}
+                    className={`w-full text-left p-4 border-2 rounded-sm transition-all ${
+                      scaleSelection === 'preselected' ? 'border-[#002FA7] bg-[#002FA7]/5' : 'border-[#E5E7EB] hover:border-[#002FA7]/50'
+                    }`}
+                  >
+                    <div className="font-bold text-[#1A1A1A]">Fixed Key</div>
+                    <div className="text-sm text-[#9CA3AF]">Practice one specific key</div>
+                  </button>
+                </div>
+                {scaleSelection === 'random' && (
+                  <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
+                    <h4 className="text-lg font-medium tracking-tight text-[#1A1A1A] mb-1">Scale types in pool</h4>
+                    <p className="text-xs text-[#9CA3AF] mb-3">At least one must be selected</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <ScaleCheckbox label="Major" checked={majorEnabled} onChange={toggleMajor} testId="scale-type-major" disabled={majorEnabled && enabledCount === 1} />
+                      <ScaleCheckbox label="Natural Minor" checked={naturalMinorEnabled} onChange={toggleNaturalMinor} testId="scale-type-natural-minor" disabled={naturalMinorEnabled && enabledCount === 1} />
+                      <ScaleCheckbox label="Harmonic Minor" checked={harmonicMinorEnabled} onChange={toggleHarmonicMinor} testId="scale-type-harmonic-minor" disabled={harmonicMinorEnabled && enabledCount === 1} />
+                      <ScaleCheckbox label="Melodic Minor" checked={melodicMinorEnabled} onChange={toggleMelodicMinor} testId="scale-type-melodic-minor" disabled={melodicMinorEnabled && enabledCount === 1} />
+                      <ScaleCheckbox
+                        label="Other Modes"
+                        subtitle="Dorian, Phrygian, Lydian, Mixolydian"
+                        checked={otherModesEnabled}
+                        onChange={toggleOtherModes}
+                        testId="scale-type-other-modes"
+                        disabled={otherModesEnabled && enabledCount === 1}
+                      />
+                    </div>
+                  </div>
+                )}
+                {scaleSelection === 'preselected' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Root Note</label>
+                      <RootSelect value={selectedRoot} onChange={(e) => setSelectedRoot(e.target.value)} testId="root-selector" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-2 block">Scale Type</label>
+                      <ScaleTypeSelect value={selectedScaleType} onChange={(e) => setSelectedScaleType(e.target.value)} testId="scale-type-selector" useAllScaleTypes />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chord Types */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-1">Chord Types</h3>
+                <p className="text-xs text-[#9CA3AF] mb-3">Choose which chord categories to include — at least one must be selected</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <ScaleCheckbox
+                    label="Diatonic Triads"
+                    subtitle="Major, minor, dim (in key)"
+                    checked={enabledChordGroups.includes('basic')}
+                    onChange={() => toggleChordGroup('basic')}
+                    disabled={enabledChordGroups.includes('basic') && enabledChordGroups.length === 1}
+                  />
+                  <ScaleCheckbox
+                    label="Augmented"
+                    subtitle="aug"
+                    checked={enabledChordGroups.includes('aug')}
+                    onChange={() => toggleChordGroup('aug')}
+                  />
+                  <ScaleCheckbox
+                    label="Suspended"
+                    subtitle="sus2, sus4"
+                    checked={enabledChordGroups.includes('sus')}
+                    onChange={() => toggleChordGroup('sus')}
+                  />
+                  <ScaleCheckbox
+                    label="7th Chords"
+                    subtitle="Maj7, m7, dom7, \u00f87, \u00b07"
+                    checked={enabledChordGroups.includes('7th')}
+                    onChange={() => toggleChordGroup('7th')}
+                  />
+                  <ScaleCheckbox
+                    label="Add / Extended"
+                    subtitle="add9, m(add9), 9, Maj9, m9"
+                    checked={enabledChordGroups.includes('ext')}
+                    onChange={() => toggleChordGroup('ext')}
+                  />
+                </div>
+              </div>
+
+              {/* Display Options */}
+              <div className="bg-white border border-[#E5E7EB] rounded-sm p-6">
+                <h3 className="text-xl font-medium tracking-tight text-[#1A1A1A] mb-1">Display Options</h3>
+                <p className="text-xs text-[#9CA3AF] mb-2">How the chord notes are presented each question</p>
+                <div className="divide-y divide-[#E5E7EB]">
+                  <SwitchRow
+                    label="Inversions"
+                    description="Include 1st and 2nd inversions. The bass note changes but the answer is always root + quality."
+                    checked={includeInversions}
+                    onChange={() => setIncludeInversions(!includeInversions)}
+                    testId="inversions-toggle"
+                  />
+                  <SwitchRow
+                    label="Omit Notes"
+                    description="Show only the minimum notes needed to identify the chord within the key. Some chords can't be reduced."
+                    checked={omitNotes}
+                    onChange={() => setOmitNotes(!omitNotes)}
+                    testId="omit-notes-toggle"
+                  />
+                </div>
+              </div>
+
               <TimerSection />
             </>
           ) : (

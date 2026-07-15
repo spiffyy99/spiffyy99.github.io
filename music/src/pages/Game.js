@@ -25,6 +25,8 @@ import {
   buildChordDisplay,
   formatRomanNumeral,
 } from '../utils/chordLogic';
+import { generateProgressionQuestion } from '../utils/progressionLogic';
+import { generateChordFromNotesQuestion } from '../utils/chordNoteLogic';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -72,6 +74,7 @@ const Game = () => {
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [pendingNoteIndex, setPendingNoteIndex] = useState(null);
   const [pendingDegreeIndex, setPendingDegreeIndex] = useState(null);
+  const [selectedProgressionOption, setSelectedProgressionOption] = useState(null);
 
   // Modals
   const [showSettings, setShowSettings] = useState(false);
@@ -149,6 +152,7 @@ const Game = () => {
     setSelectedQuality(null);
     setPendingNoteIndex(null);
     setPendingDegreeIndex(null);
+    setSelectedProgressionOption(null);
   }, [gameState.currentQuestion]);
 
   // Generate question
@@ -199,6 +203,28 @@ const Game = () => {
         const tgt = config.targetRoot || 'D';
         return generateTranspositionQuestion(src, randomScaleType, tgt, randomScaleType, borrowed, sevenths, secDom, regular);
       }
+    }
+    if (config.mode === 'chord-progression') {
+      const scale = config.scaleSelection === 'random'
+        ? getRandomScale(scaleTypes)
+        : { rootNote: config.selectedRoot || 'C', scaleType: config.selectedScaleType || 'major' };
+      return generateProgressionQuestion(scale.rootNote, scale.scaleType, {
+        includeRegular: regular,
+        includeSecondaryDominants: secDom,
+        includeBorrowed: borrowed,
+      });
+    }
+    if (config.mode === 'chord-from-notes') {
+      const scale = config.scaleSelection === 'random'
+        ? getRandomScale(scaleTypes)
+        : { rootNote: config.selectedRoot || 'C', scaleType: config.selectedScaleType || 'major' };
+      return generateChordFromNotesQuestion(
+        scale.rootNote,
+        scale.scaleType,
+        config.enabledChordGroups || ['basic'],
+        config.includeInversions || false,
+        config.omitNotes || false,
+      );
     }
     return null;
   }, [
@@ -267,6 +293,8 @@ const Game = () => {
     if (q.type === 'interval' || q.type === 'interval-relative') return q.correctInterval;
     if (q.type === 'interval-transpose') return q.correctNote;
     if (q.type === 'guess-scale' || q.type === 'guess-scale-notes') return q.correctScale?.rootNote || '';
+    if (q.type === 'chord-from-notes') return q.chordDisplay;
+    if (q.type === 'chord-progression') return [...(q.correctSet || [])].join(' or ');
     return '';
   };
 
@@ -322,7 +350,7 @@ const Game = () => {
     const q = gameState.currentQuestion;
     if (!q) return;
     setSelectedQuality(qo);
-    const chordMode = config.mode === 'number-to-chord' || config.mode === 'transposition';
+    const chordMode = config.mode === 'number-to-chord' || config.mode === 'transposition' || config.mode === 'chord-from-notes';
     const degreeMode = config.mode === 'chord-to-number';
     if (chordMode && pendingNoteIndex !== null) {
       submitAnswer(pendingNoteIndex === q.correctNoteIndex && qo === q.correctQuality);
@@ -353,6 +381,12 @@ const Game = () => {
     const selectedNote = ALL_NOTES[noteIndex];
     const isCorrect = selectedNote === q.correctScale?.rootNote;
     submitAnswer(isCorrect);
+  };
+
+  const handleProgressionAnswer = (option) => {
+    if (!gameState.isGameActive || gameState.feedback) return;
+    setSelectedProgressionOption(option.display);
+    submitAnswer(option.isCorrect);
   };
 
   // Save session
@@ -586,23 +620,29 @@ const Game = () => {
   }
 
   const q = gameState.currentQuestion;
-  const isChordMode = config.mode === 'number-to-chord' || config.mode === 'transposition';
+  const isChordMode = config.mode === 'number-to-chord' || config.mode === 'transposition' || config.mode === 'chord-from-notes';
   const isDegreeMode = config.mode === 'chord-to-number';
   const isIntervalMode = config.mode === 'intervals' || config.mode === 'interval-transpose';
   const isGuessScaleMode = config.mode === 'guess-scale';
-  const isPreselectedUntimed = config.scaleSelection === 'preselected' && config.timerMode === 'untimed';
+  const isPreselectedUntimed = config.scaleSelection === 'preselected' && config.timerMode === 'untimed'
+    && config.mode !== 'chord-from-notes' && config.mode !== 'chord-progression';
 
   // Quality options - show 7ths only when enabled AND question is a 7th question
   const show7thOptions = include7ths && q.is7th;
-  const qualityOptions = isDegreeMode
-    ? [...['major', 'minor', 'dim', 'aug', 'flat'], ...(includeSecondaryDominants ? ['secondary'] : [])]
-    : show7thOptions
-      ? ['maj7', 'min7', 'dom7', 'halfdim7', 'dim7', 'aug7']
-      : ['major', 'minor', 'dim', 'aug'];
+  const qualityOptions = config.mode === 'chord-from-notes'
+    ? (q.enabledQualities || ['major', 'minor', 'dim'])
+    : isDegreeMode
+      ? [...['major', 'minor', 'dim', 'aug', 'flat'], ...(includeSecondaryDominants ? ['secondary'] : [])]
+      : show7thOptions
+        ? ['maj7', 'min7', 'dom7', 'halfdim7', 'dim7', 'aug7']
+        : ['major', 'minor', 'dim', 'aug'];
   const qualityLabels = {
     major: 'Major', minor: 'Minor', dim: 'Dim', aug: 'Aug', flat: '\u266D Flat',
     maj7: 'Maj7', min7: 'm7', dom7: '7', halfdim7: 'ø7', dim7: '°7', aug7: 'Aug7',
-    secondary: 'V/'
+    secondary: 'V/',
+    sus2: 'sus2', sus4: 'sus4',
+    add9: 'add9', madd9: 'm(add9)',
+    dom9: '9', maj9: 'Maj9', min9: 'm9',
   };
 
   const displayScale = q.scale || q.sourceScale || gameState.currentScale;
@@ -616,6 +656,8 @@ const Game = () => {
       return `${SCALE_TYPES[q.scaleType]?.name || 'scale'}: ${q.degree1} \u2192 ${q.degree2}`;
     }
     if (q.type === 'interval-transpose') return q.startNote;
+    if (q.type === 'chord-progression') return q.currentChord?.display || '';
+    if (q.type === 'chord-from-notes') return q.notes ? q.notes.join('  ') : '';
     return '';
   };
 
@@ -755,6 +797,8 @@ const Game = () => {
              config.mode === 'intervals' ? 'Identify the interval' :
              config.mode === 'interval-transpose' ? 'Find the destination note' :
              config.mode === 'guess-scale' ? `${SCALE_TYPES[q?.correctScaleType]?.name || 'scale'} scale — ${q?.type === 'guess-scale-notes' ? 'identify the root from these notes' : 'identify the root from these chords'}:` :
+             config.mode === 'chord-progression' ? 'What chord comes next?' :
+             config.mode === 'chord-from-notes' ? 'What chord is this?' :
              'Transpose this chord'}
           </p>
           <div
@@ -787,6 +831,24 @@ const Game = () => {
                       </span>
                     ))
                 }
+              </div>
+            ) : q.type === 'chord-progression' ? (
+              <div className="text-center px-4">
+                <div className="text-4xl md:text-6xl font-bold text-[#1A1A1A]">{q.currentChord?.display}</div>
+                <div className="text-base text-[#9CA3AF] mt-2">{q.currentChord?.romanNumeral}</div>
+              </div>
+            ) : q.type === 'chord-from-notes' ? (
+              <div className="text-center px-4">
+                <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
+                  {(q.notes || []).map((note, idx) => (
+                    <span key={idx} className="text-3xl md:text-5xl font-bold text-[#1A1A1A]">{note}</span>
+                  ))}
+                </div>
+                {q.inversion > 0 && (
+                  <div className="text-sm text-[#9CA3AF] mt-2">
+                    {q.inversion === 1 ? '1st' : '2nd'} inversion
+                  </div>
+                )}
               </div>
             ) : (
               <span className={`${questionTextClass(getQuestionText())} font-bold text-[#1A1A1A]`}>
@@ -932,6 +994,38 @@ const Game = () => {
                   {note}
                 </button>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Chord Progression Answer Buttons */}
+        {config.mode === 'chord-progression' && q.options && (
+          <div className="max-w-3xl mx-auto">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3 text-center">Select Next Chord</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {q.options.map((option, idx) => {
+                const isSelected = selectedProgressionOption === option.display;
+                const showFeedback = !!gameState.feedback;
+                let btnClass = 'border-[#E5E7EB] bg-white text-[#1A1A1A] hover:border-[#002FA7] hover:bg-blue-50';
+                if (showFeedback && isSelected && option.isCorrect) {
+                  btnClass = 'border-green-500 bg-green-100 text-green-700';
+                } else if (showFeedback && isSelected && !option.isCorrect) {
+                  btnClass = 'border-red-500 bg-red-100 text-red-700';
+                } else if (showFeedback && option.isCorrect) {
+                  btnClass = 'border-green-500 bg-green-100 text-green-700';
+                }
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleProgressionAnswer(option)}
+                    disabled={!gameState.isGameActive || !!gameState.feedback}
+                    className={`px-6 py-4 text-xl md:text-2xl font-bold border-2 rounded-sm transition-all active:scale-95 disabled:cursor-default ${btnClass}`}
+                  >
+                    {option.display}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

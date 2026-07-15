@@ -43,6 +43,18 @@ const Home = () => {
       title: 'Guess the Scale',
       description: 'See diatonic chords and identify which scale they belong to',
       icon: Music
+    },
+    {
+      id: 'chord-progression',
+      title: 'Chord Progression',
+      description: 'Given a key and current chord, pick the most likely next chord based on functional harmony',
+      icon: Music
+    },
+    {
+      id: 'chord-from-notes',
+      title: 'Chord from Notes',
+      description: 'See the notes of a chord in order and identify the root and quality',
+      icon: Music
     }
   ];
 
