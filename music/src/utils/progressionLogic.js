@@ -128,33 +128,27 @@ const makeBorrowedChord = (rootNote, def) => {
 export const generateProgressionDiatonicQuestion = (rootNote, scaleType) => {
   const allChords = getAllDiatonic(rootNote, scaleType);
   const transitions = getTransitions(scaleType);
-  const fromDeg = Math.floor(Math.random() * 7);
-  const acceptedDegs = transitions[fromDeg] || [0];
+
+  // Avoid dim chords as the "from" chord
+  const nonDimDegrees = allChords
+    .filter((c) => c.quality !== 'dim')
+    .map((c) => c.degreeIndex);
+  const fromDeg = nonDimDegrees[Math.floor(Math.random() * nonDimDegrees.length)];
+  const allAcceptedDegs = transitions[fromDeg] || [0];
+
+  // Filter correct answers to non-dim chords; fall back to original set if all are dim
+  const nonDimAcceptedDegs = allAcceptedDegs.filter((d) => allChords[d].quality !== 'dim');
+  const acceptedDegs = nonDimAcceptedDegs.length > 0 ? nonDimAcceptedDegs : allAcceptedDegs;
 
   const currentChord = allChords[fromDeg];
   const correctChords = acceptedDegs.map((d) => allChords[d]);
   const correctSet = new Set(correctChords.map((c) => c.display));
-
-  // distractors: diatonic chords not accepted and not current
-  const distractors = shuffle(
-    allChords.filter(
-      (c) => c.degreeIndex !== fromDeg && !acceptedDegs.includes(c.degreeIndex)
-    )
-  );
-
-  const numDistractors = Math.max(2, 6 - correctChords.length);
-  const options = shuffle([
-    ...correctChords.map((c) => ({ ...c, isCorrect: true })),
-    ...distractors.slice(0, numDistractors).map((c) => ({ ...c, isCorrect: false })),
-  ]);
 
   return {
     type: 'chord-progression',
     subtype: 'diatonic',
     scale: { rootNote, scaleType },
     currentChord,
-    currentRomanNumeral: currentChord.romanNumeral,
-    options,
     correctSet,
   };
 };

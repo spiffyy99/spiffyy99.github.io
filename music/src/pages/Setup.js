@@ -681,11 +681,17 @@ const Setup = () => {
                 <p className="text-xs text-[#9CA3AF] mb-3">Choose which chord categories to include — at least one must be selected</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <ScaleCheckbox
-                    label="Diatonic Triads"
-                    subtitle="Major, minor, dim (in key)"
+                    label="Major & Minor"
+                    subtitle="major, minor"
                     checked={enabledChordGroups.includes('basic')}
                     onChange={() => toggleChordGroup('basic')}
                     disabled={enabledChordGroups.includes('basic') && enabledChordGroups.length === 1}
+                  />
+                  <ScaleCheckbox
+                    label="Diminished"
+                    subtitle={"dim, \u00f87, \u00b07"}
+                    checked={enabledChordGroups.includes('dim')}
+                    onChange={() => toggleChordGroup('dim')}
                   />
                   <ScaleCheckbox
                     label="Augmented"
@@ -701,15 +707,27 @@ const Setup = () => {
                   />
                   <ScaleCheckbox
                     label="7th Chords"
-                    subtitle="Maj7, m7, dom7, \u00f87, \u00b07"
+                    subtitle="Maj7, m7, dom7"
                     checked={enabledChordGroups.includes('7th')}
                     onChange={() => toggleChordGroup('7th')}
                   />
                   <ScaleCheckbox
-                    label="Add / Extended"
+                    label="Add / Extended (9th)"
                     subtitle="add9, m(add9), 9, Maj9, m9"
                     checked={enabledChordGroups.includes('ext')}
                     onChange={() => toggleChordGroup('ext')}
+                  />
+                  <ScaleCheckbox
+                    label="11th Chords"
+                    subtitle="m11, 11, Maj11"
+                    checked={enabledChordGroups.includes('11th')}
+                    onChange={() => toggleChordGroup('11th')}
+                  />
+                  <ScaleCheckbox
+                    label="13th Chords"
+                    subtitle="m13, 13, Maj13"
+                    checked={enabledChordGroups.includes('13th')}
+                    onChange={() => toggleChordGroup('13th')}
                   />
                 </div>
               </div>
