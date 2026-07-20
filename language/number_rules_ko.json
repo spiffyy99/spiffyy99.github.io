@@ -1663,7 +1663,10 @@
                   "en": "generation",
                   "ko": "세대",
                   "ordinal": true
-                }
+                },
+                { "en": "case", "ko": "건" },
+                { "en": "order", "ko": "건" },
+                { "en": "report", "ko": "건" }
               ]
             }
           },
